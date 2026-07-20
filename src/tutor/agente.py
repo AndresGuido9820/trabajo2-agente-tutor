@@ -37,6 +37,7 @@ from tutor.models import PerfilEstudiante
 from tutor.perfil import cargar_perfil, guardar_perfil
 from tutor.progreso import Progreso, Resultado, cargar_progreso, guardar_progreso
 from tutor.prompts import (
+    prompt_artefacto,
     prompt_charla,
     prompt_turno_leccion,
     system_charla,
@@ -118,6 +119,8 @@ class Agente:
         self._conversatorios: dict[int, list[tuple[str, str]]] = {}
         # Enunciados del último quiz por unidad, para variantes (HU-13).
         self._quizzes_previos: dict[int, list[str]] = {}
+        # Preguntas al tutor durante la guía, por unidad (HU-14).
+        self._charlas_guia: dict[int, list[tuple[str, str]]] = {}
         # Racha diaria (HU-13): la sesión de hoy cuenta al abrir el agente.
         self.progreso.registrar_sesion(date.today().isoformat())
         self.guardar()
@@ -203,7 +206,17 @@ class Agente:
             ErrorBloqueada: Si falta aprobar la unidad anterior.
         """
         self._exigir_desbloqueada(indice)
-        leccion = self.abrir_unidad(indice)
+        if indice in self.curso.guias:
+            # La guía ya enseña la unidad: el quiz se basa en ella (evita
+            # generar además la lección Markdown: ~1 min menos de espera).
+            leccion = "\n\n".join(
+                f"### {s.objetivo}\n{s.contenido}"
+                for s in self.curso.guias[indice].secciones
+            )
+            self.progreso.marcar_vista(indice)
+            self.guardar()
+        else:
+            leccion = self.abrir_unidad(indice)
         unidad = self.curso.temario.unidades[indice]
         quiz = generar_quiz(
             self._cliente,
@@ -305,6 +318,71 @@ class Agente:
             puntos_totales=self.progreso.puntos,
             revelada=True,
         )
+
+    def artefacto_de_seccion(self, indice: int, seccion: int) -> str:
+        """Mini-artefacto HTML interactivo que ilustra la sección (HU-14).
+
+        Se genera una vez y queda cacheado en el curso (persistido).
+
+        Raises:
+            KeyError: Si la guía de la unidad no está generada.
+            ValueError: Si la sección no existe.
+            ErrorLLM: Si la API falla tras los reintentos.
+        """
+        guia = self.curso.guias[indice]
+        if not 0 <= seccion < len(guia.secciones):
+            raise ValueError(f"No existe la sección {seccion}.")
+        clave = f"{indice}-{seccion}"
+        if clave in self.curso.artefactos:
+            return self.curso.artefactos[clave]
+
+        actual = guia.secciones[seccion]
+        html = self._cliente.generar(
+            system=system_tutor(self.perfil),
+            prompt=prompt_artefacto(
+                objetivo=actual.objetivo,
+                contenido=actual.contenido,
+                lenguaje=self.curso.temario.lenguaje,
+            ),
+        )
+        # Tolerar fences de Markdown alrededor del HTML.
+        html = html.strip()
+        if html.startswith("```"):
+            html = html.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+        self.curso.artefactos[clave] = html
+        guardar_curso(self.curso, self._dir / ARCHIVO_CURSO)
+        return html
+
+    def preguntar_guia(self, indice: int, seccion: int, mensaje: str) -> str:
+        """Pregunta libre al tutor mientras estudia una sección de la guía.
+
+        El contexto es la sección actual (objetivo + contenido + enunciado
+        del checkpoint, NUNCA su respuesta ni su explicación); el tutor
+        responde con las reglas socráticas de charla (HU-09).
+
+        Raises:
+            KeyError: Si la guía de la unidad no está generada.
+            ValueError: Si la sección no existe.
+            ErrorLLM: Si la API falla tras los reintentos.
+        """
+        guia = self.curso.guias[indice]
+        if not 0 <= seccion < len(guia.secciones):
+            raise ValueError(f"No existe la sección {seccion}.")
+        actual = guia.secciones[seccion]
+        contexto = (
+            f"### Objetivo que el estudiante está trabajando: {actual.objetivo}\n"
+            f"{actual.contenido}\n\n"
+            f"Checkpoint pendiente de esta sección (NO reveles ni insinúes su "
+            f"respuesta): {actual.checkpoint.pregunta}"
+        )
+        historial = self._charlas_guia.setdefault(indice, [])
+        respuesta = self._cliente.generar(
+            system=system_charla(self.perfil),
+            prompt=prompt_charla(contexto, historial, mensaje),
+        )
+        historial.append((mensaje, respuesta))
+        del historial[:-MAX_TURNOS_CHARLA]
+        return respuesta
 
     def conversatorio(self, indice: int, mensaje: str) -> str:
         """Turno del conversatorio socrático de dudas tras reprobar (HU-12).

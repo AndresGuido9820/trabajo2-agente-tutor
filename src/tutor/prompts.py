@@ -397,6 +397,37 @@ Responde ÚNICAMENTE este JSON:
 }}"""
 
 
+def prompt_artefacto(objetivo: str, contenido: str, lenguaje: str) -> str:
+    """Prompt de un mini-artefacto interactivo que ilustra la sección (HU-14).
+
+    Inspirado en los Artifacts de Claude: una página HTML autocontenida y
+    pequeña con la que el estudiante manipula el concepto y VE el efecto.
+    """
+    return f"""Crea un MINI-ARTEFACTO interactivo que ilustre visualmente \
+este concepto para el estudiante (curso de {lenguaje}):
+
+Objetivo de la sección: {objetivo}
+Contenido que el estudiante acaba de leer:
+---
+{contenido}
+---
+
+Requisitos ESTRICTOS:
+- UN solo documento HTML autocontenido: CSS en <style> y JS en <script>, \
+sin recursos externos (ni CDN, ni imágenes, ni fetch, ni librerías).
+- Interactivo de verdad: el estudiante manipula algo (botones, sliders, \
+inputs, clic en líneas de código) y ve el efecto INMEDIATO en el estado \
+(p. ej. el valor de las variables, la salida, el paso del bucle).
+- Ilustra EXACTAMENTE el concepto de la sección con los mismos ejemplos o \
+datos del contenido (no inventes otro tema).
+- Tema oscuro: fondo #0f1420, texto #e8ecf3, acento #4ade80, monoespaciada \
+para código. Compacto (cabe en ~500px de alto), en español.
+- Sin alert/confirm/prompt; sin console; manejo defensivo (nada debe romperse).
+
+Responde ÚNICAMENTE el documento HTML (empezando por <!doctype html>), sin \
+explicaciones ni fences de Markdown."""
+
+
 def system_conversatorio(
     perfil: PerfilEstudiante,
     conceptos_fallados: list[str],

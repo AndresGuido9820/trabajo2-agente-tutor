@@ -146,10 +146,12 @@ class TestConversatorio:
         agente, falso = agente_nuevo(
             tmp_path,
             perfil,
-            [guia_respuesta(), "# lección", quiz_respuesta(), "hola, ¿qué pasó?"],
+            [guia_respuesta(), quiz_respuesta(), "hola, ¿qué pasó?"],
         )
         agente.guia_de_unidad(0)
-        quiz = agente.quiz_de_unidad(0)
+        quiz = agente.quiz_de_unidad(0)  # usa la guía como material, sin lección
+        _, prompt_quiz = falso.llamadas[-1]
+        assert "contenido de la sección 0" in prompt_quiz
         agente.calificar_quiz(quiz, [1, 1, 1, 1])  # reprueba: falla "variables"
 
         respuesta = agente.conversatorio(0, "")
