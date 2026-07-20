@@ -26,7 +26,8 @@ y evaluaciones con un LLM y llevando su progreso.
   formadas → reintentos con backoff y mensajes claros al usuario.
 
 ### RF-3. Interfaz de usuario
-- RF-3.1 Interfaz de línea de comandos (CLI).
+- RF-3.1 Interfaz de línea de comandos (CLI) **y** interfaz web simple local
+  (`uv run tutor-web`, FastAPI single-user sobre el mismo `Agente`).
 - RF-3.2 Mostrar resultados de evaluaciones y progreso.
 - RF-3.3 Navegar por las unidades del curso **aunque su contenido aún no se
   haya generado** (se genera bajo demanda al entrar).
@@ -41,9 +42,10 @@ y evaluaciones con un LLM y llevando su progreso.
 
 ## 3. Interfaces explícitas
 
-### 3.1 CLI
+### 3.1 CLI y web
 ```
-uv run tutor                # flujo completo: perfil → curso → navegación
+uv run tutor                # CLI: perfil → curso → navegación
+uv run tutor-web            # web en http://127.0.0.1:8017 (API en plan/HU-11)
 ```
 Menú principal: `[n] entrar a unidad n · [e] evaluación de la unidad ·
 [p] ver progreso · [q] salir`.

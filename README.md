@@ -35,8 +35,11 @@ uv sync
 cp .env.example .env
 # editar .env y poner OPENAI_API_KEY=sk-...
 
-# 3. Ejecutar el tutor
+# 3a. Ejecutar el tutor en la terminal
 uv run tutor
+
+# 3b. …o en el navegador (interfaz web simple)
+uv run tutor-web        # abre http://127.0.0.1:8017
 ```
 
 ## Comandos de desarrollo
