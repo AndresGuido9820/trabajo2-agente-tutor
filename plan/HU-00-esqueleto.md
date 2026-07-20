@@ -14,14 +14,14 @@ construya sobre una base con puertas de calidad automáticas.
 
 ## Tareas
 
-- [ ] `pyproject.toml`: metadatos, deps (`anthropic`, `rich`, `python-dotenv`),
+- [x] `pyproject.toml`: metadatos, deps (`anthropic`, `rich`, `python-dotenv`),
       dev-deps (`pytest`, `ruff`, `mypy`), script `tutor`, config de ruff/mypy.
-- [ ] `.gitignore` (venv, `.env`, `data/`, `__pycache__`, cachés de tools).
-- [ ] `.env.example` con `ANTHROPIC_API_KEY`, `TUTOR_MODEL`, `TUTOR_DATA_DIR`.
-- [ ] Paquete `src/tutor/` con `__init__.py`, `config.py` (carga de env,
+- [x] `.gitignore` (venv, `.env`, `data/`, `__pycache__`, cachés de tools).
+- [x] `.env.example` con `ANTHROPIC_API_KEY`, `TUTOR_MODEL`, `TUTOR_DATA_DIR`.
+- [x] Paquete `src/tutor/` con `__init__.py`, `config.py` (carga de env,
       constantes, `ErrorConfiguracion`) y `__main__.py` mínimo.
-- [ ] Test trivial de `config.py` (falta de API key → `ErrorConfiguracion`).
-- [ ] Verificar las 4 puertas de calidad.
+- [x] Test trivial de `config.py` (falta de API key → `ErrorConfiguracion`).
+- [x] Verificar las 4 puertas de calidad.
 
 ## Pruebas
 
