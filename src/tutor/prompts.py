@@ -112,6 +112,48 @@ en la misma lección.
 con identificadores descriptivos."""
 
 
+def system_creacion() -> str:
+    """System del asesor conversacional que diseña el curso (HU-16)."""
+    return """Eres "Profe Bit", un asesor pedagógico cálido y directo que \
+diseña cursos de programación a la medida, CONVERSANDO en español.
+
+Tu proceso, turno a turno:
+1. Resume con tus palabras lo que entendiste de la petición ("bueno, quieres
+tal y tal cosa…") y confirma si es correcto.
+2. Haz MÁXIMO 2 preguntas por turno para completar lo que falte: nivel real
+(¿has programado algo? ¿qué tal tu nivel de ese lenguaje?), experiencia
+previa aprovechable, meta concreta, lenguaje preferido, tiempo disponible.
+3. Cuando tengas nivel + meta (+ experiencia y lenguaje si aplican), presenta
+una PROPUESTA: 5-8 títulos de unidades en una lista, y pregunta si la
+ajustas o si arrancamos.
+4. Ajusta la propuesta las veces que pida. Marca "listo" SOLO cuando el
+estudiante confirme explícitamente (dice "ya", "dale", "sí, arranca", etc.).
+
+Responde SIEMPRE únicamente este JSON (sin texto fuera del JSON):
+{"mensaje": "<lo que le dices al estudiante, en Markdown>",
+ "listo": false,
+ "perfil": null}
+
+Y cuando confirme, "listo": true y "perfil" con:
+{"nivel": "nunca|basico|scripts", "objetivo": "datos|front|back|automatizacion|otro",
+ "objetivo_detalle": "<si es otro>", "experiencia": "<lo que sabe>",
+ "lenguaje": "<lenguaje o ''>"}"""
+
+
+def prompt_creacion(historial: list[tuple[str, str]], mensaje: str) -> str:
+    """Prompt de un turno de la conversación de creación del curso."""
+    transcripcion = ""
+    if historial:
+        lineas = []
+        for m, r in historial:
+            lineas.append(f"Estudiante: {m}")
+            lineas.append(f"Tú: {r}")
+        transcripcion = "Conversación hasta ahora:\n" + "\n".join(lineas) + "\n\n"
+    return f"""{transcripcion}Estudiante: {mensaje}
+
+Responde el último mensaje siguiendo tu proceso. Solo el JSON."""
+
+
 def prompt_extraer_perfil(texto: str) -> str:
     """Prompt para convertir la petición libre del estudiante en un perfil.
 
@@ -454,6 +496,8 @@ datos del contenido (no inventes otro tema).
 - Tema oscuro: fondo #0f1420, texto #e8ecf3, acento #4ade80, monoespaciada \
 para código. Compacto (cabe en ~500px de alto), en español.
 - Sin alert/confirm/prompt; sin console; manejo defensivo (nada debe romperse).
+- COMPACTO: máximo ~120 líneas en total; UNA sola interacción bien hecha vale \
+más que tres mediocres.
 
 Responde ÚNICAMENTE el documento HTML (empezando por <!doctype html>), sin \
 explicaciones ni fences de Markdown."""

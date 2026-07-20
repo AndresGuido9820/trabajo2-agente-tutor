@@ -59,6 +59,12 @@ class Progreso:
     puntos: int = 0
     racha: int = 0
     ultima_sesion: str = ""  # fecha ISO AAAA-MM-DD de la última sesión
+    completadas: list[int] = field(default_factory=list)  # lecciones terminadas
+
+    def completar(self, unidad: int) -> None:
+        """Marca la lección de la unidad como completada en el chat (HU-16)."""
+        if unidad not in self.completadas:
+            self.completadas.append(unidad)
 
     def sumar_puntos(self, cantidad: int) -> None:
         """Acumula puntos ganados en checkpoints y evaluaciones (HU-12)."""
@@ -118,6 +124,7 @@ def guardar_progreso(progreso: Progreso, ruta: Path) -> None:
         "puntos": progreso.puntos,
         "racha": progreso.racha,
         "ultima_sesion": progreso.ultima_sesion,
+        "completadas": progreso.completadas,
         "vistas": {str(unidad): fecha for unidad, fecha in progreso.vistas.items()},
         "resultados": [
             {
@@ -154,6 +161,7 @@ def _parsear(datos: Any) -> Progreso:
         puntos=int(datos.get("puntos", 0)),
         racha=int(datos.get("racha", 0)),
         ultima_sesion=str(datos.get("ultima_sesion", "")),
+        completadas=[int(u) for u in datos.get("completadas", [])],
     )
 
 

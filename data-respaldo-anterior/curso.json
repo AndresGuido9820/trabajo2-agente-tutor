@@ -1,0 +1,197 @@
+{
+  "version": 1,
+  "lenguaje": "python",
+  "unidades": [
+    {
+      "titulo": "Guardar y calcular como en una celda: valores y variables",
+      "objetivo": "Saber representar datos en variables, ver su estado línea a línea y usar tipos básicos para hacer un cálculo simple (ej.: reproducir una fórmula de Excel en un script). Resultado: un script que guarda dos valores, calcula su suma y muestra el estado intermedio.",
+      "conceptos": [
+        "valor",
+        "variable",
+        "asignación",
+        "tipos básicos (int, float, str)"
+      ]
+    },
+    {
+      "titulo": "Preguntar como un formulario: entrada y salida de datos",
+      "objetivo": "Usar entrada del usuario y salida formateada, convertir tipos y validar datos simples. Reusa variables y tipos de la unidad anterior. Resultado: programa que pide dos números, los convierte y muestra la suma con formato claro.",
+      "conceptos": [
+        "input()",
+        "print()",
+        "conversión de tipos",
+        "f-strings / formato de salida"
+      ]
+    },
+    {
+      "titulo": "Reglas si... entonces: condicionales para decidir",
+      "objetivo": "Aplicar decisiones con if/else para controlar el flujo según valores (ej.: comprobar si un total supera un umbral). Reusa entrada/salida y variables. Resultado: script que valida inputs y devuelve mensajes distintos según condiciones.",
+      "conceptos": [
+        "if / else",
+        "comparaciones (>, <, ==, !=)",
+        "booleanos",
+        "indentación y flujo"
+      ]
+    },
+    {
+      "titulo": "Repetir la fórmula en muchas filas: bucles",
+      "objetivo": "Automatizar tareas repetitivas con for y while para procesar varias filas de datos como si aplicaras una fórmula a una columna. Reusa condicionales y colecciones simples. Resultado: programa que recorre una lista de números y calcula total y promedio.",
+      "conceptos": [
+        "for",
+        "while",
+        "range()",
+        "acumulador / acumulación"
+      ]
+    },
+    {
+      "titulo": "Estructurar filas y columnas: listas y diccionarios",
+      "objetivo": "Guardar y manipular conjuntos de filas (registros) con listas y diccionarios, acceder y filtrar datos como lo harías con tablas en Excel. Reusa bucles y condicionales. Resultado: script que almacena varios registros, filtra según una condición y muestra los resultados.",
+      "conceptos": [
+        "lista",
+        "diccionario",
+        "indexación / claves",
+        "append / acceso y eliminación"
+      ]
+    },
+    {
+      "titulo": "Encapsular fórmulas: funciones y parámetros",
+      "objetivo": "Separar lógica en funciones reutilizables con parámetros y valores de retorno, mejorar claridad y testeabilidad del código. Reusa colecciones y bucles. Resultado: conjunto de funciones (ej.: calcular suma, promedio, filtrar registros) y un programa que las orquesta.",
+      "conceptos": [
+        "def / función",
+        "parámetros y argumentos",
+        "return",
+        "ámbito (scope)"
+      ]
+    },
+    {
+      "titulo": "Tu primera API que responde cálculos: servidor local básico",
+      "objetivo": "Integrar todo para exponer lógica como un endpoint HTTP: recibir datos (query o JSON), ejecutar funciones y devolver JSON. Reusa funciones, validaciones y colecciones. Resultado: servidor Flask pequeño que ofrece una ruta /calcula que suma o promedia datos y responde JSON, testeable con curl.",
+      "conceptos": [
+        "Flask básico (ruta/endpoint)",
+        "request / response",
+        "JSON input/output",
+        "ejecutar servidor local"
+      ]
+    }
+  ],
+  "lecciones": {},
+  "guiones": {
+    "0": {
+      "objetivos": [
+        "Guardar valores en variables y entender qué representa cada variable (como una celda en Excel).",
+        "Ver el estado de las variables línea a línea mientras el programa se ejecuta (máquina nocional).",
+        "Usar tipos básicos (int, float, str) para reproducir una suma simple equivalente a una fórmula de Excel."
+      ],
+      "pasos": [
+        {
+          "tipo": "gancho",
+          "instruccion": "Conectar con la meta: explicar que aprender a guardar valores en variables es equivalente a poner datos en celdas de Excel para luego usar una fórmula; decir que al final escribirán un script que guarda dos valores, calcula su suma y muestra estados intermedios."
+        },
+        {
+          "tipo": "prediccion",
+          "instruccion": "Mostrar este código corto y pedir que prediga qué imprimirá y cuál será el estado de las variables después de cada línea (sin explicar aún):\n\nvalor1 = 5\nvalor2 = 3\nsuma = valor1 + valor2\nprint(suma)\n\nPedir al estudiante que indique (en su cabeza o en voz alta) el contenido de valor1, valor2 y suma antes y después de la línea de la suma."
+        },
+        {
+          "tipo": "explicacion",
+          "instruccion": "Explicar 'valor' y 'variable' con la analogía: un valor es lo que está en una celda; una variable es la celda. Introducir 'asignación' como acción de poner un valor en la variable y mostrar el worked example con subgoal labels y estado máquina nocional línea a línea:\n\n# 1. guardar primer número\nvalor1 = 5\n# Estado: valor1 -> 5\n\n# 2. guardar segundo número\nvalor2 = 3\n# Estado: valor1 -> 5, valor2 -> 3\n\n# 3. calcular la suma\nsuma = valor1 + valor2\n# Estado: valor1 -> 5, valor2 -> 3, suma -> 8\n\n# 4. mostrar resultado\nprint(suma)\n# Salida: 8\n\nPedir que confirme si la analogía Excel ayuda y recordar que los comentarios nombran el propósito del bloque."
+        },
+        {
+          "tipo": "explicacion",
+          "instruccion": "Presentar tipos básicos uno a la vez con analogía a celdas: int (número sin decimales), float (número con decimales), str (texto/lo que esté entre comillas). Mostrar tres micro-ejemplos y el estado después de cada asignación:\n\n# 1. entero\nentero = 2\n# Estado: entero -> 2 (int)\n\n# 2. decimal\ndecimal = 2.5\n# Estado: decimal -> 2.5 (float)\n\n# 3. texto\ntexto = '2'\n# Estado: texto -> '2' (str)\n\nExplicar que el tipo afecta lo que el computador puede hacer con ese valor (p. ej. sumar int+int ok)."
+        },
+        {
+          "tipo": "error_tipico",
+          "instruccion": "Desmontar la misconception común: 'poner un número entre comillas sigue siendo un número'. Mostrar ejemplo breve que provoque error si se intenta sumar str + int y explicar el error (TypeError) y por qué pasa; proponer la solución: convertir con int() o quitar comillas."
+        },
+        {
+          "tipo": "modificacion",
+          "instruccion": "Pedir que modifique 1-2 líneas del ejemplo original: cambiar valor1 = 5 a valor1 = 2.5 (ver cómo cambia el tipo y el resultado), y opcionalmente cambiar valor2 = 3 a valor2 = '3' para observar el error y luego arreglarlo quitando las comillas o usando int(valor2)."
+        },
+        {
+          "tipo": "reto",
+          "instruccion": "Mini-ejercicio: crear un script que guarde dos valores en variables (usar nombres descriptivos), calcule su suma y muestre en pantalla los estados intermedios (después de cada asignación) y el resultado final. Pista: usar print(...) después de cada asignación y asegurarse de que ambos valores sean numéricos (int o float)."
+        },
+        {
+          "tipo": "recap",
+          "instruccion": "Cerrar con 3 puntos esenciales: 1) variable = celda que guarda un valor; 2) tipos importan: int/float son números, str es texto; 3) mostrar el estado línea a línea ayuda a entender el flujo. Celebrar el quick win: ahora puede escribir un script que guarda dos valores, suma y muestra estados intermedios."
+        }
+      ]
+    }
+  },
+  "guias": {
+    "0": {
+      "secciones": [
+        {
+          "objetivo": "Identificar valores y distinguir int, float y str",
+          "contenido": "Para tu meta de back-end necesitas saber qué tipo de dato guarda cada celda de Excel. En Excel tú escribes 42, 3.5 o \"venta\" en una celda. En Python eso se llama valor: un dato concreto. Los tipos básicos que veremos ahora son:\n\n- int: números enteros (ej.: 42). \n- float: números con decimales (ej.: 3.5).\n- str: texto, siempre entre comillas (ej.: \"venta\").\n\nEn Python la función print muestra valores en pantalla. Definición: \"print\" envía texto o números a la salida (como verías el contenido de una celda). Worked example (comentarios = propósito):\n\n```python\n# 1. mostrar un entero (ver el valor)\nprint(42)\n# 2. mostrar un decimal (ver el valor)\nprint(3.5)\n# 3. mostrar un texto (ver el valor)\nprint(\"venta\")\n```\n\nTabla de estado línea a línea (no hay variables aún, solo valores que se evalúan):\n\n- Línea 1: se evalúa 42 y se muestra -> salida: 42\n- Línea 2: se evalúa 3.5 y se muestra -> salida: 3.5\n- Línea 3: se evalúa \"venta\" y se muestra -> salida: venta\n\nAnalogía Excel: cada print es como mirar una celda; el valor puede ser número entero, decimal o texto. Quick win: distingue en tu cabeza cuando debes poner comillas para texto (str) y cuándo no (int/float).",
+          "checkpoint": {
+            "pregunta": "¿Qué imprime este código?\n\nprint(\"salario\")\nprint(1000)\nprint(3.5)",
+            "opciones": [
+              "salario\n1000\n3.5",
+              "salario\n\"1000\"\n\"3.5\"",
+              "Error: no puedes mezclar strings y números",
+              "salario10003.5"
+            ],
+            "correcta": 0,
+            "pista": "Fíjate si cada valor está entre comillas o no. ¿Qué hace print con lo que recibe?",
+            "explicacion": "La opción correcta muestra tres líneas: 'salario', 1000 y 3.5. Los literales entre comillas son texto y se imprimen tal cual; los números se imprimen como números. El distractor más tentador (mezclar strings y números causa error) confunde la visualización con una operación aritmética: imprimir valores distintos no produce error.",
+            "concepto": "tipos básicos (int, float, str)"
+          }
+        },
+        {
+          "objetivo": "Guardar un valor en una variable mediante asignación",
+          "contenido": "Para reproducir una fórmula de Excel en un script necesitas guardar números en nombres legibles. En Excel: pones 1200 en A1; en Python creas una variable. Definición: variable = nombre que apunta a un valor. Asignación es la acción de guardar un valor en ese nombre usando el símbolo =. Importante: = no es una ecuación matemática; es una orden: calcula la derecha y guarda el resultado en la izquierda.\n\nWorked example:\n\n```python\n# 1. guardar salario (asignar valor a nombre)\nsalario_base = 1200\n# 2. mostrar salario (ver estado guardado)\nprint(salario_base)\n```\n\nTabla de estado línea a línea:\n\n- Línea 1 (salario_base = 1200): salario_base -> 1200\n- Línea 2 (print): muestra 1200; el estado sigue siendo salario_base = 1200\n\nAnalogía Excel: la asignación es como escribir 1200 en la celda A1. La celda retiene solo el valor actual, no un historial ni un vínculo eterno con otros nombres. Quick win: puedes crear nombres claros (salario_base) y ver su valor con print.",
+          "checkpoint": {
+            "pregunta": "¿Qué imprime este código?\n\ncontador = 5\ncontador = contador + 1\nprint(contador)",
+            "opciones": [
+              "6",
+              "5",
+              "Error: la expresión 'contador = contador + 1' es imposible",
+              "contador + 1"
+            ],
+            "correcta": 0,
+            "pista": "¿Qué hace Python primero: evalúa la derecha o asigna la izquierda? Piensa paso a paso.",
+            "explicacion": "La opción correcta es 6. Python evalúa la expresión de la derecha (contador + 1 → 5 + 1 = 6) y luego guarda ese resultado en la variable contador. El distractor más tentador (es imposible) confunde la asignación con una ecuación matemática que debe cumplirse; en realidad es una orden de actualizar el valor.",
+            "concepto": "asignación"
+          }
+        },
+        {
+          "objetivo": "Seguir línea a línea el estado de variables durante la ejecución",
+          "contenido": "Para depurar un script y entender resultados como en una hoja de cálculo, necesitas leer el programa línea a línea y saber cómo cambia cada variable. Máquina nocional: el computador ejecuta cada línea en orden; después de cada línea puedes anotar el nuevo estado (nombre → valor).\n\nWorked example (precio en dos celdas y suma):\n\n```python\n# 1. guardar precio 1\nprecio1 = 19.99\n# 2. guardar precio 2\nprecio2 = 5\n# 3. calcular total (suma)\ntotal = precio1 + precio2\n# 4. mostrar total\nprint(total)\n```\n\nTabla de estado línea a línea:\n\n- Línea 1: precio1 -> 19.99\n- Línea 2: precio2 -> 5\n- Línea 3: total -> 19.99 + 5 => 24.99\n- Línea 4: imprime 24.99 ; estados se mantienen\n\nNota sobre tipos: precio1 es float, precio2 es int; sumar int + float produce un float (en Python se promueve a decimal). Analogía Excel: es como tener 19.99 en A1, 5 en B1 y en C1 pones =A1+B1; el resultado es 24.99. Quick win: practica trazando cada línea y anotando las parejas nombre→valor.",
+          "checkpoint": {
+            "pregunta": "¿Qué imprime este fragmento?\n\nprecio1 = 19.99\nprecio2 = 5\ntotal = precio1 + precio2\nprint(total)",
+            "opciones": [
+              "24.99",
+              "24",
+              "Error: no se pueden sumar int y float",
+              "precio1precio2"
+            ],
+            "correcta": 0,
+            "pista": "¿De qué tipo es precio1 y de qué tipo es precio2? ¿Cómo suma Python un entero con un decimal?",
+            "explicacion": "La respuesta correcta es 24.99. Python suma 19.99 (float) y 5 (int) y el resultado es un float 24.99. El distractor que da 24 asume una conversión a entero o truncado; esa suposición es errónea aquí. Otro distractor (error por mezclar tipos) confunde la operación de suma con una incompatibilidad que no existe en Python.",
+            "concepto": "variable"
+          }
+        },
+        {
+          "objetivo": "Escribir un script que guarde dos valores, calcule su suma y muestre el estado intermedio",
+          "contenido": "Este es el objetivo práctico que te acerca a reproducir una fórmula de Excel en un servidor: guardar entradas, calcular una fórmula y mostrar valores intermedios para comprobar la lógica.\n\nWorked example (equivalente a =A1+B1 en Excel):\n\n```python\n# 1. guardar valores de entrada\nsalario_base = 1200        # 1. entrada: salario base (int)\nbono = 150.5               # 2. entrada: bono (float)\n# 2. calcular la suma total\nsalario_total = salario_base + bono  # 3. operación: sumar\n# 3. mostrar estados intermedios y resultado\nprint(\"salario_base:\", salario_base)\nprint(\"bono:\", bono)\nprint(\"salario_total:\", salario_total)\n```\n\nTabla de estado línea a línea:\n\n- Línea 1: salario_base -> 1200\n- Línea 2: bono -> 150.5\n- Línea 3: salario_total -> 1200 + 150.5 => 1350.5\n- Líneas 4-6: imprimen los tres valores; estados no cambian\n\nAnalogía Excel: esto es como tener A1=1200, B1=150.5 y C1= A1+B1. Quick win: guarda este script y ejecútalo; tendrás visible cada entrada y el resultado final.",
+          "checkpoint": {
+            "pregunta": "¿Qué imprime este código?\n\na = 100\nb = a\na = 200\nprint(b)",
+            "opciones": [
+              "100",
+              "200",
+              "Error: las variables quedan vinculadas",
+              "a"
+            ],
+            "correcta": 0,
+            "pista": "¿Qué valor tenía b justo después de la línea 'b = a'? ¿Qué hace cambiar después la línea 'a = 200' con lo que ya está guardado en b?",
+            "explicacion": "La opción correcta es 100. En 'b = a' se copia el valor actual de a (100) en b; después cambiar a a = 200 no modifica el valor ya guardado en b. El distractor más tentador (200) asume que la asignación crea un vínculo vivo entre nombres; en realidad es una copia del valor en tiempo de asignación.",
+            "concepto": "valor"
+          }
+        }
+      ]
+    }
+  },
+  "artefactos": {
+    "0-0": "<!doctype html>\n<html lang=\"es\">\n<head>\n<meta charset=\"utf-8\" />\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n<title>Tipos: int, float, str — Mini-artefacto</title>\n<style>\n  :root{\n    --bg:#0f1420;\n    --fg:#e8ecf3;\n    --accent:#4ade80;\n    --muted:#98a0b3;\n    --code-bg:#0b0f17;\n  }\n  *{box-sizing:border-box}\n  html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:Inter, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial;}\n  .wrap{max-width:900px;margin:18px auto;padding:18px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);box-shadow:0 4px 18px rgba(0,0,0,0.6);}\n  header{font-size:14px;margin-bottom:12px;color:var(--muted);}\n  header b{color:var(--fg);}\n  .mini{display:flex;gap:14px;align-items:flex-start;height:480px;}\n  .left{width:52%;display:flex;flex-direction:column;gap:10px;}\n  .codebox{background:var(--code-bg);padding:12px;border-radius:8px;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, \"Roboto Mono\", \"Courier New\", monospace; font-size:13px;color:var(--fg);line-height:1.45;box-shadow:inset 0 -1px 0 rgba(255,255,255,0.02);}\n  .code-line{display:flex;align-items:center;gap:8px;padding:6px;border-radius:6px;}\n  .code-line:hover{background:rgba(74,222,128,0.05);cursor:pointer}\n  .ln{width:26px;text-align:right;color:var(--muted);user-select:none;font-size:12px}\n  .code-text{white-space:pre;color:var(--fg);flex:1}\n  .run-btn{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--accent);padding:6px 8px;border-radius:6px;font-size:12px}\n  .controls{display:flex;gap:8px;margin-top:6px}\n  .btn{background:var(--accent);color:#042012;border:none;padding:8px 10px;border-radius:8px;font-weight:600;cursor:pointer}\n  .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--fg)}\n  .right{width:48%;display:flex;flex-direction:column;gap:10px;}\n  .panel{background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);font-size:13px}\n  .panel h3{margin:0 0 6px 0;font-size:13px;color:var(--accent)}\n  .output{background:#071018;padding:10px;border-radius:6px;height:120px;overflow:auto;font-family:ui-monospace,monospace;color:var(--fg);font-size:13px;border:1px solid rgba(255,255,255,0.02)}\n  .state-table{font-family:ui-monospace,monospace;color:var(--fg);font-size:13px;border-collapse:collapse;width:100%}\n  .state-table td{padding:6px;border-top:1px dashed rgba(255,255,255,0.03);vertical-align:top}\n  .muted{color:var(--muted);font-size:12px}\n  .step{background:rgba(255,255,255,0.02);padding:6px;border-radius:6px;margin-top:6px;font-size:13px}\n  .small{font-size:12px;color:var(--muted)}\n  footer{margin-top:10px;font-size:13px;color:var(--muted);display:flex;justify-content:space-between;align-items:center}\n  .quickwin{color:var(--accent);font-weight:700}\n  /* compact scrollbars */\n  .output::-webkit-scrollbar{height:8px;width:8px}\n  .output::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:8px}\n  @media (max-width:800px){\n    .mini{flex-direction:column;height:auto}\n    .left,.right{width:100%}\n    .output{height:100px}\n  }\n</style>\n</head>\n<body>\n<div class=\"wrap\" role=\"main\" aria-label=\"Mini artefacto tipos\">\n  <header>\n    Conexión con tu meta back-end: aquí aprendes a reconocer qué tipo guarda una \"celda\" (como en Excel). Saber si algo es int, float o str es vital al recibir datos en una API.\n  </header>\n\n  <div class=\"mini\">\n    <div class=\"left\">\n      <div class=\"codebox\" aria-hidden=\"false\">\n        <!-- Worked example con comentarios de propósito -->\n        <div class=\"code-line\" data-line=\"1\" tabindex=\"0\" title=\"Haz clic para ejecutar esta línea\">\n          <div class=\"ln\">1</div>\n          <div class=\"code-text\"># 1. mostrar un entero (ver el valor)\nprint(42)</div>\n          <button class=\"run-btn\" data-run=\"1\">Ejecutar</button>\n        </div>\n\n        <div class=\"code-line\" data-line=\"2\" tabindex=\"0\" title=\"Haz clic para ejecutar esta línea\">\n          <div class=\"ln\">2</div>\n          <div class=\"code-text\"># 2. mostrar un decimal (ver el valor)\nprint(3.5)</div>\n          <button class=\"run-btn\" data-run=\"2\">Ejecutar</button>\n        </div>\n\n        <div class=\"code-line\" data-line=\"3\" tabindex=\"0\" title=\"Haz clic para ejecutar esta línea\">\n          <div class=\"ln\">3</div>\n          <div class=\"code-text\"># 3. mostrar un texto (ver el valor)\nprint(\"venta\")</div>\n          <button class=\"run-btn\" data-run=\"3\">Ejecutar</button>\n        </div>\n      </div>\n\n      <div class=\"controls\">\n        <button class=\"btn\" id=\"run-all\">Ejecutar todo</button>\n        <button class=\"btn secondary\" id=\"reset\">Reset</button>\n        <div style=\"margin-left:auto\" class=\"small muted\">Tema: int · float · str</div>\n      </div>\n\n      <div class=\"panel\" style=\"margin-top:6px\">\n        <h3>Salida (lo que mostraría print)</h3>\n        <div id=\"output\" class=\"output\" aria-live=\"polite\"></div>\n      </div>\n    </div>\n\n    <div class=\"right\">\n      <div class=\"panel\">\n        <h3>Tabla de estado (línea seleccionada)</h3>\n        <table class=\"state-table\" id=\"state\">\n          <tr>\n            <td class=\"muted\">Línea</td><td id=\"st-line\">—</td>\n          </tr>\n          <tr>\n            <td class=\"muted\">Expresión</td><td id=\"st-expr\">—</td>\n          </tr>\n          <tr>\n            <td class=\"muted\">Valor evaluado</td><td id=\"st-value\">—</td>\n          </tr>\n          <tr>\n            <td class=\"muted\">Tipo (python)</td><td id=\"st-type\">—</td>\n          </tr>\n          <tr>\n            <td class=\"muted\">Estado de variables</td><td id=\"st-vars\">sin variables (no se asignó ninguna)</td>\n          </tr>\n        </table>\n\n        <div class=\"step\" id=\"machine-steps\">\n          <div class=\"muted\">Máquina nocional</div>\n          <div id=\"steps-list\">Haz clic en una línea para ver los pasos que ejecuta la computadora.</div>\n        </div>\n      </div>\n\n      <div class=\"panel\">\n        <h3>Consejo rápido</h3>\n        <div class=\"small\">\n          En Python: si el valor está entre comillas es texto (str). Si no tiene comillas y tiene punto, es float. Si no tiene comillas ni punto, es int.\n        </div>\n      </div>\n    </div>\n  </div>\n\n  <footer>\n    <div class=\"muted\">Analógico Excel: una celda puede contener 42, 3.5 o \"venta\".</div>\n    <div class=\"quickwin\">Quick win: recuerda: texto ➜ comillas; números ➜ sin comillas.</div>\n  </footer>\n</div>\n\n<script>\n(function(){\n  // Valores exactos del contenido (mantener tal cual)\n  const lines = [\n    {line:1, expr: '42'},\n    {line:2, expr: '3.5'},\n    {line:3, expr: '\"venta\"'}\n  ];\n\n  // elementos\n  const outputEl = document.getElementById('output');\n  const stLine = document.getElementById('st-line');\n  const stExpr = document.getElementById('st-expr');\n  const stValue = document.getElementById('st-value');\n  const stType = document.getElementById('st-type');\n  const stVars = document.getElementById('st-vars');\n  const stepsList = document.getElementById('steps-list');\n  const runAllBtn = document.getElementById('run-all');\n  const resetBtn = document.getElementById('reset');\n\n  // Estado local (salida acumulada)\n  let salida = [];\n\n  // Inferir tipo como lo haría la lección: str si entre comillas; float si tiene punto; int si dígitos\n  function inferirTipo(expr){\n    const trimmed = expr.trim();\n    if ((trimmed.startsWith('\"') && trimmed.endsWith('\"')) || (trimmed.startsWith(\"'\") && trimmed.endsWith(\"'\"))) {\n      return 'str';\n    }\n    // permitir signos +/-\n    if (/^[+-]?\\d+(\\.\\d+)?$/.test(trimmed)) {\n      return trimmed.includes('.') ? 'float' : 'int';\n    }\n    return 'desconocido';\n  }\n\n  // Obtener valor \"impreso\" como Python: strings sin comillas, números tal cual\n  function valorImpreso(expr, tipo){\n    const t = expr.trim();\n    if (tipo === 'str'){\n      // quitar comillas externas (seguras porque detectamos antes)\n      return t.slice(1,-1);\n    }\n    return t;\n  }\n\n  // Máquina nocional: lista de pasos para mostrar\n  function pasosMaquina(lineObj, tipo, valor){\n    return [\n      `1) Leer la línea ${lineObj.line}: ${lineObj.expr}`,\n      `2) Evaluar la expresión -> valor evaluado = ${valor}`,\n      `3) Determinar tipo -> ${tipo}`,\n      `4) Enviar el valor a la salida (print) -> aparece en pantalla`\n    ];\n  }\n\n  // Ejecutar una línea: actualizar salida y panel de estado\n  function ejecutarLinea(n, opts={focus:true}){\n    const li = lines.find(l=>l.line===n);\n    if(!li) return;\n    let tipo = 'desconocido', valor = '';\n    try {\n      tipo = inferirTipo(li.expr);\n      valor = valorImpreso(li.expr, tipo);\n    } catch(e){\n      tipo = 'desconocido';\n      valor = '<error>';\n    }\n\n    // Actualizar salida acumulada\n    salida.push({line:li.line, printed: valor});\n    renderSalida();\n\n    // Actualizar tabla de estado (selección)\n    stLine.textContent = li.line;\n    stExpr.textContent = li.expr;\n    stValue.textContent = valor;\n    stType.textContent = tipo;\n    stVars.textContent = 'sin variables (no hay asignaciones en este ejemplo)';\n\n    // Mostrar pasos\n    const pasos = pasosMaquina(li, tipo, valor);\n    stepsList.innerHTML = pasos.map(p=>`<div style=\"margin-top:6px\">${escapeHtml(p)}</div>`).join('');\n    if(opts.focus){\n      // resaltar visualmente la salida más reciente\n      const lastNode = outputEl.lastElementChild;\n      if(lastNode){\n        lastNode.style.outline = `2px solid rgba(74,222,128,0.08)`;\n        setTimeout(()=>{ if(lastNode) lastNode.style.outline = ''; }, 700);\n      }\n    }\n  }\n\n  function renderSalida(){\n    outputEl.innerHTML = '';\n    salida.forEach(item=>{\n      const d = document.createElement('div');\n      d.textContent = item.printed;\n      d.style.padding = '2px 0';\n      d.style.fontFamily = 'ui-monospace, monospace';\n      outputEl.appendChild(d);\n    });\n    // mantener scroll abajo\n    outputEl.scrollTop = outputEl.scrollHeight;\n  }\n\n  // Util: escapar HTML\n  function escapeHtml(s){ return String(s).replace(/[&<>\"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[m]); }); }\n\n  // Eventos: botones por línea\n  document.querySelectorAll('.run-btn').forEach(btn=>{\n    btn.addEventListener('click', (e)=>{\n      const n = Number(btn.getAttribute('data-run'));\n      ejecutarLinea(n);\n    });\n  });\n\n  // También permitir hacer clic en la línea entera\n  document.querySelectorAll('.code-line').forEach(el=>{\n    el.addEventListener('click', (e)=>{\n      const n = Number(el.getAttribute('data-line'));\n      ejecutarLinea(n);\n    });\n    el.addEventListener('keydown', (e)=>{\n      if(e.key === 'Enter' || e.key === ' '){\n        e.preventDefault();\n        const n = Number(el.getAttribute('data-line'));\n        ejecutarLinea(n);\n      }\n    });\n  });\n\n  // Ejecutar todo secuencialmente para mostrar paso a paso\n  runAllBtn.addEventListener('click', ()=>{\n    // defensivo: evitar doble ejecución concurrente\n    runAllBtn.disabled = true;\n    resetBtn.disabled = true;\n    const seq = [...lines];\n    let i = 0;\n    function next(){\n      if(i >= seq.length){\n        runAllBtn.disabled = false;\n        resetBtn.disabled = false;\n        return;\n      }\n      ejecutarLinea(seq[i].line, {focus:true});\n      i++;\n      setTimeout(next, 500);\n    }\n    next();\n  });\n\n  // Reset\n  resetBtn.addEventListener('click', ()=>{\n    salida = [];\n    renderSalida();\n    stLine.textContent = '—';\n    stExpr.textContent = '—';\n    stValue.textContent = '—';\n    stType.textContent = '—';\n    stVars.textContent = 'sin variables (no se asignó ninguna)';\n    stepsList.textContent = 'Haz clic en una línea para ver los pasos que ejecuta la computadora.';\n  });\n\n  // Inicializar con panel vacío (defensivo)\n  resetBtn.click();\n\n  // Evitar errores inesperados\n  window.addEventListener('error', function(e){\n    // mostrar en el panel de pasos en vez de romper la página\n    stepsList.innerHTML = `<div style=\"color:#ffb4b4\">Error interno: ${escapeHtml(String(e.message || ''))}</div>`;\n    // prevenir el comportamiento por defecto\n    e.preventDefault();\n  });\n})();\n</script>\n</body>\n</html>"
+  }
+}

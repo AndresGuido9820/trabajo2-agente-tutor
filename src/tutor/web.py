@@ -20,12 +20,13 @@ from pydantic import BaseModel
 
 from tutor.agente import ARCHIVO_PERFIL, Agente, perfil_o_none
 from tutor.config import NOTA_APROBATORIA, Configuracion, cargar_configuracion
+from tutor.curso import plan_markdown
 from tutor.errores import ErrorBloqueada, ErrorConfiguracion, ErrorLLM
 from tutor.evaluacion import Quiz
 from tutor.llm import ClienteLLM, ClienteOpenAI, pedir_json
 from tutor.models import Nivel, Objetivo, PerfilEstudiante
 from tutor.perfil import guardar_perfil, validar_perfil_extraido
-from tutor.prompts import prompt_extraer_perfil
+from tutor.prompts import prompt_creacion, prompt_extraer_perfil, system_creacion
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +90,13 @@ class CuerpoPromptCurso(BaseModel):
     prompt: str
 
 
+class CuerpoEstudio(BaseModel):
+    """Body de un turno del estudio en chat (HU-16)."""
+
+    mensaje: str | None = None
+    unidad: int | None = None
+
+
 class _Estado:
     """Estado del servidor: agente (si hay perfil) y quizzes en curso."""
 
@@ -100,6 +108,8 @@ class _Estado:
             Agente(cliente, configuracion.dir_datos, perfil) if perfil else None
         )
         self.quizzes: dict[int, Quiz] = {}
+        # Conversación de creación del curso (HU-16), previa al agente.
+        self.creacion: list[tuple[str, str]] = []
 
 
 def crear_app(
@@ -147,16 +157,100 @@ def crear_app(
             "puntos": agente.progreso.puntos,
             "racha": agente.progreso.racha,
             "nota_aprobatoria": NOTA_APROBATORIA,
+            "unidad_actual": agente.unidad_actual,
             "unidades": [
                 {
                     "indice": fila.indice,
                     "titulo": fila.titulo,
+                    "objetivo": curso.temario.unidades[fila.indice].objetivo,
                     "estado": fila.estado.value,
                     "mejor_nota": fila.mejor_nota,
+                    "completada": fila.indice in agente.progreso.completadas,
                 }
                 for fila in agente.filas_unidades()
             ],
         }
+
+    def _validar_creacion(datos: Any) -> dict[str, Any]:
+        """Valida el JSON del asesor de creación (mensaje/listo/perfil)."""
+        if not isinstance(datos, dict) or "mensaje" not in datos:
+            raise ValueError("falta el campo 'mensaje'")
+        listo = bool(datos.get("listo"))
+        if listo and not isinstance(datos.get("perfil"), dict):
+            raise ValueError("con listo=true debe venir el perfil")
+        return {
+            "mensaje": str(datos["mensaje"]),
+            "listo": listo,
+            "perfil": datos.get("perfil"),
+        }
+
+    @app.post("/api/creacion")
+    def api_creacion(cuerpo: CuerpoMensaje) -> dict[str, Any]:
+        """Turno de la conversación que diseña el curso (HU-16).
+
+        Cuando el asesor marca listo (el estudiante confirmó), crea el
+        perfil, genera el temario y guarda el plan en ``curso.md``.
+        """
+        if estado.agente is not None:
+            raise HTTPException(409, "Ya tienes un curso creado.")
+        mensaje = cuerpo.mensaje.strip()
+        if not mensaje:
+            raise HTTPException(400, "Cuéntame qué quieres aprender.")
+
+        turno = _con_llm(
+            lambda: pedir_json(
+                estado.cliente,
+                system=system_creacion(),
+                prompt=prompt_creacion(estado.creacion, mensaje),
+                validar=_validar_creacion,
+            )
+        )
+        estado.creacion.append((mensaje, turno["mensaje"]))
+        if not turno["listo"]:
+            return {"mensaje": turno["mensaje"], "listo": False}
+
+        descripcion = estado.creacion[0][0]
+        try:
+            perfil = validar_perfil_extraido(turno["perfil"], descripcion)
+        except (ValueError, KeyError) as error:
+            raise HTTPException(502, f"Perfil extraído inválido: {error}") from error
+        guardar_perfil(perfil, estado.configuracion.dir_datos / ARCHIVO_PERFIL)
+        estado.agente = Agente(estado.cliente, estado.configuracion.dir_datos, perfil)
+        agente = estado.agente
+        temario = _con_llm(lambda: agente.curso).temario
+        (estado.configuracion.dir_datos / "curso.md").write_text(
+            plan_markdown(temario, descripcion), "utf-8"
+        )
+        return {"mensaje": turno["mensaje"], "listo": True}
+
+    @app.get("/api/plan")
+    def api_plan() -> dict[str, Any]:
+        """El plan del curso (curso.md) para la mini-ventana del panel."""
+        _agente()
+        ruta = estado.configuracion.dir_datos / "curso.md"
+        return {"md": ruta.read_text("utf-8") if ruta.exists() else ""}
+
+    @app.post("/api/estudio")
+    def api_estudio(cuerpo: CuerpoEstudio) -> dict[str, Any]:
+        """Turno del estudio en chat continuo; con `unidad` (re)inicia esa lección."""
+        agente = _agente()
+        return dict(
+            _con_llm(lambda: agente.turno_estudio(cuerpo.mensaje, cuerpo.unidad))
+        )
+
+    @app.post("/api/artefacto")
+    def api_artefacto_unidad(cuerpo: CuerpoEstudio) -> dict[str, Any]:
+        """Mini-artefacto interactivo de la unidad actual del chat."""
+        agente = _agente()
+        unidad = cuerpo.unidad if cuerpo.unidad is not None else agente.unidad_actual
+
+        def operacion() -> str:
+            try:
+                return agente.artefacto_de_unidad(unidad)
+            except ValueError as error:
+                raise HTTPException(400, str(error)) from error
+
+        return {"html": _con_llm(operacion)}
 
     @app.post("/api/curso")
     def api_crear_curso(cuerpo: CuerpoPromptCurso) -> dict[str, Any]:

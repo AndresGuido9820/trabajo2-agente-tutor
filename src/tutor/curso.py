@@ -131,6 +131,23 @@ def validar_temario(datos: Any) -> Temario:
     return Temario(lenguaje=lenguaje, unidades=unidades)
 
 
+def plan_markdown(temario: Temario, descripcion: str = "") -> str:
+    """El plan del curso como Markdown (`curso.md`, mini-ventana en HU-16)."""
+    lineas = [f"# Tu curso de {temario.lenguaje}", ""]
+    if descripcion:
+        lineas += [f"> Pedido: “{descripcion}”", ""]
+    for numero, unidad in enumerate(temario.unidades, start=1):
+        lineas += [
+            f"## {numero}. {unidad.titulo}",
+            "",
+            f"**Objetivo:** {unidad.objetivo}",
+            "",
+            "Conceptos: " + ", ".join(unidad.conceptos),
+            "",
+        ]
+    return "\n".join(lineas)
+
+
 def generar_temario(cliente: ClienteLLM, perfil: PerfilEstudiante) -> Temario:
     """Genera el temario del curso adaptado al perfil.
 

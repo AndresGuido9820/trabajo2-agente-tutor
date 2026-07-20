@@ -17,8 +17,11 @@ from tutor.errores import ErrorConfiguracion
 MODELO_POR_DEFECTO = "gpt-5-mini"
 DIR_DATOS_POR_DEFECTO = "./data"
 
-# Límites de interacción con el LLM (ver plan/HU-02-cliente-llm.md)
-TIMEOUT_API_SEGUNDOS = 60.0
+# Límites de interacción con el LLM (ver plan/HU-02-cliente-llm.md).
+# Los modelos razonadores pueden tardar 1-3 min en generaciones largas
+# (artefactos, guías): un timeout corto convierte llamadas exitosas en
+# reintentos inútiles (ver HALLAZGOS 2026-07-20 HU-16).
+TIMEOUT_API_SEGUNDOS = 180.0
 MAX_REINTENTOS_API = 3
 MAX_REINTENTOS_PARSEO = 2
 # Los modelos gpt-5 gastan tokens de razonamiento DENTRO de este límite;
