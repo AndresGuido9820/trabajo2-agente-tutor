@@ -218,6 +218,41 @@ sin tumbar la sesión.
 
 ---
 
+## 2026-07-20 — HU-13: adopción de patrones de los mejores OSS
+
+**Contexto:** encuesta de referentes open source (informe con fuentes en
+`docs/INVESTIGACION-OSS.md`) y adopción de los 5 patrones de mejor ratio
+impacto/esfuerzo.
+
+**Hallazgos:**
+
+1. **Pyodide (futurecoder)**: ejecutar Python en el navegador vía WASM
+   elimina el backend de ejecución — la pieza más cara de cualquier
+   plataforma de código — a cambio de ~8 MB de descarga la primera vez.
+   Lazy-load al primer clic lo hace gratis para quien no lo usa.
+2. **Gamificación con evidencia y sin dark patterns**: adoptamos racha
+   diaria y XP (los A/B de Duolingo les atribuyen +30 % de finalización) y
+   descartamos explícitamente vidas y ligas (frustración documentada).
+   Nuestro 10/5/0 por intento resultó ser el mismo patrón `autoPoints` de
+   PrairieLearn — validación independiente del diseño de HU-12.
+3. **Variantes al reintentar (PrairieLearn)**: bastó pasar los enunciados
+   previos al prompt del quiz; sin esto, aprobar el reintento medía memoria
+   de la letra correcta, no dominio.
+4. **Theory-of-mind (tutor-gpt/Bloom)**: el conversatorio ahora recibe el
+   historial de intentos y debe inferir el malentendido antes de preguntar
+   (thought → response). Cambio de ~10 líneas con impacto directo en la
+   calidad de la tutoría.
+5. Operativo: al relanzar el servidor tras un merge hay que verificar que
+   el proceso viejo soltó el puerto; un bind fallido silenciado deja código
+   viejo sirviendo (se manifestó como 404 en endpoints nuevos).
+
+**Decisión/acción:** lo no adoptado (checkpoints de código con tests en
+Pyodide, grafo de conceptos de Exercism, repaso espaciado FSRS/HLR, modelo
+BKT del estudiante, Parsons adaptativos) queda como trabajo futuro citado
+en el reporte.
+
+---
+
 <!-- Plantilla:
 
 ## AAAA-MM-DD — Título corto

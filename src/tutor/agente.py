@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
+from datetime import date
 from enum import Enum
 from pathlib import Path
 
@@ -115,6 +116,11 @@ class Agente:
         self._lecciones_activas: dict[int, _SesionLeccion] = {}
         # Conversatorios de dudas por unidad; solo en la sesión (HU-12).
         self._conversatorios: dict[int, list[tuple[str, str]]] = {}
+        # Enunciados del último quiz por unidad, para variantes (HU-13).
+        self._quizzes_previos: dict[int, list[str]] = {}
+        # Racha diaria (HU-13): la sesión de hoy cuenta al abrir el agente.
+        self.progreso.registrar_sesion(date.today().isoformat())
+        self.guardar()
 
     @property
     def curso(self) -> Curso:
@@ -199,14 +205,17 @@ class Agente:
         self._exigir_desbloqueada(indice)
         leccion = self.abrir_unidad(indice)
         unidad = self.curso.temario.unidades[indice]
-        return generar_quiz(
+        quiz = generar_quiz(
             self._cliente,
             titulo_unidad=unidad.titulo,
             conceptos=unidad.conceptos,
             leccion_md=leccion,
             unidad=indice,
             system=system_tutor(self.perfil),
+            preguntas_previas=self._quizzes_previos.get(indice),
         )
+        self._quizzes_previos[indice] = [p.enunciado for p in quiz.preguntas]
+        return quiz
 
     def calificar_quiz(
         self, quiz: Quiz, respuestas: list[int]
@@ -315,7 +324,9 @@ class Agente:
         historial = self._conversatorios.setdefault(indice, [])
         respuesta = self._cliente.generar(
             system=system_conversatorio(
-                self.perfil, self.progreso.conceptos_fallados_recientes()
+                self.perfil,
+                self.progreso.conceptos_fallados_recientes(),
+                desempeno=self._resumen_desempeno(indice),
             ),
             prompt=prompt_charla(contexto, historial, mensaje or "(inicia tú)"),
         )
@@ -401,6 +412,22 @@ class Agente:
         historial.append((pregunta, respuesta))
         del historial[:-MAX_TURNOS_CHARLA]
         return respuesta
+
+    def _resumen_desempeno(self, indice: int) -> str:
+        """Historial de intentos de la unidad para el theory-of-mind (HU-13)."""
+        intentos = [r for r in self.progreso.resultados if r.unidad == indice]
+        if not intentos:
+            return ""
+        lineas = [
+            f"- Intento {n}: nota {r.nota}/100"
+            + (
+                f", falló: {', '.join(r.conceptos_fallados)}"
+                if r.conceptos_fallados
+                else ""
+            )
+            for n, r in enumerate(intentos, start=1)
+        ]
+        return "\n".join(lineas)
 
     def rehacer_perfil(self, nuevo_perfil: PerfilEstudiante) -> None:
         """Reemplaza el perfil y descarta el curso (el progreso se conserva)."""

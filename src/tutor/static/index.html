@@ -12,8 +12,19 @@
   body{background:var(--bg);color:var(--tx);min-height:100vh}
   header{padding:14px 22px;border-bottom:1px solid #2a3448;display:flex;gap:12px;align-items:center}
   header h1{font-size:18px} header .dot{color:var(--acc)}
-  #puntos{margin-left:auto;background:var(--panel);border:1px solid #34405a;border-radius:99px;
+  #racha{margin-left:auto;background:var(--panel);border:1px solid #34405a;border-radius:99px;
+         padding:6px 14px;font-weight:600;color:#fb923c}
+  #puntos{background:var(--panel);border:1px solid #34405a;border-radius:99px;
           padding:6px 14px;font-weight:600;color:var(--warn)}
+  .code-acciones{display:flex;gap:6px;margin:-4px 0 10px}
+  .code-acciones button{font-size:12px;padding:4px 10px}
+  .runner{background:#0b0f18;border:1px solid #34405a;border-radius:8px;padding:10px;margin:6px 0 12px}
+  .runner textarea{width:100%;min-height:110px;background:transparent;border:none;color:var(--tx);
+                   font-family:ui-monospace,monospace;font-size:13px;resize:vertical}
+  .runner textarea:focus{outline:none}
+  .runner .salida{border-top:1px dashed #34405a;margin-top:8px;padding-top:8px;
+                  font-family:ui-monospace,monospace;font-size:13px;white-space:pre-wrap;color:var(--acc2)}
+  .runner .salida.err{color:var(--bad)}
   main{display:flex;height:calc(100vh - 55px)}
   #sidebar{width:330px;min-width:260px;border-right:1px solid #2a3448;overflow-y:auto;padding:14px}
   #contenido{flex:1;overflow-y:auto;padding:22px}
@@ -72,6 +83,7 @@
 <body>
 <header><h1>Profe Bit <span class="dot">●</span></h1>
   <span class="dim" id="subtitulo">tu tutor de programación</span>
+  <span id="racha" style="display:none">🔥 0</span>
   <span id="puntos" style="display:none">⭐ 0 pts</span></header>
 <main>
   <nav id="sidebar"></nav>
@@ -118,10 +130,87 @@ function md(texto){
   return html;
 }
 
+let lenguajeCurso = "";
+
 function ponerPuntos(n){
   const chip = $("#puntos");
   chip.style.display = "inline-block";
   chip.textContent = `⭐ ${n} pts`;
+}
+
+function ponerRacha(n){
+  const chip = $("#racha");
+  chip.style.display = "inline-block";
+  chip.textContent = `🔥 ${n} ${n === 1 ? "día" : "días"}`;
+}
+
+/* ---------- Ejecutar Python en el navegador (Pyodide, estilo futurecoder) ---------- */
+
+let pyodideListo = null;
+
+function cargarPyodide(){
+  if(!pyodideListo){
+    pyodideListo = new Promise((resolver, rechazar) => {
+      const s = document.createElement("script");
+      s.src = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js";
+      s.onload = () => loadPyodide().then(resolver, rechazar);
+      s.onerror = () => rechazar(new Error("No se pudo descargar Pyodide (¿sin internet?)."));
+      document.head.appendChild(s);
+    });
+  }
+  return pyodideListo;
+}
+
+async function ejecutarPython(codigo, salida){
+  salida.className = "salida";
+  salida.textContent = "⏳ Cargando Python en tu navegador (solo la primera vez)…";
+  let py;
+  try{ py = await cargarPyodide(); }
+  catch(e){ salida.className = "salida err"; salida.textContent = e.message; return; }
+  salida.textContent = "▶ Ejecutando…";
+  py.runPython("import sys, io\nsys.stdout = sys.stderr = io.StringIO()");
+  let error = null;
+  try{ py.runPython(codigo); }
+  catch(e){ error = String(e.message || e).split("\n").filter(l => !l.includes("pyodide")).slice(-8).join("\n"); }
+  const impreso = py.runPython("sys.stdout.getvalue()");
+  if(error){
+    salida.className = "salida err";
+    salida.textContent = (impreso ? impreso + "\n" : "") + error;
+  }else{
+    salida.textContent = impreso || "(el código corrió sin imprimir nada — agrega un print())";
+  }
+}
+
+function urlPythonTutor(codigo){
+  return "https://pythontutor.com/render.html#code=" + encodeURIComponent(codigo) +
+         "&cumulative=false&py=311&curInstr=0";
+}
+
+// Agrega a cada bloque <pre> de la guía los botones ▶ Pruébalo y 🔍 Paso a paso
+function activarBloquesDeCodigo(raiz){
+  if(lenguajeCurso !== "python") return;
+  raiz.querySelectorAll("pre").forEach(pre => {
+    const codigo = pre.textContent;
+    if(!codigo.trim() || codigo.split("\n").length < 2) return;
+    const barra = document.createElement("div");
+    barra.className = "code-acciones";
+    barra.innerHTML = `<button>▶ Pruébalo aquí</button><button>🔍 Paso a paso</button>`;
+    const [bRun, bViz] = barra.querySelectorAll("button");
+    bViz.onclick = () => window.open(urlPythonTutor(codigo), "_blank");
+    bRun.onclick = () => {
+      bRun.disabled = true;
+      const runner = document.createElement("div");
+      runner.className = "runner";
+      runner.innerHTML = `<textarea spellcheck="false"></textarea>
+        <div><button class="primario">▶ Ejecutar</button></div><div class="salida dim">Edita el código y ejecútalo: corre en TU navegador.</div>`;
+      runner.querySelector("textarea").value = codigo.trimEnd();
+      const salida = runner.querySelector(".salida");
+      runner.querySelector("button").onclick = () =>
+        ejecutarPython(runner.querySelector("textarea").value, salida);
+      barra.after(runner);
+    };
+    pre.after(barra);
+  });
 }
 
 async function cargarEstado(mostrarInicio){
@@ -131,7 +220,9 @@ async function cargarEstado(mostrarInicio){
   catch(e){ mostrarError(e.message); return; }
   if(!estado.perfil){ verFormPerfil(); $("#sidebar").innerHTML = ""; return; }
   $("#subtitulo").textContent = "curso de " + estado.lenguaje;
+  lenguajeCurso = estado.lenguaje;
   ponerPuntos(estado.puntos);
+  ponerRacha(estado.racha);
   const nav = $("#sidebar");
   nav.innerHTML = "";
   estado.unidades.forEach(u => {
@@ -243,6 +334,7 @@ function verSeccion(){
     b.onclick = () => responderCheckpoint(j, b);
     $("#opciones").appendChild(b);
   });
+  activarBloquesDeCodigo($("#contenido"));
 }
 
 async function responderCheckpoint(opcion, elemento){

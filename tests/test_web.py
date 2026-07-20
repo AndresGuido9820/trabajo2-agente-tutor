@@ -47,6 +47,7 @@ class TestPerfilYEstado:
         assert datos["perfil"] is True
         assert datos["lenguaje"] == "python"
         assert datos["puntos"] == 0
+        assert datos["racha"] == 1  # la sesión de hoy cuenta al abrir
         assert len(datos["unidades"]) == 5
         assert datos["unidades"][0]["estado"] == "pendiente"
         assert all(u["estado"] == "bloqueada" for u in datos["unidades"][1:])
