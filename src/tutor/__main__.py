@@ -56,6 +56,7 @@ def _bucle_principal(agente: Agente) -> None:
             )
             leccion = ui.con_spinner(mensaje, partial(agente.abrir_unidad, indice))
             ui.mostrar_leccion(leccion)
+            ui.bucle_charla(agente, indice)
         elif accion.tipo == "evaluar":
             assert accion.indice is not None
             calificacion = ui.preguntar_respuestas(agente, accion.indice)

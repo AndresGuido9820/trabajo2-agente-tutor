@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
+from tutor.config import MAX_TURNOS_CHARLA
 from tutor.curso import (
     Curso,
     cargar_curso,
@@ -24,7 +25,7 @@ from tutor.llm import ClienteLLM
 from tutor.models import PerfilEstudiante
 from tutor.perfil import cargar_perfil, guardar_perfil
 from tutor.progreso import Progreso, Resultado, cargar_progreso, guardar_progreso
-from tutor.prompts import system_tutor
+from tutor.prompts import prompt_charla, system_charla, system_tutor
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +70,8 @@ class Agente:
         self.perfil = perfil
         self.progreso: Progreso = cargar_progreso(dir_datos / ARCHIVO_PROGRESO)
         self._curso: Curso | None = cargar_curso(dir_datos / ARCHIVO_CURSO)
+        # Historial de charla por unidad; vive solo en la sesión (HU-09).
+        self._charlas: dict[int, list[tuple[str, str]]] = {}
 
     @property
     def curso(self) -> Curso:
@@ -139,6 +142,25 @@ class Agente:
         self.progreso.registrar(resultado)
         self.guardar()
         return resultado, detalle
+
+    def charlar(self, indice: int, pregunta: str) -> str:
+        """Responde una pregunta del estudiante sobre la unidad ``indice``.
+
+        Mantiene un historial por unidad (solo en memoria) acotado a
+        ``MAX_TURNOS_CHARLA`` turnos para controlar el tamaño del prompt.
+
+        Raises:
+            ErrorLLM: Si la API falla tras los reintentos.
+        """
+        leccion = self.curso.lecciones.get(indice) or self.abrir_unidad(indice)
+        historial = self._charlas.setdefault(indice, [])
+        respuesta = self._cliente.generar(
+            system=system_charla(self.perfil),
+            prompt=prompt_charla(leccion, historial, pregunta),
+        )
+        historial.append((pregunta, respuesta))
+        del historial[:-MAX_TURNOS_CHARLA]
+        return respuesta
 
     def rehacer_perfil(self, nuevo_perfil: PerfilEstudiante) -> None:
         """Reemplaza el perfil y descarta el curso (el progreso se conserva)."""

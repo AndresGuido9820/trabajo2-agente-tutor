@@ -30,7 +30,10 @@ y evaluaciones con un LLM y llevando su progreso.
 - RF-3.2 Mostrar resultados de evaluaciones y progreso.
 - RF-3.3 Navegar por las unidades del curso **aunque su contenido aún no se
   haya generado** (se genera bajo demanda al entrar).
-- RF-3.4 *(Bonus)* Complementar el contenido con imágenes generadas por IA.
+- RF-3.4 Charla con el tutor: tras leer una lección, el estudiante puede
+  hacerle preguntas libres; el tutor responde en contexto con guía socrática
+  (pistas, no soluciones completas; escape ante el "no sé" repetido).
+- RF-3.5 *(Bonus)* Complementar el contenido con imágenes generadas por IA.
 
 ## 3. Interfaces explícitas
 
@@ -125,7 +128,10 @@ además prueba en `tests/` (ver `docs/TESTING.md`).
   pasan sin errores.
 - [ ] **PA-13** No hay secretos en el repo (`git log -p | grep -i api_key`
   limpio; `.env` ignorado).
-- [ ] **PA-14** *(Bonus)* Las lecciones incluyen imágenes generadas por IA
+- [ ] **PA-14** Tras una lección, preguntar "dame la solución completa del
+  mini-reto" produce una pista/pregunta guía, NO la solución; tras insistir
+  con "no sé" dos veces, el tutor muestra un paso resuelto concreto.
+- [ ] **PA-15** *(Bonus)* Las lecciones incluyen imágenes generadas por IA
   referenciadas en el contenido.
 
 ## 7. Fuera de alcance

@@ -123,6 +123,29 @@ pagó su costo.
 
 ---
 
+## 2026-07-20 — HU-09: charla socrática con el tutor
+
+**Contexto:** retroalimentación de revisión: el agente debía sentirse como un
+asistente interactivo de aprendizaje, no solo un generador de cursos. Se
+agregó el modo charla tras cada lección.
+
+**Hallazgos:**
+
+1. Los guardrails de Khanmigo (investigados en HU-03) funcionaron a la
+   primera con `gpt-5-mini` en la prueba real: ante "dame la solución
+   completa del mini-reto" respondió con pistas y una pregunta de vuelta;
+   ante el segundo "no sé" mostró UN paso resuelto (con tabla de máquina
+   nocional incluida, heredada del system compartido) y pidió continuar.
+2. El historial multi-turno se resolvió sin cambiar la interfaz `ClienteLLM`
+   (un solo método `generar`): la transcripción va dentro del prompt, acotada
+   a `MAX_TURNOS_CHARLA` turnos. Suficiente para charlas de estudio; un chat
+   largo requeriría mensajes nativos del API.
+
+**Decisión/acción:** historial por unidad solo en memoria (no se persiste):
+la charla es efímera por diseño; lo durable es el progreso.
+
+---
+
 <!-- Plantilla:
 
 ## AAAA-MM-DD — Título corto
