@@ -35,7 +35,7 @@ def calificar(quiz: Quiz, respuestas: list[int]) -> Resultado
 - [x] Prompt de quiz en `prompts.py` con ejemplo few-shot y esquema JSON.
 - [x] `evaluacion.py`: modelos, validador de esquema, `generar_quiz`,
       `calificar`, validación de respuestas del usuario.
-- [ ] (se completa en HU-06) Presentación del resultado (nota + detalle por pregunta) en la CLI.
+- [x] (completada en HU-06) Presentación del resultado (nota + detalle por pregunta) en la CLI.
 - [x] Pruebas (abajo).
 
 ## Pruebas
