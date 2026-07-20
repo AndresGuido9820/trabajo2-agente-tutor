@@ -67,6 +67,11 @@ def _describir_perfil(perfil: PerfilEstudiante) -> str:
         f"- Nivel: {_NOMBRE_NIVEL[perfil.nivel.value]}.",
         f"- Meta: quiere aprender programación para {objetivo}.",
     ]
+    if perfil.descripcion:
+        lineas.append(
+            f'- Pidió su curso con sus palabras: "{perfil.descripcion}". '
+            "Respeta esa petición por encima de todo."
+        )
     if perfil.experiencia:
         lineas.append(
             f"- Experiencia previa declarada: {perfil.experiencia}. "
@@ -105,6 +110,32 @@ principiantes (te doy la lista documentada cuando aplique).
 en la misma lección.
 8. Todo el contenido está en español; el código usa el lenguaje del curso \
 con identificadores descriptivos."""
+
+
+def prompt_extraer_perfil(texto: str) -> str:
+    """Prompt para convertir la petición libre del estudiante en un perfil.
+
+    "Hazme un curso de python para analizar mis ventas, sé Excel" →
+    campos estructurados que alimentan todo el sistema (HU-15).
+    """
+    return f"""Un estudiante pidió su curso con estas palabras:
+"{texto}"
+
+Extrae su perfil. Reglas:
+- "nivel": "nunca" (no ha programado o no lo menciona), "basico" (menciona
+  conocimientos básicos) o "scripts" (dice que ya programa algo).
+- "objetivo": "datos", "front", "back", "automatizacion", u "otro" si no
+  encaja claramente.
+- "objetivo_detalle": si objetivo es "otro", resume su meta en una frase;
+  si no, "".
+- "experiencia": lo que dice saber o haber hecho (Excel, diseño, etc.); si
+  no menciona nada, "".
+- "lenguaje": el lenguaje de programación si lo pide explícitamente (en
+  minúsculas); si no, "".
+
+Responde ÚNICAMENTE este JSON:
+{{"nivel": "...", "objetivo": "...", "objetivo_detalle": "...",
+"experiencia": "...", "lenguaje": "..."}}"""
 
 
 def prompt_temario(perfil: PerfilEstudiante) -> str:

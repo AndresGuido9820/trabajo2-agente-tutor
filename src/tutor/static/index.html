@@ -5,162 +5,211 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Profe Bit — Tutor de programación</title>
 <style>
-  /* ==== Sistema base (paleta GitHub-dark AA, escalas 1.25/4px, motion M3) ==== */
+  /* ===== Sistema visual (dark AA, elevación sutil, motion M3) ===== */
   :root{
-    --bg:#0d1117; --superficie:#161b22; --superficie2:#1f2733; --borde:#30363d;
-    --borde-input:#484f58; --tx:#e6edf3; --tx2:#8b949e; --acc:#58a6ff;
-    --ok:#3fb950; --err:#f85149; --warn:#d29922; --fuego:#f0883e;
-    --fs-xs:12px; --fs-sm:14px; --fs-base:16px; --fs-lg:20px; --fs-xl:25px;
-    --r-input:6px; --r-card:10px; --r-chip:999px;
-    --t-rapida:180ms cubic-bezier(.2,0,0,1); --t-media:280ms cubic-bezier(.2,0,0,1);
-    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+    --bg:#0b0e14; --bg-grad:radial-gradient(1200px 500px at 50% -10%, #131b2c 0%, #0b0e14 60%);
+    --card:#12161f; --card2:#181d29; --linea:rgba(255,255,255,.07); --linea-fuerte:rgba(255,255,255,.14);
+    --tx:#e8ecf3; --tx2:#98a2b3; --tx3:#667085;
+    --acc:#7aa2ff; --acc-fondo:#16233f; --ok:#4ade80; --ok-fondo:#122619;
+    --err:#f87171; --err-fondo:#2a1516; --warn:#fbbf24; --fuego:#fb923c;
+    --sombra:0 1px 2px rgba(0,0,0,.5), 0 8px 24px -12px rgba(0,0,0,.6);
+    --r:12px; --r-sm:8px; --r-pill:999px;
+    --t1:160ms cubic-bezier(.2,0,0,1); --t2:280ms cubic-bezier(.2,0,0,1);
+    font-family:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
   }
   *{box-sizing:border-box;margin:0}
   @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
-  body{background:var(--bg);color:var(--tx);min-height:100vh;font-size:var(--fs-base)}
-  :focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:4px}
-  button{background:var(--superficie2);color:var(--tx);border:1px solid var(--borde-input);
-         border-radius:var(--r-input);padding:8px 14px;cursor:pointer;font-size:var(--fs-sm);
-         transition:filter var(--t-rapida),border-color var(--t-rapida)}
-  button:hover:not(:disabled){filter:brightness(1.12);border-color:var(--acc)}
-  button:active:not(:disabled){filter:brightness(.95)}
-  button.primario{background:var(--acc);border-color:var(--acc);color:#0d1117;font-weight:600}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);background-image:var(--bg-grad);background-attachment:fixed;
+       color:var(--tx);min-height:100vh;font-size:15.5px;line-height:1.6;
+       -webkit-font-smoothing:antialiased}
+  h1,h2,h3{letter-spacing:-.015em;line-height:1.25}
+  :focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:6px}
+
+  button{background:var(--card2);color:var(--tx);border:1px solid var(--linea-fuerte);
+         border-radius:var(--r-sm);padding:8px 14px;cursor:pointer;font-size:13.5px;
+         font-weight:500;font-family:inherit;transition:all var(--t1)}
+  button:hover:not(:disabled){border-color:var(--acc);transform:translateY(-1px)}
+  button:active:not(:disabled){transform:translateY(0)}
+  button.primario{background:linear-gradient(180deg,#82a8ff,#5c8aff);border-color:transparent;
+      color:#0a1020;font-weight:600;box-shadow:0 2px 8px -2px rgba(92,138,255,.5)}
+  button.primario:hover:not(:disabled){filter:brightness(1.06)}
   button.sutil{background:transparent;border-color:transparent;color:var(--acc)}
-  button:disabled{opacity:.45;cursor:not-allowed}
+  button:disabled{opacity:.45;cursor:not-allowed;transform:none}
 
-  header{padding:12px 22px;border-bottom:1px solid var(--borde);display:flex;gap:14px;
-         align-items:center;flex-wrap:wrap}
-  header h1{font-size:var(--fs-lg)} header .dot{color:var(--ok)}
-  #progreso-curso{flex:1;min-width:160px;max-width:340px}
-  #progreso-curso .texto{font-size:var(--fs-xs);color:var(--tx2);margin-bottom:4px}
-  .chip-stat{background:var(--superficie);border:1px solid var(--borde);border-radius:var(--r-chip);
-             padding:5px 12px;font-weight:600;font-size:var(--fs-sm);cursor:help}
+  /* ---- shell ---- */
+  header{padding:14px 24px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;
+         border-bottom:1px solid var(--linea);backdrop-filter:blur(8px);position:sticky;top:0;
+         background:rgba(11,14,20,.8);z-index:5}
+  .marca{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px}
+  .marca .logo{width:26px;height:26px;border-radius:8px;
+      background:linear-gradient(135deg,#4ade80,#5c8aff);display:grid;place-items:center;
+      color:#0a1020;font-size:14px;font-weight:800}
+  #progreso-curso{flex:1;min-width:150px;max-width:320px;display:none}
+  #progreso-curso .texto{font-size:11.5px;color:var(--tx2);margin-bottom:5px}
+  .chip-stat{background:var(--card);border:1px solid var(--linea);border-radius:var(--r-pill);
+             padding:5px 13px;font-weight:600;font-size:13px;cursor:help;display:none}
   #racha{color:var(--fuego)} #puntos{color:var(--warn)}
+  .barra{height:5px;background:var(--card2);border-radius:var(--r-pill);overflow:hidden}
+  .barra > div{height:100%;background:linear-gradient(90deg,#4ade80,#5c8aff);
+      transition:width 400ms cubic-bezier(0,0,0,1)}
 
-  .barra{height:6px;background:var(--superficie2);border-radius:var(--r-chip);overflow:hidden}
-  .barra > div{height:100%;background:var(--ok);transition:width 400ms cubic-bezier(0,0,0,1)}
+  main{display:flex;min-height:calc(100vh - 61px)}
+  #sidebar{width:330px;min-width:270px;border-right:1px solid var(--linea);
+           overflow-y:auto;padding:18px 14px;max-height:calc(100vh - 61px);position:sticky;top:61px}
+  #contenido{flex:1;overflow-y:auto;padding:28px 32px}
+  .lectura{max-width:72ch;margin:0 auto}
 
-  main{display:flex;height:calc(100vh - 61px)}
-  #sidebar{width:340px;min-width:270px;border-right:1px solid var(--borde);
-           overflow-y:auto;padding:16px}
-  #contenido{flex:1;overflow-y:auto;padding:24px}
-  .lectura{max-width:70ch}
+  /* ---- sidebar ---- */
+  .sidebar-titulo{font-size:11px;text-transform:uppercase;letter-spacing:.08em;
+      color:var(--tx3);margin:2px 8px 10px;font-weight:600}
+  .unidad{background:transparent;border:1px solid transparent;border-radius:var(--r);
+          padding:10px 12px;margin-bottom:4px;transition:all var(--t1)}
+  .unidad:hover:not(.bloqueada){background:var(--card)}
+  .unidad.siguiente{background:var(--card);border-color:var(--linea-fuerte);box-shadow:var(--sombra)}
+  .unidad.bloqueada{opacity:.45}
+  .unidad .fila{display:flex;gap:10px;align-items:flex-start}
+  .num{flex:none;width:24px;height:24px;border-radius:50%;border:1.5px solid var(--linea-fuerte);
+       display:grid;place-items:center;font-size:11.5px;font-weight:700;color:var(--tx2);margin-top:1px}
+  .num.aprobada{background:var(--ok);border-color:var(--ok);color:#0a1020}
+  .num.activa{border-color:var(--acc);color:var(--acc)}
+  .unidad b{font-size:13.5px;line-height:1.4;font-weight:600}
+  .unidad .meta{font-size:11.5px;color:var(--tx3);margin-top:2px}
+  .unidad .cta{margin-top:8px;display:flex;gap:6px;padding-left:34px}
+  .unidad .cta button{font-size:12px;padding:5px 12px}
 
-  .unidad{background:var(--superficie);border:1px solid var(--borde);border-radius:var(--r-card);
-          padding:12px 14px;margin-bottom:8px;transition:border-color var(--t-rapida)}
-  .unidad.siguiente{border-color:var(--ok)}
-  .unidad.bloqueada{opacity:.55}
-  .unidad b{font-size:var(--fs-sm);line-height:1.4;display:block;margin:2px 24px 0 0}
-  .badge{float:right;font-size:var(--fs-xs);padding:2px 10px;border-radius:var(--r-chip);
-         background:var(--superficie2);color:var(--tx2);border:1px solid var(--borde)}
-  .badge.aprobada{color:var(--ok);border-color:var(--ok)}
-  .badge.vista,.badge.evaluada{color:var(--warn)}
-  .badge.generando{color:var(--acc)}
-  .unidad .cta{margin-top:10px;display:flex;gap:8px;align-items:center}
-
-  .tarjeta{background:var(--superficie);border:1px solid var(--borde);
-           border-radius:var(--r-card);padding:24px;max-width:780px;margin:0 auto 16px}
-  .tarjeta h2{font-size:var(--fs-xl);margin-bottom:12px}
-  h3{font-size:var(--fs-lg);margin:16px 0 8px}
+  /* ---- tarjetas ---- */
+  .tarjeta{background:var(--card);border:1px solid var(--linea);border-radius:var(--r);
+           padding:26px 28px;margin:0 auto 16px;max-width:72ch;box-shadow:var(--sombra)}
+  .tarjeta h2{font-size:22px;margin-bottom:10px}
   .dim{color:var(--tx2)} .ok{color:var(--ok)} .mal{color:var(--err)}
   .puntos-pop{color:var(--warn);font-weight:700}
 
-  /* Formulario (GOV.UK style) */
-  .campo{margin-bottom:24px}
-  .campo label{display:block;font-weight:600;margin-bottom:4px;font-size:var(--fs-sm)}
-  .campo .hint{display:block;color:var(--tx2);font-size:var(--fs-sm);margin-bottom:8px}
-  .campo select,.campo input{width:100%;background:var(--bg);border:1px solid var(--borde-input);
-      border-radius:var(--r-input);color:var(--tx);padding:10px 12px;font-size:var(--fs-base)}
-  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-  .chips button{font-size:var(--fs-xs);padding:4px 10px;border-radius:var(--r-chip)}
+  /* ---- hero (crear curso por prompt) ---- */
+  .hero{min-height:70vh;display:flex;flex-direction:column;justify-content:center;
+        align-items:center;text-align:center;max-width:640px;margin:0 auto;padding:24px}
+  .hero .logo-xl{width:56px;height:56px;border-radius:16px;margin-bottom:20px;
+      background:linear-gradient(135deg,#4ade80,#5c8aff);display:grid;place-items:center;
+      font-size:26px;font-weight:800;color:#0a1020;box-shadow:0 8px 32px -8px rgba(92,138,255,.5)}
+  .hero h2{font-size:30px;margin-bottom:10px}
+  .hero .sub{color:var(--tx2);margin-bottom:28px;font-size:15px}
+  .prompt-caja{width:100%;background:var(--card);border:1px solid var(--linea-fuerte);
+      border-radius:16px;padding:6px;box-shadow:var(--sombra);transition:border-color var(--t1);
+      text-align:left}
+  .prompt-caja:focus-within{border-color:var(--acc);box-shadow:0 0 0 3px rgba(122,162,255,.15),var(--sombra)}
+  .prompt-caja textarea{width:100%;background:transparent;border:none;color:var(--tx);
+      font-family:inherit;font-size:15.5px;line-height:1.5;padding:14px 14px 4px;resize:none;min-height:76px}
+  .prompt-caja textarea:focus{outline:none}
+  .prompt-pie{display:flex;justify-content:space-between;align-items:center;padding:4px 8px 6px 14px}
+  .prompt-pie .nota{font-size:11.5px;color:var(--tx3)}
+  .ejemplos{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:18px}
+  .ejemplos button{border-radius:var(--r-pill);font-size:12.5px;color:var(--tx2);background:transparent}
+  .ejemplos button:hover{color:var(--tx)}
 
-  /* Contenido markdown */
-  .contenido-md{line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
-  .contenido-md pre,.msg pre{background:var(--bg);border:1px solid var(--borde);
-      border-radius:var(--r-input);padding:12px;overflow-x:auto;margin:8px 0;
-      font-size:var(--fs-sm);white-space:pre;line-height:1.5}
-  .contenido-md code,.msg code{background:var(--bg);border-radius:4px;padding:1px 5px;
-      font-size:var(--fs-sm);font-family:ui-monospace,monospace}
+  /* ---- markdown ---- */
+  .prosa{line-height:1.7}
+  .prosa p{margin:0 0 12px}
+  .prosa ul,.prosa ol{margin:0 0 12px;padding-left:22px}
+  .prosa li{margin-bottom:4px}
+  .prosa h3,.prosa h4{margin:18px 0 8px;font-size:16.5px}
+  .prosa pre{background:#0a0d13;border:1px solid var(--linea);border-radius:var(--r-sm);
+      padding:14px;overflow-x:auto;margin:10px 0;font-size:13px;line-height:1.55;white-space:pre}
+  .prosa code,.msg code{background:#0a0d13;border:1px solid var(--linea);border-radius:5px;
+      padding:1px 6px;font-size:13px;font-family:ui-monospace,"SF Mono",Menlo,monospace}
+  .prosa pre code{border:none;padding:0;background:transparent}
 
-  .objetivo-chip{display:inline-block;background:#0d2137;color:var(--acc);
-      border-radius:var(--r-chip);padding:5px 14px;font-size:var(--fs-xs);
-      font-weight:600;margin-bottom:12px}
-  .code-acciones{display:flex;gap:6px;margin:-4px 0 10px}
-  .code-acciones button{font-size:var(--fs-xs);padding:4px 10px}
-  .runner{background:var(--bg);border:1px solid var(--borde-input);
-          border-radius:var(--r-input);padding:10px;margin:6px 0 12px}
-  .runner textarea{width:100%;min-height:110px;background:transparent;border:none;
-      color:var(--tx);font-family:ui-monospace,monospace;font-size:var(--fs-sm);resize:vertical}
+  .objetivo-chip{display:inline-flex;align-items:center;gap:6px;background:var(--acc-fondo);
+      color:var(--acc);border-radius:var(--r-pill);padding:6px 14px;font-size:12px;
+      font-weight:600;margin-bottom:14px}
+  .code-acciones{display:flex;gap:6px;margin:-2px 0 12px}
+  .code-acciones button{font-size:11.5px;padding:4px 10px;color:var(--tx2)}
+  .runner{background:#0a0d13;border:1px solid var(--linea-fuerte);border-radius:var(--r-sm);
+          padding:12px;margin:6px 0 14px}
+  .runner textarea{width:100%;min-height:110px;background:transparent;border:none;color:var(--tx);
+      font-family:ui-monospace,Menlo,monospace;font-size:13px;resize:vertical;line-height:1.55}
   .runner textarea:focus{outline:none}
-  .runner .salida{border-top:1px dashed var(--borde-input);margin-top:8px;padding-top:8px;
-      font-family:ui-monospace,monospace;font-size:var(--fs-sm);white-space:pre-wrap;color:var(--acc)}
+  .runner .salida{border-top:1px dashed var(--linea-fuerte);margin-top:10px;padding-top:10px;
+      font-family:ui-monospace,Menlo,monospace;font-size:13px;white-space:pre-wrap;color:#7dd3fc}
   .runner .salida.err{color:var(--err)}
 
-  .checkpoint{background:var(--superficie2);border:1px solid var(--borde-input);
-      border-radius:var(--r-card);padding:16px;margin-top:16px}
-  .opcion{display:block;margin:8px 0;padding:10px 12px;border:1px solid var(--borde);
-      border-radius:var(--r-input);cursor:pointer;white-space:pre-wrap;
-      transition:border-color var(--t-rapida)}
+  /* ---- checkpoint ---- */
+  .checkpoint{background:var(--card2);border:1px solid var(--linea);border-radius:var(--r);
+      padding:18px;margin-top:18px}
+  .checkpoint .titulo-cp{display:flex;align-items:center;gap:8px;font-weight:700;
+      font-size:13px;color:var(--tx2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+  .opcion{display:flex;gap:10px;align-items:flex-start;margin:8px 0;padding:11px 13px;
+      border:1px solid var(--linea-fuerte);border-radius:var(--r-sm);cursor:pointer;
+      transition:all var(--t1);background:var(--card)}
   .opcion:hover{border-color:var(--acc)}
-  .opcion.correcta{border-color:var(--ok);background:#12291c}
-  .opcion.incorrecta{border-color:var(--err);background:#2b1416}
-  .feedback{border-left:3px solid var(--acc);padding:10px 14px;margin-top:12px;
-      color:var(--tx);white-space:pre-wrap;background:var(--superficie);
-      border-radius:0 var(--r-input) var(--r-input) 0;animation:aparecer 280ms cubic-bezier(0,0,0,1)}
+  .opcion .letra{flex:none;width:22px;height:22px;border-radius:6px;border:1.5px solid var(--linea-fuerte);
+      display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--tx2)}
+  .opcion.correcta{border-color:var(--ok);background:var(--ok-fondo)}
+  .opcion.correcta .letra{background:var(--ok);border-color:var(--ok);color:#0a1020}
+  .opcion.incorrecta{border-color:var(--err);background:var(--err-fondo)}
+  .feedback{border-left:3px solid var(--acc);padding:12px 16px;margin-top:14px;
+      background:var(--card);border-radius:0 var(--r-sm) var(--r-sm) 0;
+      animation:aparecer 280ms cubic-bezier(0,0,0,1)}
   .feedback.pista{border-color:var(--warn)}
   .feedback.exito{border-color:var(--ok)}
   @keyframes aparecer{from{opacity:0;transform:translateY(4px)}to{opacity:1}}
 
-  #barra-guia{position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:2}
+  #barra-guia{position:sticky;top:61px;background:rgba(11,14,20,.9);backdrop-filter:blur(8px);
+      padding:10px 0;z-index:3}
 
-  /* Skeletons */
-  .sk{background:linear-gradient(90deg,var(--superficie2) 25%,#2a3444 50%,var(--superficie2) 75%);
-      background-size:200% 100%;animation:sk 1.2s infinite;border-radius:var(--r-input)}
+  .sk{background:linear-gradient(90deg,var(--card2) 25%,#232b3b 50%,var(--card2) 75%);
+      background-size:200% 100%;animation:sk 1.2s infinite;border-radius:var(--r-sm)}
   @keyframes sk{to{background-position:-200% 0}}
 
-  /* Chat */
-  .msg{max-width:82%;padding:12px 15px;border-radius:14px;line-height:1.55;
-       margin-bottom:10px;white-space:pre-wrap;overflow-wrap:anywhere;
+  /* ---- chat ---- */
+  .msg{max-width:85%;padding:12px 16px;border-radius:14px;margin-bottom:10px;
        animation:aparecer 250ms cubic-bezier(0,0,0,1)}
-  .msg.tutor{background:var(--superficie);border:1px solid var(--borde);margin-right:auto}
-  .msg.yo{background:#173a2a;margin-left:auto}
-  .chat-barra{display:flex;gap:8px;margin-top:10px}
-  .chat-barra input{flex:1;background:var(--bg);border:1px solid var(--borde-input);
-      border-radius:var(--r-card);color:var(--tx);padding:11px 14px;font-size:var(--fs-sm)}
+  .msg.tutor{background:var(--card2);border:1px solid var(--linea);margin-right:auto;
+      border-bottom-left-radius:4px}
+  .msg.yo{background:var(--acc-fondo);border:1px solid rgba(122,162,255,.25);
+      margin-left:auto;border-bottom-right-radius:4px}
+  .msg pre{background:#0a0d13;border-radius:var(--r-sm);padding:10px;overflow-x:auto;
+      white-space:pre;font-size:12.5px;margin:8px 0}
+  .chat-barra{display:flex;gap:8px;margin-top:12px}
+  .chat-barra input{flex:1;background:var(--card2);border:1px solid var(--linea-fuerte);
+      border-radius:var(--r);color:var(--tx);padding:12px 15px;font-size:14px;font-family:inherit}
+  .chat-barra input:focus{outline:none;border-color:var(--acc)}
   .escribiendo::after{content:"···";animation:puntos 1.2s infinite;letter-spacing:2px;font-weight:700}
   @keyframes puntos{0%{opacity:.2}50%{opacity:1}100%{opacity:.2}}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+  .chips button{font-size:12px;padding:5px 12px;border-radius:var(--r-pill);color:var(--tx2)}
 
-  .panel-tutor{margin-top:16px;border-top:1px dashed var(--borde);padding-top:12px}
-  iframe.artefacto{width:100%;height:480px;border:1px solid var(--borde);
-      border-radius:var(--r-card);background:var(--bg);margin-top:10px}
+  .panel-tutor{margin-top:18px;border-top:1px dashed var(--linea-fuerte);padding-top:14px}
+  iframe.artefacto{width:100%;height:480px;border:1px solid var(--linea-fuerte);
+      border-radius:var(--r);background:#0a0d13;margin-top:12px}
 
-  /* Celebración (≤600ms, proporcional) */
   .celebra{animation:celebra 500ms cubic-bezier(0,0,0,1)}
-  @keyframes celebra{0%{transform:scale(.92);opacity:0}60%{transform:scale(1.03)}100%{transform:scale(1);opacity:1}}
+  @keyframes celebra{0%{transform:scale(.94);opacity:0}60%{transform:scale(1.02)}100%{transform:scale(1);opacity:1}}
 
-  /* Toast (solo confirmaciones; errores van inline) */
-  #toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);
-      background:var(--superficie);border:1px solid var(--ok);border-radius:var(--r-card);
-      padding:12px 18px;display:none;z-index:9;animation:aparecer 250ms}
-  #error{position:fixed;bottom:16px;right:16px;background:#3d1214;border:1px solid var(--err);
-      border-radius:var(--r-card);padding:12px 16px;max-width:420px;display:none;z-index:9}
-  .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--tx2);
+  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+      background:var(--card);border:1px solid var(--ok);border-radius:var(--r);
+      padding:12px 20px;display:none;z-index:9;box-shadow:var(--sombra);animation:aparecer 250ms}
+  #error{position:fixed;bottom:20px;right:20px;background:var(--err-fondo);
+      border:1px solid var(--err);border-radius:var(--r);padding:12px 16px;
+      max-width:420px;display:none;z-index:9;box-shadow:var(--sombra)}
+  .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--tx3);
       border-top-color:var(--acc);border-radius:50%;animation:g .8s linear infinite;vertical-align:-2px}
   @keyframes g{to{transform:rotate(360deg)}}
-  @media(max-width:780px){main{flex-direction:column}#sidebar{width:100%;max-height:38vh}}
+  @media(max-width:800px){main{flex-direction:column}
+    #sidebar{width:100%;max-height:none;position:static;border-right:none;border-bottom:1px solid var(--linea)}
+    #contenido{padding:20px 16px}}
 </style>
 </head>
 <body>
 <header>
-  <h1>Profe Bit <span class="dot">●</span></h1>
-  <div id="progreso-curso" style="display:none">
+  <span class="marca"><span class="logo">Pb</span> Profe Bit</span>
+  <div id="progreso-curso">
     <div class="texto" id="progreso-texto"></div>
     <div class="barra"><div id="progreso-barra" style="width:0%"></div></div>
   </div>
-  <span class="chip-stat" id="racha" style="display:none"
-        title="Tu racha: días seguidos estudiando. No se pierde por descansar un día de vez en cuando."></span>
-  <span class="chip-stat" id="puntos" style="display:none"
-        title="Puntos por checkpoints (10 al primer intento, 5 al segundo) y por aprobar unidades (+30)."></span>
+  <span class="chip-stat" id="racha"
+        title="Días seguidos estudiando. Descansar un día de vez en cuando no la rompe de por vida."></span>
+  <span class="chip-stat" id="puntos"
+        title="Puntos por checkpoints (10 al primer intento, 5 al segundo) y +30 por aprobar cada unidad."></span>
 </header>
 <main>
   <nav id="sidebar" aria-label="Unidades del curso"></nav>
@@ -172,11 +221,11 @@
 "use strict";
 const $ = (sel) => document.querySelector(sel);
 let lenguajeCurso = "";
-let guiaActual = null;             // {indice, titulo, secciones, seccion, intento}
-const guiasEnCurso = new Map();    // indice -> Promise (generación no bloqueante)
-let quizPrefetch = null;           // {indice, promesa}
+let guiaActual = null;
+const guiasEnCurso = new Map();
+let quizPrefetch = null;
 
-/* ---------- utilidades ---------- */
+/* ===== utilidades ===== */
 
 function mostrarError(texto){
   const caja = $("#error");
@@ -205,38 +254,52 @@ async function api(ruta, cuerpo, metodo){
   return r.json();
 }
 
+/* Render de Markdown: párrafos, listas, headings y código — sin librerías */
 function md(texto){
   const esc = (s) => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const enLinea = (s) => esc(s)
+    .replace(/`([^`\n]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>")
+    .replace(/\*([^*\n]+)\*/g, "<i>$1</i>");
   const partes = String(texto).split(/```(?:\w*)\n?/);
   let html = "";
-  partes.forEach((parte, i) => {
-    if(i % 2 === 1){ html += `<pre>${esc(parte)}</pre>`; return; }
-    let t = esc(parte);
-    t = t.replace(/`([^`\n]+)`/g, "<code>$1</code>");
-    t = t.replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>");
-    t = t.replace(/^#{1,4} (.+)$/gm, "<b>$1</b>");
-    html += t;
+  partes.forEach((parte, idx) => {
+    if(idx % 2 === 1){ html += `<pre><code>${esc(parte.replace(/\n$/,""))}</code></pre>`; return; }
+    parte.split(/\n{2,}/).forEach(bloque => {
+      const lineas = bloque.split("\n").filter(l => l.trim() !== "");
+      if(!lineas.length) return;
+      if(lineas.every(l => /^\s*[-*•] /.test(l))){
+        html += "<ul>" + lineas.map(l => `<li>${enLinea(l.replace(/^\s*[-*•] /,""))}</li>`).join("") + "</ul>";
+      }else if(lineas.every(l => /^\s*\d+[.)] /.test(l))){
+        html += "<ol>" + lineas.map(l => `<li>${enLinea(l.replace(/^\s*\d+[.)] /,""))}</li>`).join("") + "</ol>";
+      }else if(/^#{1,4} /.test(lineas[0]) && lineas.length === 1){
+        html += `<h3>${enLinea(lineas[0].replace(/^#{1,4} /,""))}</h3>`;
+      }else{
+        html += "<p>" + lineas.map(l =>
+          /^#{1,4} /.test(l) ? `</p><h3>${enLinea(l.replace(/^#{1,4} /,""))}</h3><p>` : enLinea(l)
+        ).join("<br>") + "</p>";
+      }
+    });
   });
   return html;
 }
 
 function ponerStats(estado){
   $("#puntos").style.display = "inline-block";
-  $("#puntos").textContent = `⭐ ${estado.puntos} pts`;
+  $("#puntos").textContent = `⭐ ${estado.puntos}`;
   $("#racha").style.display = "inline-block";
-  $("#racha").textContent = `🔥 ${estado.racha} ${estado.racha === 1 ? "día" : "días"}`;
+  $("#racha").textContent = `🔥 ${estado.racha}`;
   const aprobadas = estado.unidades.filter(u => u.estado === "aprobada").length;
   $("#progreso-curso").style.display = "block";
-  $("#progreso-texto").textContent = `${aprobadas} de ${estado.unidades.length} unidades aprobadas`;
+  $("#progreso-texto").textContent = `${aprobadas} de ${estado.unidades.length} unidades · curso de ${estado.lenguaje}`;
   $("#progreso-barra").style.width = `${Math.round(100 * aprobadas / estado.unidades.length)}%`;
 }
 
-// Loader por fases para esperas largas (NN/g: >10 s exige progreso + expectativa)
 function loaderFases(contenedor, fases, duracionTotalMs){
   contenedor.innerHTML = `<p class="dim" style="margin-bottom:10px" aria-live="polite">
       <span class="spin"></span> <span class="fase">${fases[0]}</span></p>
     <div class="barra"><div style="width:4%"></div></div>
-    <p class="dim" style="font-size:var(--fs-xs);margin-top:8px">Suele tardar ~${Math.round(duracionTotalMs/1000)} s. Puedes seguir navegando por el curso mientras tanto.</p>`;
+    <p class="dim" style="font-size:11.5px;margin-top:8px">Suele tardar ~${Math.round(duracionTotalMs/1000)} s.</p>`;
   const barra = contenedor.querySelector(".barra > div");
   const fase = contenedor.querySelector(".fase");
   const inicio = Date.now();
@@ -251,56 +314,55 @@ function loaderFases(contenedor, fases, duracionTotalMs){
 function skeletonGuia(){
   return `<div class="tarjeta">
     <div class="sk" style="width:180px;height:24px;margin-bottom:14px"></div>
-    <div class="sk" style="height:14px;margin-bottom:8px"></div>
-    <div class="sk" style="height:14px;width:92%;margin-bottom:8px"></div>
-    <div class="sk" style="height:14px;width:85%;margin-bottom:14px"></div>
+    <div class="sk" style="height:13px;margin-bottom:8px"></div>
+    <div class="sk" style="height:13px;width:92%;margin-bottom:8px"></div>
+    <div class="sk" style="height:13px;width:85%;margin-bottom:14px"></div>
     <div class="sk" style="height:110px;margin-bottom:14px"></div>
-    <div class="sk" style="height:14px;width:60%"></div></div>`;
+    <div class="sk" style="height:13px;width:60%"></div></div>`;
 }
 
-/* ---------- estado / sidebar ---------- */
+/* ===== estado / sidebar ===== */
 
 async function cargarEstado(mostrarInicio){
   let estado;
   try{ estado = await api("/api/estado"); }
   catch(e){ mostrarError(e.message); return; }
-  if(!estado.perfil){ verFormPerfil(); $("#sidebar").innerHTML = ""; return; }
+  if(!estado.perfil){ verHero(); $("#sidebar").innerHTML = ""; return; }
   lenguajeCurso = estado.lenguaje;
   ponerStats(estado);
   const nav = $("#sidebar");
-  nav.innerHTML = "";
+  nav.innerHTML = `<div class="sidebar-titulo">Tu curso</div>`;
   const siguiente = estado.unidades.find(u => u.estado !== "aprobada" && u.estado !== "bloqueada");
   estado.unidades.forEach(u => {
     const bloqueada = u.estado === "bloqueada";
     const esSiguiente = siguiente && u.indice === siguiente.indice;
+    const generando = guiasEnCurso.has(u.indice);
     const div = document.createElement("div");
     div.className = "unidad" + (bloqueada ? " bloqueada" : "") + (esSiguiente ? " siguiente" : "");
-    const generando = guiasEnCurso.has(u.indice);
-    const etiqueta = generando ? "Generando…"
-      : {bloqueada:"🔒 Bloqueada", pendiente:"Pendiente", vista:"En curso",
-         evaluada:`Nota ${u.mejor_nota}`, aprobada:`✓ Aprobada · ${u.mejor_nota}`}[u.estado];
-    div.innerHTML = `<span class="badge ${generando ? "generando" : u.estado}">${etiqueta}</span>
-      <b>${u.indice + 1}. ${u.titulo}</b><div class="cta"></div>`;
+    const meta = generando ? "Generando tu guía…"
+      : {bloqueada:"Se desbloquea aprobando la anterior", pendiente:"Lista para empezar",
+         vista:"En curso", evaluada:`Último intento: ${u.mejor_nota}/100`,
+         aprobada:`Aprobada con ${u.mejor_nota}/100`}[u.estado];
+    const numClase = u.estado === "aprobada" ? "aprobada" : (esSiguiente ? "activa" : "");
+    div.innerHTML = `<div class="fila">
+        <span class="num ${numClase}">${u.estado === "aprobada" ? "✓" : u.indice + 1}</span>
+        <div><b>${u.titulo}</b><div class="meta">${bloqueada ? "🔒 " : ""}${meta}</div></div>
+      </div><div class="cta"></div>`;
     const cta = div.querySelector(".cta");
     if(!bloqueada){
-      // Un solo CTA primario según el estado (Hick's Law)
       const principal = document.createElement("button");
-      if(u.estado === "aprobada"){
-        principal.textContent = "Repasar";
-      }else if(u.estado === "vista" || u.estado === "evaluada"){
-        principal.textContent = u.estado === "evaluada" ? "Reintentar evaluación" : "Continuar guía";
-        principal.className = esSiguiente ? "primario" : "";
-      }else{
-        principal.textContent = "Estudiar";
-        principal.className = esSiguiente ? "primario" : "";
-      }
+      if(u.estado === "aprobada"){ principal.textContent = "Repasar"; }
+      else if(u.estado === "evaluada"){ principal.textContent = "Reintentar evaluación";
+        if(esSiguiente) principal.className = "primario"; }
+      else{ principal.textContent = u.estado === "vista" ? "Continuar" : "Empezar";
+        if(esSiguiente) principal.className = "primario"; }
       principal.onclick = () => (u.estado === "evaluada")
         ? iniciarQuiz(u.indice) : iniciarGuia(u.indice, u.titulo);
       cta.appendChild(principal);
       if(u.estado === "vista" || u.estado === "aprobada"){
         const b = document.createElement("button");
         b.className = "sutil";
-        b.textContent = u.estado === "aprobada" ? "Evaluar de nuevo" : "Ir a la evaluación";
+        b.textContent = "Evaluación";
         b.onclick = () => iniciarQuiz(u.indice);
         cta.appendChild(b);
       }
@@ -312,88 +374,76 @@ async function cargarEstado(mostrarInicio){
 
 function verBienvenida(estado){
   $("#contenido").innerHTML = `<div class="tarjeta lectura">
-    <h2>Así funciona tu curso</h2>
-    <p class="dim" style="line-height:1.7">1. Cada unidad tiene una <b>guía por objetivos</b>: aprendes, respondes
-    checkpoints y ganas <span class="puntos-pop">⭐ puntos</span>. Puedes <b>preguntarle al tutor</b> lo que sea
-    y pedirle <b>demos interactivas ✨</b> en cualquier sección.<br>
-    2. Al final, la <b>evaluación</b>: con ${estado.nota_aprobatoria}+ apruebas y desbloqueas la siguiente unidad.<br>
-    3. Si no apruebas, el tutor abre un <b>conversatorio</b> para cerrar tus dudas y reintentas.<br><br>
-    La unidad resaltada en verde es tu siguiente paso 👈</p></div>`;
+    <h2>Tu curso está listo</h2>
+    <div class="prosa"><p class="dim">Cada unidad es una <b>guía interactiva</b>: aprendes por objetivos,
+    respondes checkpoints que suman <span class="puntos-pop">⭐ puntos</span>, le
+    <b>preguntas al tutor</b> lo que quieras y pides <b>demos interactivas ✨</b>.
+    Al final de cada unidad, una evaluación: con ${estado.nota_aprobatoria}+ desbloqueas la siguiente —
+    y si no sale, el tutor conversa contigo tus dudas y reintentas con preguntas nuevas.</p>
+    <p class="dim">Empieza por la unidad resaltada 👈</p></div></div>`;
 }
 
-/* ---------- perfil ---------- */
+/* ===== hero: crear curso por prompt ===== */
 
-const SUGERENCIAS_EXP = ["Fórmulas y tablas dinámicas en Excel", "Nunca he programado, uso bien el PC", "Hice una página en Wordpress"];
-const SUGERENCIAS_LEN = ["python", "javascript", "que el tutor decida"];
+const EJEMPLOS_PROMPT = [
+  "Hazme un curso de Python para analizar las ventas de mi negocio; manejo bien Excel",
+  "Quiero aprender a hacer páginas web desde cero, nunca he programado",
+  "Enséñame a automatizar reportes aburridos de mi trabajo",
+];
 
-function verFormPerfil(){
-  $("#contenido").innerHTML = `<div class="tarjeta lectura"><h2>Tu curso, a tu medida</h2>
-    <p class="dim" style="margin-bottom:24px">Con 4 respuestas, el tutor diseña un curso solo para ti —
-    por ejemplo: <i>“Abrir y explorar tablas: CSV → DataFrame (tu hoja de cálculo en Python)”</i>
-    para alguien que viene de Excel.</p>
-    <div class="campo"><label for="f-nivel">¿Cuál es tu experiencia programando?</label>
-      <select id="f-nivel">
-        <option value="nunca">Nunca he programado</option>
-        <option value="basico">Sé algo básico (variables, condicionales)</option>
-        <option value="scripts">He escrito scripts o programas pequeños</option>
-      </select></div>
-    <div class="campo"><label for="f-exp">¿Qué has hecho antes? (opcional)</label>
-      <span class="hint">El tutor lo usa para explicarte con analogías de tu mundo</span>
-      <input id="f-exp"><div class="chips" id="chips-exp"></div></div>
-    <div class="campo"><label for="f-objetivo">¿Qué quieres lograr?</label>
-      <select id="f-objetivo">
-        <option value="datos">Ciencia de datos / análisis</option>
-        <option value="front">Desarrollo front-end</option>
-        <option value="back">Desarrollo back-end</option>
-        <option value="automatizacion">Automatizar tareas</option>
-        <option value="otro">Otro…</option>
-      </select></div>
-    <div class="campo" id="f-detalle-campo" style="display:none"><label for="f-detalle">Cuéntame tu objetivo</label>
-      <input id="f-detalle"></div>
-    <div class="campo"><label for="f-lenguaje">¿Lenguaje preferido? (opcional)</label>
-      <span class="hint">Si lo dejas vacío, el tutor elige el mejor para tu meta</span>
-      <input id="f-lenguaje"><div class="chips" id="chips-len"></div></div>
-    <button class="primario" id="f-enviar">Crear mi curso</button>
-    <div id="f-progreso" style="margin-top:16px"></div></div>`;
-  SUGERENCIAS_EXP.forEach(s => agregarChip("#chips-exp", "#f-exp", s));
-  SUGERENCIAS_LEN.forEach(s => agregarChip("#chips-len", "#f-lenguaje", s === "que el tutor decida" ? "" : s, s));
-  $("#f-objetivo").onchange = (e) =>
-    $("#f-detalle-campo").style.display = e.target.value === "otro" ? "block" : "none";
-  $("#f-nivel").focus();
-  $("#f-enviar").onclick = crearPerfil;
+function verHero(){
+  $("#contenido").innerHTML = `<div class="hero">
+    <div class="logo-xl">Pb</div>
+    <h2>¿Qué quieres aprender?</h2>
+    <p class="sub">Descríbelo con tus palabras y tu tutor diseña un curso único para ti:
+    guías interactivas, un tutor que responde tus dudas y evaluaciones a tu medida.</p>
+    <div class="prompt-caja">
+      <textarea id="h-prompt" rows="3"
+        placeholder="Hazme un curso de… (cuéntame qué quieres lograr y qué sabes ya)"></textarea>
+      <div class="prompt-pie">
+        <span class="nota">Enter para crear · Shift+Enter para otra línea</span>
+        <button class="primario" id="h-crear">Crear mi curso ✨</button>
+      </div>
+    </div>
+    <div class="ejemplos" id="h-ejemplos"></div>
+    <div id="h-progreso" style="width:100%;max-width:480px;margin-top:24px"></div>
+  </div>`;
+  EJEMPLOS_PROMPT.forEach(e => {
+    const b = document.createElement("button");
+    b.textContent = e.length > 58 ? e.slice(0, 58) + "…" : e;
+    b.onclick = () => { $("#h-prompt").value = e; $("#h-prompt").focus(); };
+    $("#h-ejemplos").appendChild(b);
+  });
+  const area = $("#h-prompt");
+  area.focus();
+  area.addEventListener("keydown", e => {
+    if(e.key === "Enter" && !e.shiftKey){ e.preventDefault(); crearCurso(); }
+  });
+  $("#h-crear").onclick = crearCurso;
 }
 
-function agregarChip(contenedor, input, valor, etiqueta){
-  const b = document.createElement("button");
-  b.type = "button";
-  b.textContent = etiqueta || valor;
-  b.onclick = () => { $(input).value = valor; };
-  $(contenedor).appendChild(b);
-}
-
-async function crearPerfil(){
-  const boton = $("#f-enviar");
-  boton.disabled = true; boton.textContent = "Diseñando tu curso…";
-  const parar = loaderFases($("#f-progreso"), [
-    "Analizando tu perfil…", "Eligiendo la secuencia de temas…",
-    "Diseñando unidades a tu medida…", "Puliendo los títulos…", "Casi listo…",
-  ], 60000);
+async function crearCurso(){
+  const texto = $("#h-prompt").value.trim();
+  if(texto.length < 8){ mostrarError("Cuéntame un poco más: ¿qué quieres aprender?"); return; }
+  const boton = $("#h-crear");
+  boton.disabled = true; boton.textContent = "Creando…";
+  $("#h-prompt").disabled = true;
+  const parar = loaderFases($("#h-progreso"), [
+    "Entendiendo tu petición…", "Armando tu perfil…", "Eligiendo la secuencia de temas…",
+    "Diseñando unidades a tu medida…", "Casi listo…",
+  ], 70000);
   try{
-    await api("/api/perfil", {
-      nivel: $("#f-nivel").value, objetivo: $("#f-objetivo").value,
-      experiencia: $("#f-exp").value,
-      objetivo_detalle: $("#f-detalle") ? $("#f-detalle").value : "",
-      lenguaje: $("#f-lenguaje").value.replace("que el tutor decida",""),
-    });
+    await api("/api/curso", {prompt: texto});
     await cargarEstado(true);
     toast("¡Tu curso está listo! 🎉");
   }catch(e){
     mostrarError(e.message);
-    boton.disabled = false; boton.textContent = "Crear mi curso";
-  }finally{ parar(); const p = $("#f-progreso"); if(p) p.innerHTML = ""; }
+    boton.disabled = false; boton.textContent = "Crear mi curso ✨";
+    $("#h-prompt").disabled = false;
+  }finally{ parar(); const p = $("#h-progreso"); if(p) p.innerHTML = ""; }
 }
 
-/* ---------- guía interactiva ---------- */
+/* ===== guía interactiva ===== */
 
 function pedirGuia(indice){
   if(!guiasEnCurso.has(indice)){
@@ -405,23 +455,20 @@ function pedirGuia(indice){
 }
 
 async function iniciarGuia(indice, titulo){
-  const cont = $("#contenido");
-  cont.innerHTML = `<div class="tarjeta lectura"><h2>${titulo || `Unidad ${indice + 1}`}</h2>
-    <div id="g-progreso"></div>
-    <div style="margin-top:12px"><button class="sutil" id="g-volver">← Volver al curso (la guía se sigue preparando)</button></div>
+  $("#contenido").innerHTML = `<div class="tarjeta lectura"><h2>${titulo || `Unidad ${indice + 1}`}</h2>
+    <div id="g-progreso" style="margin-top:8px"></div>
+    <div style="margin-top:14px"><button class="sutil" id="g-volver">← Volver al curso (te aviso cuando esté lista)</button></div>
     </div>` + skeletonGuia();
   const parar = loaderFases($("#g-progreso"), [
     "Leyendo tu perfil y tu progreso…", "Definiendo los objetivos de la unidad…",
     "Escribiendo la guía con tus analogías…", "Preparando los checkpoints…", "Últimos toques…",
   ], 75000);
-  $("#g-volver").onclick = () => { parar(); cargarEstado(true); toast("Te aviso cuando tu guía esté lista."); };
+  $("#g-volver").onclick = () => { parar(); cargarEstado(true); };
   let guia;
   try{ guia = await pedirGuia(indice); }
   catch(e){ parar(); mostrarError(e.message); cargarEstado(true); return; }
   parar();
-  toast("Tu guía está lista ✅");
-  // Si el usuario se fue a otra vista, no lo interrumpimos (no bloqueante)
-  if(!document.getElementById("g-progreso")) return;
+  if(!document.getElementById("g-progreso")){ toast("Tu guía está lista ✅"); return; }
   guiaActual = {indice, titulo, secciones: guia.secciones, seccion: 0, intento: 1};
   verSeccion();
 }
@@ -432,25 +479,25 @@ function verSeccion(){
   g.intento = 1;
   const pct = Math.round(100 * g.seccion / g.secciones.length);
   $("#contenido").innerHTML = `
-    <div class="lectura" style="margin:0 auto">
+    <div class="lectura">
     <div id="barra-guia">
-      <div class="dim" style="font-size:var(--fs-xs);margin-bottom:4px">
-        ${g.titulo} — objetivo ${g.seccion + 1} de ${g.secciones.length}
+      <div class="dim" style="font-size:11.5px;margin-bottom:5px">
+        ${g.titulo} · objetivo ${g.seccion + 1} de ${g.secciones.length}
         · <a href="#" id="g-salir" style="color:var(--acc)">volver al curso</a></div>
       <div class="barra"><div style="width:${pct}%"></div></div>
     </div>
-    <div class="tarjeta" style="margin-top:12px">
+    <div class="tarjeta" style="margin-top:14px;max-width:none">
       <span class="objetivo-chip">🎯 ${s.objetivo}</span>
-      <div class="contenido-md">${md(s.contenido)}</div>
-      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-        <button id="b-artefacto">✨ Ver demo interactiva</button>
+      <div class="prosa">${md(s.contenido)}</div>
+      <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+        <button id="b-artefacto">✨ Demo interactiva</button>
         <button id="b-preguntar">💬 Preguntar al tutor</button>
       </div>
       <div id="zona-artefacto"></div>
       <div id="zona-chat"></div>
       <div class="checkpoint">
-        <b>✅ Checkpoint</b>
-        <div class="contenido-md" style="margin:8px 0">${md(s.checkpoint.pregunta)}</div>
+        <div class="titulo-cp">Checkpoint · vale ⭐</div>
+        <div class="prosa" style="margin-bottom:6px">${md(s.checkpoint.pregunta)}</div>
         <div id="opciones" role="radiogroup"></div>
         <div id="feedback" aria-live="polite"></div>
         <div id="siguiente"></div>
@@ -463,14 +510,14 @@ function verSeccion(){
     const b = document.createElement("div");
     b.className = "opcion";
     b.tabIndex = 0;
-    b.innerHTML = md(op);
+    b.innerHTML = `<span class="letra">${"abcd"[j]}</span><span>${md(op)}</span>`;
     b.onclick = () => responderCheckpoint(j, b);
     b.onkeydown = (e) => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); responderCheckpoint(j, b); } };
     $("#opciones").appendChild(b);
   });
   activarBloquesDeCodigo($("#contenido"));
-  // Prefetch del quiz en la última sección (Polaris: elimina la espera después)
   if(g.seccion === g.secciones.length - 1) prefetchQuiz(g.indice);
+  window.scrollTo(0, 0);
 }
 
 async function responderCheckpoint(opcion, elemento){
@@ -485,29 +532,30 @@ async function responderCheckpoint(opcion, elemento){
     elemento.classList.add("correcta");
     desactivarOpciones();
     feedback.innerHTML = `<div class="feedback exito"><b class="ok">¡Correcto!</b>
-      ${r.puntos ? `<span class="puntos-pop"> +${r.puntos} pts</span>` : ""}<br>${md(r.texto)}</div>`;
+      ${r.puntos ? `<span class="puntos-pop"> +${r.puntos} ⭐</span>` : ""}
+      <div class="prosa" style="margin-top:6px">${md(r.texto)}</div></div>`;
     actualizarPuntos(r.puntos_totales);
     botonSiguiente();
   }else if(!r.revelada){
     elemento.classList.add("incorrecta");
     g.intento = 2;
-    feedback.innerHTML = `<div class="feedback pista"><b>Pista 🤔</b> ${md(r.texto)}<br>
-      <span class="dim">Piénsalo de nuevo y elige otra opción — al segundo intento aún ganas puntos.</span></div>`;
+    feedback.innerHTML = `<div class="feedback pista"><b>Pista 🤔</b>
+      <div class="prosa" style="margin-top:6px">${md(r.texto)}</div>
+      <span class="dim" style="font-size:12.5px">Piénsalo otra vez — al segundo intento aún ganas ⭐.</span></div>`;
   }else{
     elemento.classList.add("incorrecta");
     desactivarOpciones();
-    feedback.innerHTML = `<div class="feedback"><b>Así funciona:</b><br>${md(r.texto)}<br>
-      <span class="dim">Equivocarse aquí es parte del método — el concepto se refuerza más adelante.</span></div>`;
+    feedback.innerHTML = `<div class="feedback"><b>Así funciona:</b>
+      <div class="prosa" style="margin-top:6px">${md(r.texto)}</div>
+      <span class="dim" style="font-size:12.5px">Equivocarse es parte del método — lo reforzaremos más adelante.</span></div>`;
     botonSiguiente();
   }
 }
 
-function actualizarPuntos(total){
-  $("#puntos").textContent = `⭐ ${total} pts`;
-}
+function actualizarPuntos(total){ $("#puntos").textContent = `⭐ ${total}`; }
 
 function desactivarOpciones(){
-  document.querySelectorAll(".opcion").forEach(o => { o.onclick = null; o.onkeydown = null; o.tabIndex = -1; });
+  document.querySelectorAll(".opcion").forEach(o => { o.onclick = null; o.onkeydown = null; o.tabIndex = -1; o.style.cursor = "default"; });
 }
 
 function botonSiguiente(){
@@ -515,52 +563,52 @@ function botonSiguiente(){
   const ultimo = g.seccion === g.secciones.length - 1;
   const b = document.createElement("button");
   b.className = "primario";
-  b.style.marginTop = "12px";
+  b.style.marginTop = "14px";
   b.textContent = ultimo ? "Presentar la evaluación final →" : "Siguiente objetivo →";
   b.onclick = () => {
     if(ultimo){ iniciarQuiz(g.indice); }
-    else{ g.seccion += 1; verSeccion(); window.scrollTo(0, 0); }
+    else{ g.seccion += 1; verSeccion(); }
   };
   $("#siguiente").appendChild(b);
   b.focus();
 }
 
-/* ---------- mini-artefactos (patrón Artifacts) ---------- */
+/* ===== mini-artefactos ===== */
 
 async function verArtefacto(indice, seccion){
   const zona = $("#zona-artefacto");
   const boton = $("#b-artefacto");
-  if(zona.querySelector("iframe")){ zona.innerHTML = ""; boton.textContent = "✨ Ver demo interactiva"; return; }
+  if(zona.querySelector("iframe")){ zona.innerHTML = ""; boton.textContent = "✨ Demo interactiva"; return; }
   boton.disabled = true; boton.innerHTML = '<span class="spin"></span> Creando tu demo…';
   try{
     const r = await api(`/api/guia/${indice}/artefacto`, {seccion});
     const iframe = document.createElement("iframe");
     iframe.className = "artefacto";
-    iframe.setAttribute("sandbox", "allow-scripts");   // aislado: sin red ni acceso a la app
+    iframe.setAttribute("sandbox", "allow-scripts");
     iframe.srcdoc = r.html;
     zona.innerHTML = "";
     zona.appendChild(iframe);
     boton.textContent = "✨ Ocultar demo";
-  }catch(e){ mostrarError(e.message); boton.textContent = "✨ Ver demo interactiva"; }
+  }catch(e){ mostrarError(e.message); boton.textContent = "✨ Demo interactiva"; }
   boton.disabled = false;
 }
 
-/* ---------- chat con el tutor dentro de la guía ---------- */
+/* ===== chat en la guía ===== */
 
 function abrirChatGuia(indice, seccion){
   const zona = $("#zona-chat");
   if(zona.dataset.abierto){ zona.innerHTML = ""; delete zona.dataset.abierto; return; }
   zona.dataset.abierto = "1";
   zona.innerHTML = `<div class="panel-tutor">
-    <div class="dim" style="font-size:var(--fs-xs);margin-bottom:8px">
-      Pregunta lo que quieras sobre esta sección. El tutor (una IA) te guía con pistas — no te dará la respuesta del checkpoint.</div>
+    <div class="dim" style="font-size:11.5px;margin-bottom:10px">
+      Tu tutor (una IA) te guía con pistas — no te dará la respuesta del checkpoint.</div>
     <div id="chat-guia"></div>
     <div class="chips" id="chat-sugerencias"></div>
     <div class="chat-barra">
-      <input id="chat-guia-in" placeholder="Escribe tu duda… (Enter para enviar)" autocomplete="off">
+      <input id="chat-guia-in" placeholder="Escribe tu duda…" autocomplete="off">
       <button class="primario" id="chat-guia-btn">Enviar</button>
     </div></div>`;
-  ["Explícamelo con otro ejemplo", "¿Para qué me sirve esto en la vida real?", "No entiendo el código"]
+  ["Explícamelo con otro ejemplo", "¿Para qué me sirve esto?", "No entiendo el código"]
     .forEach(s => {
       const b = document.createElement("button");
       b.textContent = s;
@@ -587,13 +635,13 @@ async function enviarPreguntaGuia(indice, seccion, textoDirecto){
   try{
     const r = await api(`/api/guia/${indice}/pregunta`, {seccion, mensaje});
     espera.classList.remove("escribiendo", "dim");
-    espera.innerHTML = md(r.texto);
+    espera.innerHTML = `<div class="prosa">${md(r.texto)}</div>`;
   }catch(e){ espera.remove(); mostrarError(e.message); }
   espera.scrollIntoView({behavior:"smooth", block:"end"});
   input.focus();
 }
 
-/* ---------- código ejecutable (Pyodide) y Python Tutor ---------- */
+/* ===== Pyodide + Python Tutor ===== */
 
 let pyodideListo = null;
 
@@ -616,7 +664,8 @@ async function ejecutarPython(codigo, salida, boton){
   salida.textContent = pyodideListo ? "▶ Ejecutando…" : "⏳ Preparando Python en tu navegador (solo la primera vez, ~10 s)…";
   let py;
   try{ py = await cargarPyodide(); }
-  catch(e){ salida.className = "salida err"; salida.textContent = e.message; boton.disabled = false; boton.textContent = "▶ Ejecutar"; return; }
+  catch(e){ salida.className = "salida err"; salida.textContent = e.message;
+    boton.disabled = false; boton.textContent = "▶ Ejecutar"; return; }
   py.runPython("import sys, io\nsys.stdout = sys.stderr = io.StringIO()");
   let error = null;
   try{ py.runPython(codigo); }
@@ -638,7 +687,8 @@ function urlPythonTutor(codigo){
 
 function activarBloquesDeCodigo(raiz){
   if(lenguajeCurso !== "python") return;
-  raiz.querySelectorAll(".contenido-md pre").forEach(pre => {
+  raiz.querySelectorAll(".prosa pre").forEach(pre => {
+    if(pre.closest(".msg")) return;
     const codigo = pre.textContent;
     if(!codigo.trim() || codigo.split("\n").length < 2) return;
     const barra = document.createElement("div");
@@ -653,7 +703,7 @@ function activarBloquesDeCodigo(raiz){
       runner.className = "runner";
       runner.innerHTML = `<textarea spellcheck="false" aria-label="Editor de código"></textarea>
         <div><button class="primario">▶ Ejecutar</button></div>
-        <div class="salida dim">Edita el código y ejecútalo: corre en TU navegador, rómpelo sin miedo.</div>`;
+        <div class="salida dim">Corre en TU navegador: edítalo y rómpelo sin miedo.</div>`;
       runner.querySelector("textarea").value = codigo.trimEnd();
       const salida = runner.querySelector(".salida");
       const bEjecutar = runner.querySelector("button");
@@ -664,7 +714,7 @@ function activarBloquesDeCodigo(raiz){
   });
 }
 
-/* ---------- evaluación ---------- */
+/* ===== evaluación ===== */
 
 function prefetchQuiz(indice){
   if(quizPrefetch && quizPrefetch.indice === indice) return;
@@ -673,17 +723,15 @@ function prefetchQuiz(indice){
 
 async function iniciarQuiz(indice){
   guiaActual = null;
-  const cont = $("#contenido");
-  cont.innerHTML = `<div class="tarjeta lectura"><h2>Evaluación — unidad ${indice + 1}</h2>
-    <div id="q-progreso"></div></div>` +
+  $("#contenido").innerHTML = `<div class="tarjeta lectura"><h2>Evaluación · unidad ${indice + 1}</h2>
+    <div id="q-progreso" style="margin-top:8px"></div></div>` +
     Array.from({length: 2}, () => `<div class="tarjeta lectura">
-      <div class="sk" style="height:16px;width:70%;margin-bottom:12px"></div>
-      <div class="sk" style="height:38px;margin-bottom:8px"></div>
-      <div class="sk" style="height:38px;margin-bottom:8px"></div></div>`).join("");
+      <div class="sk" style="height:15px;width:70%;margin-bottom:12px"></div>
+      <div class="sk" style="height:40px;margin-bottom:8px"></div>
+      <div class="sk" style="height:40px"></div></div>`).join("");
   const usarPrefetch = quizPrefetch && quizPrefetch.indice === indice;
   const parar = usarPrefetch ? () => {} : loaderFases($("#q-progreso"), [
-    "Repasando lo que estudiaste…", "Escribiendo preguntas de comprensión…",
-    "Verificando cada respuesta…",
+    "Repasando lo que estudiaste…", "Escribiendo preguntas de comprensión…", "Verificando cada respuesta…",
   ], 45000);
   let quiz = null;
   try{
@@ -692,20 +740,19 @@ async function iniciarQuiz(indice){
   }catch(e){ parar(); mostrarError(e.message); cargarEstado(true); return; }
   parar();
   quizPrefetch = null;
-  const cuerpo = $("#contenido");
-  cuerpo.innerHTML = `<div class="tarjeta lectura"><h2>Evaluación — unidad ${indice + 1}</h2>
-    <p class="dim">Apruebas con 70 o más y desbloqueas la siguiente unidad. Con calma: puedes reintentar las veces que necesites.</p>
+  $("#contenido").innerHTML = `<div class="tarjeta lectura"><h2>Evaluación · unidad ${indice + 1}</h2>
+    <p class="dim" style="margin-bottom:14px">Apruebas con 70+. Con calma: puedes reintentar las veces que necesites, con preguntas nuevas.</p>
     <div id="q-resumen-error"></div>
     <form id="preguntas"></form><button class="primario" id="calificar">Calificar</button></div>`;
   quiz.preguntas.forEach((p, i) => {
     const div = document.createElement("fieldset");
     div.className = "checkpoint";
-    div.style.marginBottom = "12px";
-    div.style.border = "none";
-    div.innerHTML = `<legend><b>Pregunta ${i + 1} de ${quiz.preguntas.length}</b></legend>
-      <div class="contenido-md">${md(p.enunciado)}</div>` +
+    div.style.cssText = "margin-bottom:12px;border:none";
+    div.innerHTML = `<legend class="titulo-cp">Pregunta ${i + 1} de ${quiz.preguntas.length}</legend>
+      <div class="prosa">${md(p.enunciado)}</div>` +
       p.opciones.map((op, j) =>
-        `<label class="opcion"><input type="radio" name="p${i}" value="${j}"> ${md(op)}</label>`).join("");
+        `<label class="opcion"><input type="radio" name="p${i}" value="${j}" style="margin-top:3px">
+         <span>${md(op)}</span></label>`).join("");
     $("#preguntas").appendChild(div);
   });
   $("#calificar").onclick = async () => {
@@ -716,7 +763,7 @@ async function iniciarQuiz(indice){
     const faltantes = respuestas.map((r, i) => r === -1 ? i + 1 : null).filter(Boolean);
     if(faltantes.length){
       $("#q-resumen-error").innerHTML = `<div class="feedback pista" role="alert">
-        Te faltan por responder: pregunta${faltantes.length > 1 ? "s" : ""} ${faltantes.join(", ")}.</div>`;
+        Te falta responder: pregunta${faltantes.length > 1 ? "s" : ""} ${faltantes.join(", ")}.</div>`;
       return;
     }
     const boton = $("#calificar");
@@ -732,25 +779,25 @@ function verResultado(indice, r){
   actualizarPuntos(r.puntos_totales);
   let html = `<div class="tarjeta lectura ${r.aprobado ? "celebra" : ""}">`;
   if(r.aprobado){
-    html += `<h2 class="ok">🎉 ¡Unidad aprobada! ${r.nota}/100</h2>
-      <p class="dim" style="margin:8px 0 16px">Sumaste puntos y desbloqueaste la siguiente unidad. Esto ya es tuyo.</p>`;
+    html += `<h2 class="ok">🎉 Unidad aprobada · ${r.nota}/100</h2>
+      <p class="dim" style="margin:8px 0 16px">Sumaste ⭐ y desbloqueaste la siguiente unidad. Esto ya es tuyo.</p>`;
   }else{
     const buenas = r.detalle.filter(d => d.acierto).length;
-    html += `<h2>${buenas} de ${r.detalle.length} — vamos a cerrar esas brechas</h2>
-      <p class="dim" style="margin:8px 0 16px">Aún no llegas a ${r.nota_aprobatoria}, y está bien: el tutor te ayuda
-      con lo que falló y reintentas con preguntas nuevas.</p>`;
+    html += `<h2>${buenas} de ${r.detalle.length} — cerremos esas brechas</h2>
+      <p class="dim" style="margin:8px 0 16px">Aún no llegas a ${r.nota_aprobatoria}, y está bien:
+      conversa tus dudas con el tutor y reintenta con preguntas nuevas.</p>`;
   }
   r.detalle.forEach((d, i) => {
     html += `<div class="checkpoint" style="margin-bottom:10px">${d.acierto ? "✅" : "❌"}
-      <b>P${i + 1}</b> — elegiste: <span class="contenido-md">${md(d.elegida)}</span>`;
-    if(!d.acierto) html += `<div>Correcta: <span class="ok contenido-md">${md(d.correcta)}</span></div>`;
-    html += `<div class="dim" style="margin-top:6px;font-size:var(--fs-sm)">${md(d.explicacion)}</div></div>`;
+      <b>P${i + 1}</b> — elegiste: <span class="prosa">${md(d.elegida)}</span>`;
+    if(!d.acierto) html += `<div>Correcta: <span class="ok prosa">${md(d.correcta)}</span></div>`;
+    html += `<div class="dim prosa" style="margin-top:6px;font-size:13.5px">${md(d.explicacion)}</div></div>`;
   });
   html += `<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">`;
   if(r.aprobado){
     html += `<button class="primario" id="b-volver">Siguiente unidad →</button>`;
   }else{
-    html += `<button class="primario" id="b-conversatorio">💬 Conversar mis dudas con el tutor</button>
+    html += `<button class="primario" id="b-conversatorio">💬 Conversar mis dudas</button>
              <button id="b-reintentar">Reintentar (preguntas nuevas)</button>
              <button class="sutil" id="b-volver">Volver al curso</button>`;
   }
@@ -761,23 +808,23 @@ function verResultado(indice, r){
   if(bc) bc.onclick = () => iniciarConversatorio(indice, r);
   const br = $("#b-reintentar");
   if(br) br.onclick = () => iniciarQuiz(indice);
-  if(r.aprobado) toast(`+30 pts · Unidad ${indice + 1} aprobada`);
+  if(r.aprobado) toast(`+30 ⭐ · Unidad ${indice + 1} aprobada`);
   cargarEstado(false);
 }
 
-/* ---------- conversatorio ---------- */
+/* ===== conversatorio ===== */
 
 async function iniciarConversatorio(indice, resultado){
-  $("#contenido").innerHTML = `<div class="tarjeta lectura"><h2>💬 Cerremos tus dudas — unidad ${indice + 1}</h2>
-    <p class="dim">Tu tutor (una IA que puede equivocarse) te guía con preguntas, no con respuestas hechas.
-    Cuando te sientas al día, reintenta: las preguntas serán nuevas.</p>
+  $("#contenido").innerHTML = `<div class="tarjeta lectura"><h2>💬 Cerremos tus dudas</h2>
+    <p class="dim" style="margin-bottom:12px">Tu tutor (una IA que puede equivocarse) te guía con preguntas,
+    no con respuestas hechas. Cuando te sientas al día, reintenta: las preguntas serán nuevas.</p>
     <div id="chat"></div>
     <div class="chips" id="conv-sugerencias"></div>
     <div class="chat-barra">
-      <input id="chat-entrada" placeholder="Tu respuesta o tu duda… (Enter para enviar)" autocomplete="off">
+      <input id="chat-entrada" placeholder="Tu respuesta o tu duda…" autocomplete="off">
       <button class="primario" id="chat-enviar">Enviar</button>
     </div>
-    <div style="margin-top:10px"><button id="chat-reintentar">Ya estoy listo: reintentar la evaluación →</button></div>
+    <div style="margin-top:12px"><button id="chat-reintentar">Ya estoy listo: reintentar →</button></div>
     </div>`;
   const falladas = (resultado?.detalle || []).map((d, i) => !d.acierto ? i + 1 : null).filter(Boolean);
   falladas.slice(0, 3).forEach(n => {
@@ -810,7 +857,7 @@ async function turnoConversatorio(indice, apertura, textoDirecto){
   try{
     const r = await api(`/api/conversatorio/${indice}`, {mensaje});
     espera.classList.remove("escribiendo", "dim");
-    espera.innerHTML = md(r.texto);
+    espera.innerHTML = `<div class="prosa">${md(r.texto)}</div>`;
   }catch(e){ espera.remove(); mostrarError(e.message); }
   espera.scrollIntoView({behavior:"smooth", block:"end"});
 }

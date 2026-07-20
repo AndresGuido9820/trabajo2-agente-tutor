@@ -136,6 +136,33 @@ def _rechazar(motivo: str) -> str:
     raise ValueError(motivo)
 
 
+def validar_perfil_extraido(datos: object, descripcion: str) -> PerfilEstudiante:
+    """Valida el perfil que el LLM extrajo de la petición libre (HU-15).
+
+    Args:
+        datos: JSON crudo del LLM.
+        descripcion: La petición original del estudiante, que se conserva.
+
+    Raises:
+        ValueError: Si nivel/objetivo no corresponden a los enums o si el
+            objetivo 'otro' llega sin detalle (se rellena con la petición).
+    """
+    if not isinstance(datos, dict):
+        raise ValueError("se esperaba un objeto JSON")
+    objetivo = Objetivo(str(datos["objetivo"]).strip().lower())
+    detalle = str(datos.get("objetivo_detalle", "")).strip()
+    if objetivo is Objetivo.OTRO and not detalle:
+        detalle = descripcion
+    return PerfilEstudiante(
+        nivel=Nivel(str(datos["nivel"]).strip().lower()),
+        experiencia=str(datos.get("experiencia", "")).strip(),
+        objetivo=objetivo,
+        objetivo_detalle=detalle,
+        lenguaje=validar_lenguaje(str(datos.get("lenguaje", ""))),
+        descripcion=descripcion,
+    )
+
+
 def guardar_perfil(perfil: PerfilEstudiante, ruta: Path) -> None:
     """Serializa el perfil a JSON en ``ruta`` (crea el directorio si falta)."""
     ruta.parent.mkdir(parents=True, exist_ok=True)
@@ -146,6 +173,7 @@ def guardar_perfil(perfil: PerfilEstudiante, ruta: Path) -> None:
         "objetivo": perfil.objetivo.value,
         "objetivo_detalle": perfil.objetivo_detalle,
         "lenguaje": perfil.lenguaje,
+        "descripcion": perfil.descripcion,
     }
     ruta.write_text(json.dumps(datos, ensure_ascii=False, indent=2), "utf-8")
     logger.info("Perfil guardado en %s", ruta)
@@ -177,6 +205,7 @@ def cargar_perfil(ruta: Path) -> PerfilEstudiante | None:
             objetivo=Objetivo(datos["objetivo"]),
             objetivo_detalle=str(datos["objetivo_detalle"]),
             lenguaje=str(datos["lenguaje"]),
+            descripcion=str(datos.get("descripcion", "")),
         )
     except (json.JSONDecodeError, ValueError, KeyError, TypeError) as error:
         raise ErrorDatos(

@@ -62,6 +62,7 @@ class PerfilEstudiante:
     objetivo: Objetivo
     objetivo_detalle: str
     lenguaje: str
+    descripcion: str = ""  # petición libre del estudiante ("hazme un curso de…")
 
     def __post_init__(self) -> None:
         """Valida invariantes del perfil.
