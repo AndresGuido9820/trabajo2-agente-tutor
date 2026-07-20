@@ -1,0 +1,20 @@
+# Secretos y datos locales
+.env
+data/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+dist/
+
+# Herramientas
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# SO / editores
+.DS_Store
+.idea/
+.vscode/
