@@ -34,14 +34,14 @@ def generar_leccion(cliente: ClienteLLM, perfil, temario, indice: int,
 
 ## Tareas
 
-- [ ] `prompts.py`: system prompt del tutor + plantillas de temario y lección
+- [x] `prompts.py`: system prompt del tutor + plantillas de temario y lección
       (documentar cada técnica usada en comentarios breves).
-- [ ] `curso.py`: modelos `Unidad`/`Temario`, validadores de esquema,
+- [x] `curso.py`: modelos `Unidad`/`Temario`, validadores de esquema,
       `generar_temario`, `generar_leccion`, cache en `curso.json`.
-- [ ] Adaptación: incluir en el prompt de lección qué unidades ya vio y en qué
+- [x] Adaptación: incluir en el prompt de lección qué unidades ya vio y en qué
       preguntas falló.
-- [ ] Pruebas con `ClienteLLMFalso` (abajo).
-- [ ] Revisión manual de calidad con API real (humo) y anotar en HALLAZGOS
+- [x] Pruebas con `ClienteLLMFalso` (abajo).
+- [x] Revisión manual de calidad con API real (humo) y anotar en HALLAZGOS
       qué prompts hubo que ajustar y por qué.
 
 ## Pruebas
