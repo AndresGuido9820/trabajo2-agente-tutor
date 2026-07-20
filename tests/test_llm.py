@@ -67,8 +67,13 @@ class TestClienteOpenAI:
             cliente.generar("sys", "p")
         assert len(sdk.llamadas) == MAX_REINTENTOS_API
 
-    def test_generar_respuesta_vacia_lanza_error_llm(self, configuracion):
-        cliente, _ = _cliente(configuracion, [""])
+    def test_generar_respuesta_vacia_se_reintenta(self, configuracion):
+        cliente, sdk = _cliente(configuracion, ["", "ok"])
+        assert cliente.generar("sys", "p") == "ok"
+        assert len(sdk.llamadas) == 2
+
+    def test_generar_respuesta_vacia_persistente_lanza_error_llm(self, configuracion):
+        cliente, _ = _cliente(configuracion, [""] * MAX_REINTENTOS_API)
         with pytest.raises(ErrorLLM, match="vacía"):
             cliente.generar("sys", "p")
 

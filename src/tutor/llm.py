@@ -50,9 +50,13 @@ def espera_backoff(intento: int, azar: Callable[[], float] = random.random) -> f
     return BASE_BACKOFF_SEGUNDOS * (2.0**intento) * (0.5 + azar())
 
 
+class _RespuestaVacia(Exception):
+    """Respuesta sin contenido (interno; se reintenta como error transitorio)."""
+
+
 def _es_reintentable(error: Exception) -> bool:
     """Decide si un error del SDK amerita reintento."""
-    if isinstance(error, APIConnectionError):
+    if isinstance(error, APIConnectionError | _RespuestaVacia):
         return True
     if isinstance(error, APIStatusError):
         codigo = error.status_code
@@ -66,6 +70,8 @@ def _describir(error: Exception) -> str:
         return f"la API respondió {error.status_code}"
     if isinstance(error, APIConnectionError):
         return "no se pudo conectar con la API"
+    if isinstance(error, _RespuestaVacia):
+        return "la API devolvió una respuesta vacía"
     return type(error).__name__
 
 
@@ -111,9 +117,11 @@ class ClienteOpenAI:
                 )
                 contenido = respuesta.choices[0].message.content
                 if not contenido:
-                    raise ErrorLLM("La API devolvió una respuesta vacía.")
+                    # Ocurre cuando el modelo agota el presupuesto en tokens
+                    # de razonamiento (gpt-5): transitorio, se reintenta.
+                    raise _RespuestaVacia("La API devolvió una respuesta vacía.")
                 return contenido
-            except (APIConnectionError, APIStatusError) as error:
+            except (APIConnectionError, APIStatusError, _RespuestaVacia) as error:
                 if not _es_reintentable(error):
                     raise ErrorLLM(
                         f"Error de la API sin reintento: {_describir(error)}. "
