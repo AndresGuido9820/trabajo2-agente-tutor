@@ -20,14 +20,14 @@
 
 ## Tareas
 
-- [ ] `ui.py`: menú, render de temario con estados, render de lección/quiz/
+- [x] `ui.py`: menú, render de temario con estados, render de lección/quiz/
       progreso, spinner durante llamadas al LLM.
-- [ ] `agente.py`: orquestador que conecta perfil, curso, evaluación y
+- [x] `agente.py`: orquestador que conecta perfil, curso, evaluación y
       progreso (la UI no llama al LLM directo).
-- [ ] `__main__.py` + script `tutor` en `pyproject.toml`.
-- [ ] Manejo global de `KeyboardInterrupt` y `ErrorLLM`/`ErrorConfiguracion`
+- [x] `__main__.py` + script `tutor` en `pyproject.toml`.
+- [x] Manejo global de `KeyboardInterrupt` y `ErrorLLM`/`ErrorConfiguracion`
       (mensajes finales sin traceback).
-- [ ] Pruebas (abajo) + pasada manual del checklist PA-01…PA-06.
+- [x] Pruebas (abajo) + pasada manual del checklist PA-01…PA-06.
 
 ## Pruebas
 
