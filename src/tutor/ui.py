@@ -15,6 +15,7 @@ from rich.panel import Panel
 from rich.table import Table
 
 from tutor.agente import Agente, EstadoUnidad
+from tutor.errores import ErrorLLM
 from tutor.evaluacion import Retroalimentacion, validar_respuesta
 from tutor.perfil import FuncionEntrada
 from tutor.progreso import Resultado
@@ -168,6 +169,28 @@ def mostrar_resultado(resultado: Resultado, detalle: list[Retroalimentacion]) ->
         )
     else:
         consola.print("\n[green]¡Impecable! Sigue así.[/]")
+
+
+def bucle_charla(agente: Agente, indice: int, entrada: FuncionEntrada = input) -> None:
+    """Charla con el tutor sobre la unidad recién leída (HU-09).
+
+    Enter vacío o 'volver' regresa al menú; un error del LLM no rompe la
+    sesión (se informa y se puede seguir preguntando o salir).
+    """
+    consola.print(
+        "\n[bold cyan]💬 ¿Dudas?[/] Pregúntale al tutor sobre esta lección "
+        "(Enter o 'volver' para regresar al menú)."
+    )
+    while True:
+        pregunta = entrada("💬 > ").strip()
+        if not pregunta or pregunta.lower() == "volver":
+            return
+        try:
+            with consola.status("Pensando..."):
+                respuesta = agente.charlar(indice, pregunta)
+            consola.print(Panel(Markdown(respuesta), border_style="magenta"))
+        except ErrorLLM as error:
+            consola.print(f"[red]{error}[/]")
 
 
 def confirmar(mensaje: str, entrada: FuncionEntrada = input) -> bool:

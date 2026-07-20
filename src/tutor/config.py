@@ -31,6 +31,9 @@ MIN_UNIDADES = 5
 MAX_UNIDADES = 8
 PREGUNTAS_POR_QUIZ = 4
 
+# Charla con el tutor (ver plan/HU-09): turnos de historial que se conservan
+MAX_TURNOS_CHARLA = 8
+
 
 @dataclass(frozen=True)
 class Configuracion:

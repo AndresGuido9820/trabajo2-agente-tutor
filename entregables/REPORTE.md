@@ -60,6 +60,13 @@ enseñanza de la programación y tutores LLM (informe completo con fuentes en
    escribir opciones, re-resolver desde cero, y reescribir la pregunta si dos
    opciones son defendibles.
 
+La interacción no termina en la lección: tras leerla, el estudiante puede
+**conversar con el tutor**. Ese modo aplica los guardrails documentados por
+Khan Academy para Khanmigo: guía socrática (ante "dame la solución" responde
+con pistas y preguntas), escape del "no sé" (al segundo bloqueo muestra un
+paso resuelto en lugar de repetir la pregunta) y redirección de desvíos de
+tema. En las pruebas reales el guardrail se sostuvo exactamente así.
+
 La personalización opera en dos niveles: el system prompt describe al
 estudiante (nivel, meta, experiencia como fuente de analogías) y reglas
 pedagógicas fijas; y el prompt del temario añade ajustes estructurales por

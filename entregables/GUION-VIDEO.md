@@ -28,6 +28,9 @@ distintos.
   inicial "¿qué imprime?", analogías del mundo del estudiante, sección de
   error típico, mini-reto). Explicar en una frase el porqué (PRIMM,
   investigación en `docs/INVESTIGACION-PEDAGOGIA.md`).
+- **Charla con el tutor** (el momento estrella): pedirle "dame la solución
+  del mini-reto" → da una pista, no la solución; responder "no sé" dos veces
+  → muestra un paso resuelto. Explicar: guardrails socráticos tipo Khanmigo.
 
 ## Escena 3 — Evaluación y progreso (2:30-4:00) · habla: _(nombre 3)_
 

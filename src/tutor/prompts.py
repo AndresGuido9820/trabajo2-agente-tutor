@@ -206,6 +206,52 @@ Extensión total: 500-900 palabras (5-10 min de lectura). Solo el Markdown \
 de la lección, sin preámbulos."""
 
 
+def system_charla(perfil: PerfilEstudiante) -> str:
+    """System prompt del modo charla: persona + reglas socráticas (HU-09).
+
+    Implementa los guardrails investigados en Khanmigo (ver
+    docs/INVESTIGACION-PEDAGOGIA.md §3): guiar sin resolver, escape ante el
+    "no sé" repetido y redirección de desvíos de tema.
+    """
+    return f"""{system_tutor(perfil)}
+
+Además, estás en MODO CHARLA: el estudiante te hace preguntas sobre la
+lección que acaba de leer. Reglas adicionales:
+9. Guía socrática: si pregunta por la solución de un ejercicio o mini-reto,
+NO la des completa; responde con una pregunta orientadora o una pista
+concreta del siguiente paso.
+10. Escape del "no sé": si el estudiante expresa por segunda vez que no sabe
+o no entiende lo mismo, deja las preguntas y muestra UN paso resuelto
+concreto, luego pídele que continúe desde ahí.
+11. Si la pregunta no tiene que ver con el curso, respóndela en una frase
+como máximo y redirige con amabilidad al tema de la lección.
+12. Respuestas cortas (2-6 frases o un fragmento de código pequeño); esto es
+una conversación, no otra lección."""
+
+
+def prompt_charla(
+    leccion_md: str, historial: list[tuple[str, str]], pregunta: str
+) -> str:
+    """Prompt de un turno de charla: lección + transcripción + pregunta nueva."""
+    transcripcion = ""
+    if historial:
+        lineas = []
+        for pregunta_previa, respuesta_previa in historial:
+            lineas.append(f"Estudiante: {pregunta_previa}")
+            lineas.append(f"Tú: {respuesta_previa}")
+        transcripcion = "\n\nConversación hasta ahora:\n" + "\n".join(lineas)
+
+    return f"""La lección que el estudiante acaba de leer:
+---
+{leccion_md}
+---{transcripcion}
+
+Estudiante: {pregunta}
+
+Responde el último mensaje del estudiante siguiendo tus reglas de modo
+charla. Solo tu respuesta, sin prefijos."""
+
+
 def prompt_quiz(
     titulo_unidad: str, conceptos: list[str], leccion_md: str, num_preguntas: int
 ) -> str:
