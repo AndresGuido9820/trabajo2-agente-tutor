@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 
 from tutor.errores import ErrorConfiguracion
 
-MODELO_POR_DEFECTO = "claude-sonnet-5"
+MODELO_POR_DEFECTO = "gpt-5-mini"
 DIR_DATOS_POR_DEFECTO = "./data"
 
 # Límites de interacción con el LLM (ver plan/HU-02-cliente-llm.md)
@@ -49,17 +49,17 @@ def cargar_configuracion(entorno: dict[str, str] | None = None) -> Configuracion
         La configuración efectiva.
 
     Raises:
-        ErrorConfiguracion: Si falta ``ANTHROPIC_API_KEY``.
+        ErrorConfiguracion: Si falta ``OPENAI_API_KEY``.
     """
     if entorno is None:
         load_dotenv()
         entorno = dict(os.environ)
 
-    api_key = entorno.get("ANTHROPIC_API_KEY", "").strip()
+    api_key = entorno.get("OPENAI_API_KEY", "").strip()
     if not api_key:
         raise ErrorConfiguracion(
-            "Falta ANTHROPIC_API_KEY. Copia .env.example a .env y agrega tu "
-            "API key de https://console.anthropic.com."
+            "Falta OPENAI_API_KEY. Copia .env.example a .env y agrega tu "
+            "API key de https://platform.openai.com/api-keys."
         )
 
     return Configuracion(

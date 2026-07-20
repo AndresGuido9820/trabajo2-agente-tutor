@@ -2,7 +2,7 @@
 
 Agente interactivo (CLI) que enseña fundamentos de programación adaptándose al
 perfil del estudiante: evalúa sus conocimientos previos y objetivos, genera un
-curso personalizado con un LLM (Anthropic Claude), crea evaluaciones y lleva el
+curso personalizado con un LLM (OpenAI GPT), crea evaluaciones y lleva el
 progreso.
 
 Curso: *Normalización: aplicaciones de LLMs y Agentes para la enseñanza de la
@@ -33,7 +33,7 @@ uv sync
 
 # 2. Configurar la API key (nunca se versiona)
 cp .env.example .env
-# editar .env y poner ANTHROPIC_API_KEY=sk-ant-...
+# editar .env y poner OPENAI_API_KEY=sk-...
 
 # 3. Ejecutar el tutor
 uv run tutor

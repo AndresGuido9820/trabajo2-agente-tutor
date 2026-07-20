@@ -18,7 +18,7 @@ y evaluaciones con un LLM y llevando su progreso.
   tipos incorrectos) sin crashear.
 
 ### RF-2. Motor de generación de contenidos
-- RF-2.1 Interfaz con una API de LLM (Anthropic Claude).
+- RF-2.1 Interfaz con una API de LLM (OpenAI GPT).
 - RF-2.2 Generar el contenido educativo (temario del curso + lecciones).
 - RF-2.3 Generar evaluaciones (quizzes por unidad) y calificarlas.
 - RF-2.4 Llevar el progreso del estudiante (persistente entre sesiones).
@@ -44,8 +44,8 @@ Menú principal: `[n] entrar a unidad n · [e] evaluación de la unidad ·
 ### 3.2 Variables de entorno (`.env`)
 | Variable | Requerida | Descripción |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | sí | API key de Anthropic |
-| `TUTOR_MODEL` | no (default `claude-sonnet-5`) | modelo a usar |
+| `OPENAI_API_KEY` | sí | API key de OpenAI |
+| `TUTOR_MODEL` | no (default `gpt-5-mini`) | modelo a usar |
 | `TUTOR_DATA_DIR` | no (default `./data`) | carpeta de perfiles/progreso |
 
 ### 3.3 Persistencia (JSON en `TUTOR_DATA_DIR`)
@@ -110,7 +110,7 @@ además prueba en `tests/` (ver `docs/TESTING.md`).
   calificación con retroalimentación por pregunta.
 - [ ] **PA-06** El progreso (unidades vistas, notas) persiste: cerrar y reabrir
   el tutor conserva el estado y lo muestra en `[p]`.
-- [ ] **PA-07** Sin `ANTHROPIC_API_KEY` el programa termina con un mensaje de
+- [ ] **PA-07** Sin `OPENAI_API_KEY` el programa termina con un mensaje de
   configuración claro (no traceback).
 - [ ] **PA-08** Con la red caída o error 429/5xx de la API, el tutor reintenta
   con backoff y, si agota reintentos, informa el error sin perder el progreso.
