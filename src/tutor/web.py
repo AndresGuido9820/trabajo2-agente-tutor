@@ -22,9 +22,10 @@ from tutor.agente import ARCHIVO_PERFIL, Agente, perfil_o_none
 from tutor.config import NOTA_APROBATORIA, Configuracion, cargar_configuracion
 from tutor.errores import ErrorBloqueada, ErrorConfiguracion, ErrorLLM
 from tutor.evaluacion import Quiz
-from tutor.llm import ClienteLLM, ClienteOpenAI
+from tutor.llm import ClienteLLM, ClienteOpenAI, pedir_json
 from tutor.models import Nivel, Objetivo, PerfilEstudiante
-from tutor.perfil import guardar_perfil
+from tutor.perfil import guardar_perfil, validar_perfil_extraido
+from tutor.prompts import prompt_extraer_perfil
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +81,12 @@ class CuerpoArtefacto(BaseModel):
     """Body de solicitud de mini-artefacto de una sección."""
 
     seccion: int
+
+
+class CuerpoPromptCurso(BaseModel):
+    """Body de creación de curso por prompt libre (HU-15)."""
+
+    prompt: str
 
 
 class _Estado:
@@ -150,6 +157,27 @@ def crear_app(
                 for fila in agente.filas_unidades()
             ],
         }
+
+    @app.post("/api/curso")
+    def api_crear_curso(cuerpo: CuerpoPromptCurso) -> dict[str, Any]:
+        """Crea el curso desde una petición libre: "hazme un curso de…"."""
+        texto = cuerpo.prompt.strip()
+        if len(texto) < 8:
+            raise HTTPException(400, "Cuéntame un poco más: ¿qué quieres aprender?")
+        cliente = estado.cliente
+
+        def operacion() -> PerfilEstudiante:
+            return pedir_json(
+                cliente,
+                system="Eres un extractor preciso de perfiles de estudiantes.",
+                prompt=prompt_extraer_perfil(texto),
+                validar=lambda datos: validar_perfil_extraido(datos, texto),
+            )
+
+        perfil = _con_llm(operacion)
+        guardar_perfil(perfil, estado.configuracion.dir_datos / ARCHIVO_PERFIL)
+        estado.agente = Agente(cliente, estado.configuracion.dir_datos, perfil)
+        return {"ok": True}
 
     @app.post("/api/perfil")
     def api_perfil(cuerpo: CuerpoPerfil) -> dict[str, Any]:
