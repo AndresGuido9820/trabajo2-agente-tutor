@@ -125,6 +125,7 @@ def crear_app(
             "perfil": True,
             "lenguaje": curso.temario.lenguaje,
             "puntos": agente.progreso.puntos,
+            "racha": agente.progreso.racha,
             "nota_aprobatoria": NOTA_APROBATORIA,
             "unidades": [
                 {

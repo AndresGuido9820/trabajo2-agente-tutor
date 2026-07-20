@@ -398,19 +398,35 @@ Responde ÚNICAMENTE este JSON:
 
 
 def system_conversatorio(
-    perfil: PerfilEstudiante, conceptos_fallados: list[str]
+    perfil: PerfilEstudiante,
+    conceptos_fallados: list[str],
+    desempeno: str = "",
 ) -> str:
-    """System prompt del conversatorio de dudas tras reprobar (HU-12)."""
+    """System prompt del conversatorio de dudas tras reprobar (HU-12/HU-13).
+
+    ``desempeno`` es el historial de intentos y notas del estudiante; el
+    prompt exige inferir primero el malentendido (patrón thought→response
+    de tutor-gpt/Bloom) y condicionar las preguntas a esa inferencia.
+    """
     fallados = (
         f"En la evaluación falló estos conceptos: {', '.join(conceptos_fallados)}. "
         if conceptos_fallados
         else ""
     )
+    historial = (
+        f"\nHistorial de desempeño del estudiante:\n{desempeno}\n" if desempeno else ""
+    )
     return f"""{system_tutor(perfil)}
 
 Además, estás en un CONVERSATORIO DE DUDAS: el estudiante presentó la
-evaluación de la unidad y NO la aprobó. {fallados}Tu meta es que descubra
-por sí mismo dónde está su confusión antes de reintentar. Reglas:
+evaluación de la unidad y NO la aprobó. {fallados}{historial}
+PASO PREVIO OBLIGATORIO (no lo escribas): antes de cada respuesta, infiere
+en silencio qué malentendido específico explica mejor estos errores y qué
+sabe ya el estudiante; condiciona tu siguiente pregunta o pista a esa
+inferencia, no al concepto en abstracto.
+
+Tu meta es que descubra por sí mismo dónde está su confusión antes de
+reintentar. Reglas:
 9. Método socrático estricto: guía con preguntas cortas y pistas graduales;
 nunca des la respuesta de una pregunta de evaluación directamente.
 10. Empieza tú la conversación preguntando por el concepto fallado que
@@ -469,11 +485,31 @@ charla. Solo tu respuesta, sin prefijos."""
 
 
 def prompt_quiz(
-    titulo_unidad: str, conceptos: list[str], leccion_md: str, num_preguntas: int
+    titulo_unidad: str,
+    conceptos: list[str],
+    leccion_md: str,
+    num_preguntas: int,
+    preguntas_previas: list[str] | None = None,
 ) -> str:
-    """Prompt del quiz: comprensión sobre memoria + verificación independiente."""
+    """Prompt del quiz: comprensión sobre memoria + verificación independiente.
+
+    ``preguntas_previas`` activa el modo variantes (HU-13, patrón
+    PrairieLearn): en un reintento se evalúan los mismos objetivos con
+    preguntas distintas, para que aprobar exija dominio y no memoria.
+    """
+    variantes = ""
+    if preguntas_previas:
+        listado = "\n".join(f"- {p}" for p in preguntas_previas)
+        variantes = f"""
+
+IMPORTANTE — este es un REINTENTO. El estudiante ya vio estas preguntas:
+{listado}
+Genera VARIANTES equivalentes: mismos conceptos y mismo nivel, pero con
+código, valores y enunciados DIFERENTES (prohibido repetir una pregunta o
+cambiar solo un número)."""
+
     return f"""A partir de la lección de abajo, crea un quiz de \
-{num_preguntas} preguntas de opción múltiple sobre "{titulo_unidad}".
+{num_preguntas} preguntas de opción múltiple sobre "{titulo_unidad}".{variantes}
 
 Composición del quiz (mide comprensión, no memoria):
 - Al menos la mitad de las preguntas son "¿qué imprime/hace este código?" \

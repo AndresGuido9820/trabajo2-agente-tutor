@@ -94,8 +94,18 @@ def generar_quiz(
     leccion_md: str,
     unidad: int,
     system: str,
+    preguntas_previas: list[str] | None = None,
 ) -> Quiz:
     """Genera el quiz de una unidad a partir de su lección.
+
+    Args:
+        cliente: Cliente LLM a usar.
+        titulo_unidad: Título de la unidad evaluada.
+        conceptos: Conceptos evaluables (etiquetan cada pregunta).
+        leccion_md: Lección fuente de las preguntas.
+        unidad: Índice de la unidad (base 0).
+        system: System prompt del tutor.
+        preguntas_previas: Enunciados ya vistos; exige variantes (HU-13).
 
     Raises:
         ErrorLLM: Si el modelo no produce un quiz válido tras reintentos.
@@ -109,6 +119,7 @@ def generar_quiz(
             conceptos=conceptos,
             leccion_md=leccion_md,
             num_preguntas=PREGUNTAS_POR_QUIZ,
+            preguntas_previas=preguntas_previas,
         ),
         validar=lambda datos: validar_quiz(datos, unidad, PREGUNTAS_POR_QUIZ),
     )

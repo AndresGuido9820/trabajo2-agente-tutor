@@ -11,7 +11,7 @@ import json
 import logging
 import os
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -57,12 +57,26 @@ class Progreso:
     vistas: dict[int, str] = field(default_factory=dict)
     resultados: list[Resultado] = field(default_factory=list)
     puntos: int = 0
+    racha: int = 0
+    ultima_sesion: str = ""  # fecha ISO AAAA-MM-DD de la última sesión
 
     def sumar_puntos(self, cantidad: int) -> None:
         """Acumula puntos ganados en checkpoints y evaluaciones (HU-12)."""
         if cantidad < 0:
             raise ValueError(f"Los puntos no pueden ser negativos: {cantidad}")
         self.puntos += cantidad
+
+    def registrar_sesion(self, hoy: str) -> None:
+        """Actualiza la racha diaria (HU-13, mecánica Duolingo sin castigos).
+
+        El mismo día no suma; un día consecutivo suma 1; saltarse días
+        reinicia la racha a 1 (sin vidas ni penalizaciones).
+        """
+        if self.ultima_sesion == hoy:
+            return
+        ayer = (date.fromisoformat(hoy) - timedelta(days=1)).isoformat()
+        self.racha = self.racha + 1 if self.ultima_sesion == ayer else 1
+        self.ultima_sesion = hoy
 
     def marcar_vista(self, unidad: int) -> None:
         """Registra la primera visita a una unidad (idempotente)."""
@@ -102,6 +116,8 @@ def guardar_progreso(progreso: Progreso, ruta: Path) -> None:
     datos = {
         "version": VERSION_ESQUEMA,
         "puntos": progreso.puntos,
+        "racha": progreso.racha,
+        "ultima_sesion": progreso.ultima_sesion,
         "vistas": {str(unidad): fecha for unidad, fecha in progreso.vistas.items()},
         "resultados": [
             {
@@ -131,9 +147,13 @@ def _parsear(datos: Any) -> Progreso:
         )
         for r in datos["resultados"]
     ]
-    # "puntos" es opcional para retro-compatibilidad con progresos previos.
+    # Campos nuevos opcionales (retro-compatibilidad con progresos previos).
     return Progreso(
-        vistas=vistas, resultados=resultados, puntos=int(datos.get("puntos", 0))
+        vistas=vistas,
+        resultados=resultados,
+        puntos=int(datos.get("puntos", 0)),
+        racha=int(datos.get("racha", 0)),
+        ultima_sesion=str(datos.get("ultima_sesion", "")),
     )
 
 

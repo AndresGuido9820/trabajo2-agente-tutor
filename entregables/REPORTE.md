@@ -110,6 +110,17 @@ LLM inyectados por constructor: un `ClienteLLMFalso` con respuestas en cola y
 un `SDKFalso` que simula errores HTTP del SDK. La API real solo se toca en
 scripts de humo manuales y en la exportación de los cursos de muestra.
 
+Las mecánicas del producto no son inventadas: encuestamos los mejores
+proyectos open source del área (`docs/INVESTIGACION-OSS.md`) y adoptamos con
+fuente lo que tiene evidencia — ejecución de los ejemplos en el navegador
+con Pyodide (futurecoder), racha diaria y XP sin vidas ni ligas (los A/B
+publicados de Duolingo, excluyendo sus dark patterns), variantes de las
+preguntas al reintentar (PrairieLearn), visualización de la máquina nocional
+con Python Tutor, y el patrón thought→response de tutor-gpt para que las
+pistas infieran primero el malentendido. Nuestro esquema de puntos por
+intento resultó coincidir con el `autoPoints` de PrairieLearn, una
+validación independiente del diseño.
+
 ## 4. Capacidades y limitaciones de los LLMs (reflexión)
 
 El LLM demostró una capacidad notable para la **transferencia de dominio**:
