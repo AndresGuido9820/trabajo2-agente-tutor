@@ -24,13 +24,14 @@ distintos.
 - Se genera el temario: señalar que las unidades progresan hacia "ver algo
   en el navegador" temprano (personalización estructural).
 - Mostrar el menú: TODAS las unidades navegables aunque no estén generadas.
-- Entrar a la unidad 1: señalar la estructura de la lección (predicción
-  inicial "¿qué imprime?", analogías del mundo del estudiante, sección de
-  error típico, mini-reto). Explicar en una frase el porqué (PRIMM,
-  investigación en `docs/INVESTIGACION-PEDAGOGIA.md`).
-- **Charla con el tutor** (el momento estrella): pedirle "dame la solución
-  del mini-reto" → da una pista, no la solución; responder "no sé" dos veces
-  → muestra un paso resuelto. Explicar: guardrails socráticos tipo Khanmigo.
+- Entrar a la unidad 1: la lección es UNA CONVERSACIÓN (el momento estrella).
+  Mostrar: primero aparecen los objetivos y la ruta de pasos; el tutor abre
+  con el gancho y el "predice: ¿qué imprime esto?"; responder MAL a propósito
+  → el tutor corrige con amabilidad y avanza al siguiente paso. Explicar en
+  una frase el porqué (PRIMM conversado, `docs/INVESTIGACION-PEDAGOGIA.md`).
+- Guardrail socrático: en el paso del reto pedirle "dame la solución
+  completa" → da una pista, no la solución; responder "no sé" dos veces →
+  muestra un paso resuelto. Explicar: guardrails tipo Khanmigo.
 
 ## Escena 3 — Evaluación y progreso (2:30-4:00) · habla: _(nombre 3)_
 

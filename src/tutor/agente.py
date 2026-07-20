@@ -7,14 +7,16 @@ La UI no llama al LLM ni toca archivos directamente: todo pasa por el
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 
 from tutor.config import MAX_TURNOS_CHARLA
 from tutor.curso import (
     Curso,
+    GuionLeccion,
     cargar_curso,
+    generar_guion,
     generar_leccion,
     generar_temario,
     guardar_curso,
@@ -25,7 +27,13 @@ from tutor.llm import ClienteLLM
 from tutor.models import PerfilEstudiante
 from tutor.perfil import cargar_perfil, guardar_perfil
 from tutor.progreso import Progreso, Resultado, cargar_progreso, guardar_progreso
-from tutor.prompts import prompt_charla, system_charla, system_tutor
+from tutor.prompts import (
+    prompt_charla,
+    prompt_turno_leccion,
+    system_charla,
+    system_leccion,
+    system_tutor,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +48,15 @@ class EstadoUnidad(Enum):
     PENDIENTE = "pendiente"
     VISTA = "vista"
     EVALUADA = "evaluada"
+
+
+@dataclass
+class _SesionLeccion:
+    """Estado en memoria de una lección conversada (HU-10)."""
+
+    guion: GuionLeccion
+    paso: int = 0
+    historial: list[tuple[str, str]] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -72,6 +89,8 @@ class Agente:
         self._curso: Curso | None = cargar_curso(dir_datos / ARCHIVO_CURSO)
         # Historial de charla por unidad; vive solo en la sesión (HU-09).
         self._charlas: dict[int, list[tuple[str, str]]] = {}
+        # Lecciones conversadas en curso; solo en la sesión (HU-10).
+        self._lecciones_activas: dict[int, _SesionLeccion] = {}
 
     @property
     def curso(self) -> Curso:
@@ -142,6 +161,64 @@ class Agente:
         self.progreso.registrar(resultado)
         self.guardar()
         return resultado, detalle
+
+    def iniciar_leccion(self, indice: int) -> GuionLeccion:
+        """Prepara la lección conversada: guion (con cache) y sesión limpia.
+
+        Marca la unidad como vista y persiste curso y progreso.
+
+        Raises:
+            IndexError: Si la unidad no existe.
+            ErrorLLM: Si la generación del guion falla tras reintentos.
+        """
+        guion = generar_guion(
+            self._cliente, self.perfil, self.curso, indice, self.progreso
+        )
+        guardar_curso(self.curso, self._dir / ARCHIVO_CURSO)
+        self.progreso.marcar_vista(indice)
+        self.guardar()
+        self._lecciones_activas[indice] = _SesionLeccion(guion=guion)
+        return guion
+
+    def turno_leccion(self, indice: int, mensaje: str | None) -> tuple[str, bool]:
+        """Un turno de la lección conversada.
+
+        Con ``mensaje=None`` produce el primer paso; con la respuesta del
+        estudiante avanza al paso siguiente y lo desarrolla reaccionando a
+        ella.
+
+        Returns:
+            El mensaje del tutor y si la lección quedó terminada (se acaba
+            de desarrollar el último paso).
+
+        Raises:
+            KeyError: Si la lección no fue iniciada con ``iniciar_leccion``.
+            ErrorLLM: Si la API falla tras los reintentos.
+        """
+        sesion = self._lecciones_activas[indice]
+        if mensaje is not None and sesion.paso < len(sesion.guion.pasos) - 1:
+            sesion.paso += 1
+        paso = sesion.guion.pasos[sesion.paso]
+        texto = self._cliente.generar(
+            system=system_leccion(self.perfil),
+            prompt=prompt_turno_leccion(
+                guion_texto="\n".join(f"- {o}" for o in sesion.guion.objetivos),
+                numero_paso=sesion.paso + 1,
+                total_pasos=len(sesion.guion.pasos),
+                paso_tipo=paso.tipo,
+                paso_instruccion=paso.instruccion,
+                historial=sesion.historial,
+                mensaje=mensaje,
+            ),
+        )
+        sesion.historial.append((mensaje or "", texto))
+        del sesion.historial[:-MAX_TURNOS_CHARLA]
+        return texto, sesion.paso == len(sesion.guion.pasos) - 1
+
+    def avance_leccion(self, indice: int) -> tuple[int, int]:
+        """Paso actual (base 1) y total de la lección conversada activa."""
+        sesion = self._lecciones_activas[indice]
+        return sesion.paso + 1, len(sesion.guion.pasos)
 
     def charlar(self, indice: int, pregunta: str) -> str:
         """Responde una pregunta del estudiante sobre la unidad ``indice``.

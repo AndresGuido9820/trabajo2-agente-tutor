@@ -171,6 +171,64 @@ def mostrar_resultado(resultado: Resultado, detalle: list[Retroalimentacion]) ->
         consola.print("\n[green]¡Impecable! Sigue así.[/]")
 
 
+_NOMBRE_PASO = {
+    "gancho": "para qué te sirve",
+    "prediccion": "predice",
+    "explicacion": "explicación",
+    "error_tipico": "error típico",
+    "modificacion": "modifícalo",
+    "reto": "mini-reto",
+    "recap": "en resumen",
+}
+
+
+def bucle_leccion(agente: Agente, indice: int, entrada: FuncionEntrada = input) -> bool:
+    """Lección conversada: objetivos + pasos charlados con el tutor (HU-10).
+
+    Returns:
+        ``True`` si el estudiante llegó al final de la lección.
+    """
+    with consola.status("Preparando tu lección..."):
+        guion = agente.iniciar_leccion(indice)
+
+    objetivos = "\n".join(f"• {o}" for o in guion.objetivos)
+    mapa = " → ".join(_NOMBRE_PASO.get(p.tipo, p.tipo) for p in guion.pasos)
+    consola.print(
+        Panel(
+            f"[bold]Al terminar sabrás:[/]\n{objetivos}\n\n[dim]Ruta: {mapa}[/]",
+            title="Objetivos de la lección",
+            border_style="cyan",
+        )
+    )
+    consola.print(
+        "[dim]Responde para avanzar (Enter = seguir · 'salir' = volver al menú).[/]"
+    )
+
+    with consola.status("El tutor está escribiendo..."):
+        texto, terminada = agente.turno_leccion(indice, None)
+    consola.print(Panel(Markdown(texto), border_style="magenta"))
+
+    while not terminada:
+        paso, total = agente.avance_leccion(indice)
+        mensaje = entrada(f"(paso {paso}/{total}) > ").strip()
+        if mensaje.lower() in {"salir", "menu", "menú"}:
+            consola.print("[dim]Lección pausada; puedes retomarla desde el menú.[/]")
+            return False
+        try:
+            with consola.status("El tutor está escribiendo..."):
+                texto, terminada = agente.turno_leccion(
+                    indice, mensaje or "ok, sigamos"
+                )
+            consola.print(Panel(Markdown(texto), border_style="magenta"))
+        except ErrorLLM as error:
+            consola.print(f"[red]{error}[/] Intenta de nuevo o escribe 'salir'.")
+    consola.print(
+        f"[green]¡Lección completada![/] Cuando quieras, evalúate con "
+        f"[bold]e {indice + 1}[/]."
+    )
+    return True
+
+
 def bucle_charla(agente: Agente, indice: int, entrada: FuncionEntrada = input) -> None:
     """Charla con el tutor sobre la unidad recién leída (HU-09).
 
