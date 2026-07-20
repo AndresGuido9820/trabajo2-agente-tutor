@@ -21,13 +21,13 @@ cumplir la rúbrica completa. *(PA-10; rúbrica de documentación 10 % y curso 2
 
 ## Tareas
 
-- [ ] Script `scripts/exportar_curso.py`: corre el flujo con un perfil dado y
+- [x] Script `scripts/exportar_curso.py`: corre el flujo con un perfil dado y
       exporta temario+lecciones+quiz a Markdown.
-- [ ] Generar curso muestra 1 (front/JavaScript, principiante absoluto).
-- [ ] Generar curso muestra 2 (datos/Python, nivel básico).
+- [x] Generar curso muestra 1 (front/JavaScript, principiante absoluto).
+- [x] Generar curso muestra 2 (datos/Python, nivel básico).
 - [ ] Revisar manualmente ambos cursos (código corre, quizzes correctos).
-- [ ] Redactar `entregables/REPORTE.md` (1000–1500 palabras, contar palabras).
-- [ ] Redactar `entregables/GUION-VIDEO.md` con reparto de quién dice qué.
+- [x] Redactar `entregables/REPORTE.md` (1000–1500 palabras, contar palabras).
+- [x] Redactar `entregables/GUION-VIDEO.md` con reparto de quién dice qué.
 - [ ] Grabar y editar el video con rótulos de nombre.
 - [ ] Checklist final PA-01…PA-14 de SPEC.md marcado.
 

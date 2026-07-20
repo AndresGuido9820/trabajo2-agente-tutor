@@ -103,6 +103,26 @@ prompts son su implementación.
 
 ---
 
+## 2026-07-20 — HU-07: respuestas vacías de gpt-5 y exportación de cursos
+
+**Contexto:** al exportar el primer curso de muestra, el quiz de la unidad 1
+falló con "La API devolvió una respuesta vacía".
+
+**Hallazgo:** los modelos de la familia gpt-5 gastan tokens de razonamiento
+DENTRO de `max_completion_tokens`; con el límite en 4096 y un prompt largo
+(quiz con verificación), el razonamiento podía consumir todo el presupuesto y
+el contenido llegaba vacío. Además ocurre de forma intermitente, así que no
+basta con subir el límite.
+
+**Decisión/acción:** doble mitigación en HU-02/config: `MAX_TOKENS_RESPUESTA`
+sube a 16384 y la respuesta vacía se trata como error transitorio
+reintentable (`_RespuestaVacia` interno en `llm.py`). También se observaron
+errores de conexión intermitentes durante la exportación larga que los
+reintentos con backoff absorbieron sin intervención — la estrategia de HU-02
+pagó su costo.
+
+---
+
 <!-- Plantilla:
 
 ## AAAA-MM-DD — Título corto

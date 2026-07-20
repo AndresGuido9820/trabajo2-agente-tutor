@@ -21,7 +21,9 @@ DIR_DATOS_POR_DEFECTO = "./data"
 TIMEOUT_API_SEGUNDOS = 60.0
 MAX_REINTENTOS_API = 3
 MAX_REINTENTOS_PARSEO = 2
-MAX_TOKENS_RESPUESTA = 4096
+# Los modelos gpt-5 gastan tokens de razonamiento DENTRO de este límite;
+# si es bajo, la respuesta puede llegar vacía (ver HALLAZGOS 2026-07-20).
+MAX_TOKENS_RESPUESTA = 16384
 BASE_BACKOFF_SEGUNDOS = 1.0
 
 # Parámetros del curso (ver plan/HU-03 y HU-04)
