@@ -33,11 +33,11 @@ def guardar_progreso(p: Progreso, ruta: Path) -> None
 
 ## Tareas
 
-- [ ] `progreso.py`: modelo, carga/guardado con validación y escritura atómica.
-- [ ] Integrar registro automático: entrar a unidad → `marcar_vista`; terminar
+- [x] `progreso.py`: modelo, carga/guardado con validación y escritura atómica.
+- [x] Integrar registro automático: entrar a unidad → `marcar_vista`; terminar
       quiz → `registrar`.
-- [ ] Render de la tabla de progreso con `rich`.
-- [ ] Pruebas (abajo).
+- [x] Render de la tabla de progreso con `rich`.
+- [x] Pruebas (abajo).
 
 ## Pruebas
 
