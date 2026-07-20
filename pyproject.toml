@@ -39,6 +39,9 @@ pydocstyle.convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["D"]  # los nombres de test ya documentan el comportamiento
+# N818 exige sufijo "...Error" en inglés; el dominio usa prefijo en español
+# (ErrorLLM, ErrorConfiguracion), consistente en todo el código.
+"src/tutor/errores.py" = ["N818"]
 
 [tool.mypy]
 strict = true
