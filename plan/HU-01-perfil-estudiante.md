@@ -36,14 +36,14 @@ Esquema `perfil.json`: `{"version": 1, "nivel": "basico", "experiencia": "...",
 
 ## Tareas
 
-- [ ] `models.py`: enums `Nivel`, `Objetivo` y dataclass `PerfilEstudiante`
+- [x] `models.py`: enums `Nivel`, `Objetivo` y dataclass `PerfilEstudiante`
       con validación en `__post_init__`.
-- [ ] `perfil.py`: funciones puras de validación por campo + bucle de
+- [x] `perfil.py`: funciones puras de validación por campo + bucle de
       preguntas con reintento; inyectar `entrada` para testear.
-- [ ] Serialización/carga JSON con validación de esquema y `version`.
-- [ ] Manejo de `perfil.json` corrupto (JSON inválido o campos faltantes) →
+- [x] Serialización/carga JSON con validación de esquema y `version`.
+- [x] Manejo de `perfil.json` corrupto (JSON inválido o campos faltantes) →
       advertencia + rehacer cuestionario.
-- [ ] Pruebas unitarias (abajo) + actualizar HALLAZGOS si aparece algo.
+- [x] Pruebas unitarias (abajo) + actualizar HALLAZGOS si aparece algo.
 
 ## Pruebas
 
