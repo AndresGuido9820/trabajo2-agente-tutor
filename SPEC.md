@@ -35,6 +35,12 @@ y evaluaciones con un LLM y llevando su progreso.
   primero su guion (objetivos + paso a paso PRIMM, cacheado) y el tutor la
   imparte charlando: un paso por turno, reaccionando a las respuestas del
   estudiante (predicciones, ejercicios) antes de avanzar.
+- RF-3.3c **Guía interactiva por objetivos** (experiencia principal en la
+  web): cada unidad genera una guía de 3-5 secciones (una por objetivo) con
+  contenido específico y un checkpoint; responder da puntos (10/5/0 según
+  intento), fallar da primero una pista socrática. La evaluación final con
+  nota ≥ 70 aprueba la unidad (+30 pts) y **desbloquea la siguiente**; si no,
+  se abre un **conversatorio socrático** de dudas antes de reintentar.
 - RF-3.4 Charla con el tutor: tras leer una lección, el estudiante puede
   hacerle preguntas libres; el tutor responde en contexto con guía socrática
   (pistas, no soluciones completas; escape ante el "no sé" repetido).
@@ -141,6 +147,14 @@ además prueba en `tests/` (ver `docs/TESTING.md`).
   pasos; la lección avanza un paso por respuesta del estudiante, reacciona a
   respuestas erradas con corrección amable, y `salir` pausa sin perder el
   guion (reentrar no vuelve a llamar al LLM para generarlo).
+- [ ] **PA-17** En la web: la guía muestra objetivos y secciones; fallar un
+  checkpoint da una pista que NO revela la respuesta y permite reintentar;
+  los puntos suben (10 primer intento, 5 segundo) y persisten al recargar.
+- [ ] **PA-18** Las unidades posteriores aparecen bloqueadas 🔒 hasta aprobar
+  la anterior (≥ 70); reprobar la evaluación ofrece el conversatorio de
+  dudas y el reintento; aprobar desbloquea la siguiente y suma 30 pts. Las
+  respuestas correctas de checkpoints y quiz nunca llegan al navegador antes
+  de calificar (verificar en la pestaña Red).
 - [ ] **PA-15** *(Bonus)* Las lecciones incluyen imágenes generadas por IA
   referenciadas en el contenido.
 

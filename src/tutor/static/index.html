@@ -10,58 +10,69 @@
         font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
   *{box-sizing:border-box;margin:0}
   body{background:var(--bg);color:var(--tx);min-height:100vh}
-  header{padding:14px 22px;border-bottom:1px solid #2a3448;display:flex;gap:10px;align-items:center}
+  header{padding:14px 22px;border-bottom:1px solid #2a3448;display:flex;gap:12px;align-items:center}
   header h1{font-size:18px} header .dot{color:var(--acc)}
-  main{display:flex;gap:0;height:calc(100vh - 53px)}
+  #puntos{margin-left:auto;background:var(--panel);border:1px solid #34405a;border-radius:99px;
+          padding:6px 14px;font-weight:600;color:var(--warn)}
+  main{display:flex;height:calc(100vh - 55px)}
   #sidebar{width:330px;min-width:260px;border-right:1px solid #2a3448;overflow-y:auto;padding:14px}
-  #contenido{flex:1;display:flex;flex-direction:column;overflow:hidden}
+  #contenido{flex:1;overflow-y:auto;padding:22px}
   .unidad{background:var(--panel);border:1px solid #2a3448;border-radius:10px;
-          padding:10px 12px;margin-bottom:8px;cursor:pointer}
-  .unidad:hover{border-color:var(--acc)}
-  .unidad small{color:var(--dim)}
+          padding:10px 12px;margin-bottom:8px}
+  .unidad.bloqueada{opacity:.55}
   .estado{float:right;font-size:11px;padding:2px 8px;border-radius:99px;background:var(--panel2);color:var(--dim)}
-  .estado.vista{color:var(--warn)} .estado.evaluada{color:var(--acc)}
+  .estado.vista,.estado.evaluada{color:var(--warn)} .estado.aprobada{color:var(--acc)}
   .acciones{display:flex;gap:6px;margin-top:8px}
   button{background:var(--panel2);color:var(--tx);border:1px solid #34405a;border-radius:8px;
-         padding:6px 12px;cursor:pointer;font-size:13px}
-  button:hover{border-color:var(--acc)} button.primario{background:#14532d;border-color:var(--acc)}
-  button:disabled{opacity:.5;cursor:wait}
-  #chat{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px}
-  .msg{max-width:78%;padding:12px 15px;border-radius:14px;line-height:1.55;white-space:pre-wrap;
-       overflow-wrap:anywhere}
-  .msg.tutor{background:var(--panel);border:1px solid #2a3448;align-self:flex-start}
-  .msg.yo{background:#173a2a;align-self:flex-end}
-  .msg.sistema{background:transparent;color:var(--dim);align-self:center;font-size:13px;text-align:center}
-  .msg pre{background:#0b0f18;border:1px solid #2a3448;border-radius:8px;padding:10px;
-           overflow-x:auto;margin:8px 0;font-size:13px;white-space:pre}
-  .msg code{background:#0b0f18;border-radius:4px;padding:1px 5px;font-size:13px}
-  #barra{padding:12px 20px;border-top:1px solid #2a3448;display:flex;gap:10px}
-  #barra input{flex:1;background:var(--panel);border:1px solid #34405a;border-radius:10px;
-               color:var(--tx);padding:11px 14px;font-size:14px}
-  #barra input:focus{outline:none;border-color:var(--acc)}
-  #avance{color:var(--dim);font-size:12px;align-self:center;white-space:nowrap}
+         padding:7px 13px;cursor:pointer;font-size:13px}
+  button:hover:not(:disabled){border-color:var(--acc)}
+  button.primario{background:#14532d;border-color:var(--acc)}
+  button:disabled{opacity:.45;cursor:not-allowed}
   .tarjeta{background:var(--panel);border:1px solid #2a3448;border-radius:14px;
-           padding:22px;max-width:560px;margin:40px auto;width:92%}
-  .tarjeta h2{margin-bottom:14px} .campo{margin-bottom:12px}
+           padding:22px;max-width:760px;margin:0 auto 16px;width:100%}
+  .tarjeta h2{margin-bottom:12px}
+  .campo{margin-bottom:12px}
   .campo label{display:block;color:var(--dim);font-size:13px;margin-bottom:4px}
   .campo select,.campo input{width:100%;background:var(--panel2);border:1px solid #34405a;
       border-radius:8px;color:var(--tx);padding:9px 11px;font-size:14px}
-  .quiz-p{background:var(--panel);border:1px solid #2a3448;border-radius:12px;padding:14px;margin-bottom:12px;white-space:pre-wrap}
-  .quiz-p pre{background:#0b0f18;border-radius:8px;padding:10px;overflow-x:auto;margin:8px 0;font-size:13px}
-  .opcion{display:block;margin:6px 0;padding:8px 10px;border:1px solid #2a3448;border-radius:8px;cursor:pointer}
+  .contenido-md{line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+  .contenido-md pre{background:#0b0f18;border:1px solid #2a3448;border-radius:8px;padding:11px;
+                    overflow-x:auto;margin:8px 0;font-size:13px;white-space:pre}
+  .contenido-md code{background:#0b0f18;border-radius:4px;padding:1px 5px;font-size:13px}
+  .objetivo-chip{display:inline-block;background:#0e2a3a;color:var(--acc2);border-radius:99px;
+                 padding:4px 12px;font-size:12px;margin-bottom:10px}
+  .checkpoint{background:var(--panel2);border:1px solid #34405a;border-radius:12px;padding:16px;margin-top:14px}
+  .opcion{display:block;margin:7px 0;padding:9px 11px;border:1px solid #2a3448;border-radius:8px;
+          cursor:pointer;white-space:pre-wrap}
   .opcion:hover{border-color:var(--acc2)}
-  .opcion input{margin-right:8px}
+  .opcion.correcta{border-color:var(--acc);background:#12291c}
+  .opcion.incorrecta{border-color:var(--bad);background:#2b1416}
+  .feedback{border-left:3px solid var(--acc2);padding:8px 12px;margin-top:10px;color:var(--dim);white-space:pre-wrap}
+  .feedback.pista{border-color:var(--warn)}
+  #barra-avance{height:6px;background:var(--panel2);border-radius:99px;margin:10px 0 18px;overflow:hidden}
+  #barra-avance div{height:100%;background:var(--acc);transition:width .4s}
+  .msg{max-width:82%;padding:12px 15px;border-radius:14px;line-height:1.55;margin-bottom:10px;
+       white-space:pre-wrap;overflow-wrap:anywhere}
+  .msg.tutor{background:var(--panel);border:1px solid #2a3448;margin-right:auto}
+  .msg.yo{background:#173a2a;margin-left:auto}
+  .msg pre{background:#0b0f18;border-radius:8px;padding:10px;overflow-x:auto;white-space:pre;font-size:13px}
+  #chat-barra{display:flex;gap:10px;margin-top:8px}
+  #chat-barra input{flex:1;background:var(--panel);border:1px solid #34405a;border-radius:10px;
+                    color:var(--tx);padding:11px 14px;font-size:14px}
   .ok{color:var(--acc)} .mal{color:var(--bad)} .dim{color:var(--dim)}
+  .puntos-pop{color:var(--warn);font-weight:700}
   #error{position:fixed;bottom:16px;right:16px;background:#7f1d1d;border-radius:10px;
-         padding:12px 16px;max-width:420px;display:none}
+         padding:12px 16px;max-width:420px;display:none;z-index:9}
   .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--dim);
         border-top-color:var(--acc);border-radius:50%;animation:g .8s linear infinite;vertical-align:-2px}
   @keyframes g{to{transform:rotate(360deg)}}
-  @media(max-width:760px){main{flex-direction:column}#sidebar{width:100%;max-height:38vh}}
+  @media(max-width:760px){main{flex-direction:column}#sidebar{width:100%;max-height:36vh}}
 </style>
 </head>
 <body>
-<header><h1>Profe Bit <span class="dot">●</span></h1><span class="dim" id="subtitulo">tu tutor de programación</span></header>
+<header><h1>Profe Bit <span class="dot">●</span></h1>
+  <span class="dim" id="subtitulo">tu tutor de programación</span>
+  <span id="puntos" style="display:none">⭐ 0 pts</span></header>
 <main>
   <nav id="sidebar"></nav>
   <section id="contenido"></section>
@@ -70,22 +81,19 @@
 <script>
 "use strict";
 const $ = (sel) => document.querySelector(sel);
-let leccionActiva = null;
+let guiaActual = null;   // {indice, titulo, secciones, seccion, intento}
 
 function mostrarError(texto){
   const caja = $("#error");
   caja.textContent = texto;
   caja.style.display = "block";
-  setTimeout(() => caja.style.display = "none", 6000);
+  setTimeout(() => caja.style.display = "none", 7000);
 }
 
 async function api(ruta, cuerpo, metodo){
-  // Los POST sin body (iniciar lección, pedir quiz) deben declararse con
-  // metodo="POST": un fetch sin opciones sería GET y el API responde 405.
   const usarPost = metodo === "POST" || cuerpo !== undefined;
   const opciones = usarPost
-    ? {method:"POST", headers:{"Content-Type":"application/json"},
-       body:JSON.stringify(cuerpo ?? {})}
+    ? {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(cuerpo ?? {})}
     : {};
   const r = await fetch(ruta, opciones);
   if(!r.ok){
@@ -95,10 +103,9 @@ async function api(ruta, cuerpo, metodo){
   return r.json();
 }
 
-// Render mínimo de Markdown (autocontenido, sin librerías)
 function md(texto){
   const esc = (s) => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-  const partes = texto.split(/```(?:\w*)\n?/);
+  const partes = String(texto).split(/```(?:\w*)\n?/);
   let html = "";
   partes.forEach((parte, i) => {
     if(i % 2 === 1){ html += `<pre>${esc(parte)}</pre>`; return; }
@@ -111,47 +118,50 @@ function md(texto){
   return html;
 }
 
-function burbuja(clase, texto, comoMd){
-  const div = document.createElement("div");
-  div.className = "msg " + clase;
-  if(comoMd) div.innerHTML = md(texto); else div.textContent = texto;
-  $("#chat").appendChild(div);
-  $("#chat").scrollTop = $("#chat").scrollHeight;
-  return div;
+function ponerPuntos(n){
+  const chip = $("#puntos");
+  chip.style.display = "inline-block";
+  chip.textContent = `⭐ ${n} pts`;
 }
 
-async function cargarEstado(inicial){
-  if(inicial) $("#sidebar").innerHTML = '<p class="dim"><span class="spin"></span> Preparando tu curso…</p>';
+async function cargarEstado(mostrarInicio){
+  if(mostrarInicio) $("#sidebar").innerHTML = '<p class="dim"><span class="spin"></span> Preparando tu curso…</p>';
   let estado;
   try{ estado = await api("/api/estado"); }
-  catch(e){ mostrarError(e.message); $("#sidebar").innerHTML = ""; return; }
+  catch(e){ mostrarError(e.message); return; }
   if(!estado.perfil){ verFormPerfil(); $("#sidebar").innerHTML = ""; return; }
   $("#subtitulo").textContent = "curso de " + estado.lenguaje;
+  ponerPuntos(estado.puntos);
   const nav = $("#sidebar");
   nav.innerHTML = "";
   estado.unidades.forEach(u => {
+    const bloqueada = u.estado === "bloqueada";
     const div = document.createElement("div");
-    div.className = "unidad";
-    const nota = u.mejor_nota === null ? "" : ` · ${u.mejor_nota}/100`;
-    div.innerHTML = `<span class="estado ${u.estado}">${u.estado}${nota}</span>
+    div.className = "unidad" + (bloqueada ? " bloqueada" : "");
+    const nota = u.mejor_nota === null ? "" : ` · ${u.mejor_nota}`;
+    div.innerHTML = `<span class="estado ${u.estado}">${bloqueada ? "🔒 " : ""}${u.estado}${nota}</span>
       <b>${u.indice + 1}. ${u.titulo}</b>
       <div class="acciones">
-        <button class="primario" data-accion="leccion">Estudiar</button>
-        <button data-accion="quiz">Evaluarme</button>
+        <button class="primario" ${bloqueada ? "disabled" : ""}>Estudiar la guía</button>
+        <button ${bloqueada ? "disabled" : ""}>Evaluación</button>
       </div>`;
-    div.querySelector('[data-accion="leccion"]').onclick = () => iniciarLeccion(u.indice, u.titulo);
-    div.querySelector('[data-accion="quiz"]').onclick = () => iniciarQuiz(u.indice, u.titulo);
+    const [bGuia, bEval] = div.querySelectorAll("button");
+    bGuia.onclick = () => iniciarGuia(u.indice, u.titulo);
+    bEval.onclick = () => iniciarQuiz(u.indice);
     nav.appendChild(div);
   });
-  if(inicial) verBienvenida();
+  if(mostrarInicio) verBienvenida(estado);
 }
 
-function verBienvenida(){
+function verBienvenida(estado){
   $("#contenido").innerHTML = `<div class="tarjeta">
-    <h2>¡Ese es tu curso 👈!</h2>
-    <p class="dim">Cada unidad se crea a tu medida cuando entras. Pulsa <b>Estudiar</b>
-    para una lección conversada paso a paso con el tutor, o <b>Evaluarme</b> para el quiz.
-    Tu progreso se guarda solo.</p></div>`;
+    <h2>Así funciona tu curso</h2>
+    <p class="dim" style="line-height:1.7">1️⃣ Cada unidad tiene una <b>guía interactiva por objetivos</b>: aprendes y
+    respondes checkpoints que dan <span class="puntos-pop">⭐ puntos</span> (10 al primer intento, 5 al segundo).<br>
+    2️⃣ Al final presentas la <b>evaluación</b>: con ${estado.nota_aprobatoria} o más apruebas
+    (+30 pts) y <b>desbloqueas la siguiente unidad</b>.<br>
+    3️⃣ Si no apruebas, abrimos un <b>conversatorio socrático</b> sobre tus dudas y reintentas.<br><br>
+    Empieza por la unidad 1 👈</p></div>`;
 }
 
 function verFormPerfil(){
@@ -185,7 +195,8 @@ function verFormPerfil(){
     try{
       await api("/api/perfil", {
         nivel: $("#f-nivel").value, objetivo: $("#f-objetivo").value,
-        experiencia: $("#f-exp").value, objetivo_detalle: $("#f-detalle") ? $("#f-detalle").value : "",
+        experiencia: $("#f-exp").value,
+        objetivo_detalle: $("#f-detalle") ? $("#f-detalle").value : "",
         lenguaje: $("#f-lenguaje").value,
       });
       await cargarEstado(true);
@@ -193,78 +204,113 @@ function verFormPerfil(){
   };
 }
 
-function verChat(titulo){
+/* ---------- Guía interactiva ---------- */
+
+async function iniciarGuia(indice, titulo){
+  $("#contenido").innerHTML = `<div class="tarjeta"><h2>${titulo}</h2>
+    <p class="dim"><span class="spin"></span> El tutor está escribiendo tu guía por objetivos…</p></div>`;
+  let guia;
+  try{ guia = await api(`/api/guia/${indice}`, undefined, "POST"); }
+  catch(e){ mostrarError(e.message); cargarEstado(true); return; }
+  ponerPuntos(guia.puntos);
+  guiaActual = {indice, titulo, secciones: guia.secciones, seccion: 0, intento: 1};
+  verSeccion();
+}
+
+function verSeccion(){
+  const g = guiaActual;
+  const s = g.secciones[g.seccion];
+  g.intento = 1;
+  const pct = Math.round(100 * g.seccion / g.secciones.length);
   $("#contenido").innerHTML = `
-    <div id="chat"></div>
-    <div id="barra">
-      <span id="avance" class="dim"></span>
-      <input id="entrada" placeholder="Responde al tutor… ('salir' para volver)" autocomplete="off">
-      <button class="primario" id="enviar">Enviar</button>
+    <div class="tarjeta">
+      <div class="dim">Guía: ${g.titulo} — objetivo ${g.seccion + 1} de ${g.secciones.length}</div>
+      <div id="barra-avance"><div style="width:${pct}%"></div></div>
+      <span class="objetivo-chip">🎯 ${s.objetivo}</span>
+      <div class="contenido-md">${md(s.contenido)}</div>
+      <div class="checkpoint">
+        <b>✅ Checkpoint</b>
+        <div class="contenido-md" style="margin:8px 0">${md(s.checkpoint.pregunta)}</div>
+        <div id="opciones"></div>
+        <div id="feedback"></div>
+        <div id="siguiente"></div>
+      </div>
     </div>`;
-  burbuja("sistema", titulo);
-  $("#enviar").onclick = enviarTurno;
-  $("#entrada").addEventListener("keydown", (e) => { if(e.key === "Enter") enviarTurno(); });
+  s.checkpoint.opciones.forEach((op, j) => {
+    const b = document.createElement("div");
+    b.className = "opcion";
+    b.innerHTML = md(op);
+    b.onclick = () => responderCheckpoint(j, b);
+    $("#opciones").appendChild(b);
+  });
 }
 
-async function iniciarLeccion(indice, titulo){
-  leccionActiva = indice;
-  verChat(`Unidad ${indice + 1}: ${titulo}`);
-  const espera = burbuja("sistema", "El tutor está preparando tu lección…");
+async function responderCheckpoint(opcion, elemento){
+  const g = guiaActual;
+  let r;
   try{
-    const r = await api(`/api/leccion/${indice}/iniciar`, undefined, "POST");
-    espera.remove();
-    burbuja("tutor", "🎯 Al terminar sabrás:\n" + r.objetivos.map(o => "• " + o).join("\n") +
-      "\n\nRuta: " + r.ruta.join(" → "), false);
-    burbuja("tutor", r.texto, true);
-    $("#avance").textContent = `paso ${r.paso}/${r.total}`;
-    if(r.terminada) finLeccion(indice);
-  }catch(e){ espera.textContent = ""; mostrarError(e.message); }
+    r = await api(`/api/guia/${g.indice}/checkpoint`,
+                  {seccion: g.seccion, opcion, intento: g.intento});
+  }catch(e){ mostrarError(e.message); return; }
+  ponerPuntos(r.puntos_totales);
+  const feedback = $("#feedback");
+  if(r.correcto){
+    elemento.classList.add("correcta");
+    desactivarOpciones();
+    feedback.innerHTML = `<div class="feedback"><b class="ok">¡Correcto!</b>
+      ${r.puntos ? `<span class="puntos-pop"> +${r.puntos} pts</span>` : ""}<br>${md(r.texto)}</div>`;
+    botonSiguiente();
+  }else if(!r.revelada){
+    elemento.classList.add("incorrecta");
+    g.intento = 2;
+    feedback.innerHTML = `<div class="feedback pista"><b class="mal">Aún no.</b> Pista 🤔: ${md(r.texto)}<br>
+      <span class="dim">Inténtalo una vez más.</span></div>`;
+  }else{
+    elemento.classList.add("incorrecta");
+    desactivarOpciones();
+    feedback.innerHTML = `<div class="feedback"><b class="mal">Esta vez no fue.</b><br>${md(r.texto)}</div>`;
+    botonSiguiente();
+  }
 }
 
-async function enviarTurno(){
-  if(leccionActiva === null) return;
-  const entrada = $("#entrada");
-  const mensaje = entrada.value.trim();
-  if(mensaje.toLowerCase() === "salir"){ leccionActiva = null; cargarEstado(true); return; }
-  entrada.value = "";
-  burbuja("yo", mensaje || "ok, sigamos");
-  const espera = burbuja("sistema", "escribiendo…");
-  $("#enviar").disabled = true;
-  try{
-    const r = await api(`/api/leccion/${leccionActiva}/turno`, {mensaje});
-    espera.remove();
-    burbuja("tutor", r.texto, true);
-    $("#avance").textContent = `paso ${r.paso}/${r.total}`;
-    if(r.terminada) finLeccion(leccionActiva);
-  }catch(e){ espera.remove(); mostrarError(e.message); }
-  $("#enviar").disabled = false;
-  entrada.focus();
+function desactivarOpciones(){
+  document.querySelectorAll(".opcion").forEach(o => o.onclick = null);
 }
 
-function finLeccion(indice){
-  const div = burbuja("sistema", "");
-  div.innerHTML = `¡Lección completada! 🎉 &nbsp;<button class="primario" id="ir-quiz">Presentar el quiz</button>`;
-  div.querySelector("#ir-quiz").onclick = () => iniciarQuiz(indice, "");
-  leccionActiva = null;
-  cargarEstado(false);
+function botonSiguiente(){
+  const g = guiaActual;
+  const ultimo = g.seccion === g.secciones.length - 1;
+  const b = document.createElement("button");
+  b.className = "primario";
+  b.style.marginTop = "10px";
+  b.textContent = ultimo ? "Presentar la evaluación final →" : "Siguiente objetivo →";
+  b.onclick = () => {
+    if(ultimo){ iniciarQuiz(g.indice); }
+    else{ g.seccion += 1; verSeccion(); }
+  };
+  $("#siguiente").appendChild(b);
 }
 
-async function iniciarQuiz(indice, titulo){
-  leccionActiva = null;
-  $("#contenido").innerHTML = `<div class="tarjeta"><h2>Quiz — unidad ${indice + 1}</h2>
+/* ---------- Evaluación ---------- */
+
+async function iniciarQuiz(indice){
+  guiaActual = null;
+  $("#contenido").innerHTML = `<div class="tarjeta"><h2>Evaluación — unidad ${indice + 1}</h2>
     <p class="dim"><span class="spin"></span> El tutor está escribiendo tus preguntas…</p></div>`;
   let quiz;
   try{ quiz = await api(`/api/quiz/${indice}`, undefined, "POST"); }
-  catch(e){ mostrarError(e.message); verBienvenida(); return; }
+  catch(e){ mostrarError(e.message); cargarEstado(true); return; }
   const cont = $("#contenido");
-  cont.innerHTML = `<div style="overflow-y:auto;padding:20px"><h2 style="margin-bottom:14px">Quiz — unidad ${indice + 1}</h2>
+  cont.innerHTML = `<div class="tarjeta"><h2>Evaluación — unidad ${indice + 1}</h2>
+    <p class="dim">Apruebas con 70 o más. ¡Tú puedes!</p>
     <div id="preguntas"></div><button class="primario" id="calificar">Calificar</button></div>`;
   quiz.preguntas.forEach((p, i) => {
     const div = document.createElement("div");
-    div.className = "quiz-p";
-    div.innerHTML = `<b>Pregunta ${i + 1}.</b><div>${md(p.enunciado)}</div>` +
+    div.className = "checkpoint";
+    div.style.marginBottom = "12px";
+    div.innerHTML = `<b>Pregunta ${i + 1}.</b><div class="contenido-md">${md(p.enunciado)}</div>` +
       p.opciones.map((op, j) =>
-        `<label class="opcion"><input type="radio" name="p${i}" value="${j}">${md(op)}</label>`).join("");
+        `<label class="opcion"><input type="radio" name="p${i}" value="${j}"> ${md(op)}</label>`).join("");
     $("#preguntas").appendChild(div);
   });
   $("#calificar").onclick = async () => {
@@ -275,25 +321,77 @@ async function iniciarQuiz(indice, titulo){
     if(respuestas.includes(-1)){ mostrarError("Responde todas las preguntas."); return; }
     try{
       const r = await api(`/api/quiz/${indice}/calificar`, {respuestas});
-      verResultado(indice, quiz, r);
+      verResultado(indice, r);
     }catch(e){ mostrarError(e.message); }
   };
 }
 
-function verResultado(indice, quiz, r){
-  const clase = r.nota >= 70 ? "ok" : "mal";
-  let html = `<div style="overflow-y:auto;padding:20px"><h2>Resultado: <span class="${clase}">${r.nota}/100</span></h2>`;
+function verResultado(indice, r){
+  ponerPuntos(r.puntos_totales);
+  let html = `<div class="tarjeta"><h2>Resultado:
+    <span class="${r.aprobado ? "ok" : "mal"}">${r.nota}/100</span></h2>`;
+  html += r.aprobado
+    ? `<p class="ok" style="margin-bottom:12px">🎉 ¡Aprobaste! Desbloqueaste la siguiente unidad (+30 pts).</p>`
+    : `<p class="mal" style="margin-bottom:12px">Aún no llegas a ${r.nota_aprobatoria}. Conversemos tus dudas y reintenta.</p>`;
   r.detalle.forEach((d, i) => {
-    html += `<div class="quiz-p">${d.acierto ? "✅" : "❌"} <b>P${i + 1}</b> — elegiste: ${md(d.elegida)}`;
-    if(!d.acierto) html += `<div>Correcta: <span class="ok">${md(d.correcta)}</span></div>`;
+    html += `<div class="checkpoint" style="margin-bottom:10px">${d.acierto ? "✅" : "❌"}
+      <b>P${i + 1}</b> — elegiste: <span class="contenido-md">${md(d.elegida)}</span>`;
+    if(!d.acierto) html += `<div>Correcta: <span class="ok contenido-md">${md(d.correcta)}</span></div>`;
     html += `<div class="dim" style="margin-top:6px">${md(d.explicacion)}</div></div>`;
   });
-  if(r.conceptos_fallados.length)
-    html += `<p class="dim">Para repasar: ${r.conceptos_fallados.join(", ")} — las próximas lecciones lo reforzarán.</p>`;
-  html += `<div style="margin-top:14px"><button class="primario" id="volver">Volver al curso</button></div></div>`;
+  html += `<div style="display:flex;gap:8px;margin-top:12px">`;
+  if(r.aprobado){
+    html += `<button class="primario" id="b-volver">Continuar el curso →</button>`;
+  }else{
+    html += `<button class="primario" id="b-conversatorio">💬 Conversatorio de dudas</button>
+             <button id="b-reintentar">Reintentar la evaluación</button>
+             <button id="b-volver">Volver al curso</button>`;
+  }
+  html += `</div></div>`;
   $("#contenido").innerHTML = html;
-  $("#volver").onclick = () => { cargarEstado(true); };
+  $("#b-volver").onclick = () => cargarEstado(true);
+  const bc = $("#b-conversatorio");
+  if(bc) bc.onclick = () => iniciarConversatorio(indice);
+  const br = $("#b-reintentar");
+  if(br) br.onclick = () => iniciarQuiz(indice);
   cargarEstado(false);
+}
+
+/* ---------- Conversatorio socrático ---------- */
+
+async function iniciarConversatorio(indice){
+  $("#contenido").innerHTML = `<div class="tarjeta"><h2>💬 Conversatorio de dudas — unidad ${indice + 1}</h2>
+    <p class="dim">El tutor te guiará con preguntas (método socrático). Cuando te sientas al día,
+    reintenta la evaluación.</p>
+    <div id="chat"></div>
+    <div id="chat-barra">
+      <input id="chat-entrada" placeholder="Escribe tu respuesta o tu duda…" autocomplete="off">
+      <button class="primario" id="chat-enviar">Enviar</button>
+      <button id="chat-reintentar">Reintentar evaluación</button>
+    </div></div>`;
+  $("#chat-enviar").onclick = () => turnoConversatorio(indice);
+  $("#chat-entrada").addEventListener("keydown", e => { if(e.key === "Enter") turnoConversatorio(indice); });
+  $("#chat-reintentar").onclick = () => iniciarQuiz(indice);
+  await turnoConversatorio(indice, true);   // el tutor abre la conversación
+}
+
+async function turnoConversatorio(indice, apertura){
+  const entrada = $("#chat-entrada");
+  const mensaje = apertura ? "" : entrada.value.trim();
+  if(!apertura && !mensaje) return;
+  if(!apertura){
+    entrada.value = "";
+    const yo = document.createElement("div"); yo.className = "msg yo"; yo.textContent = mensaje;
+    $("#chat").appendChild(yo);
+  }
+  const espera = document.createElement("div");
+  espera.className = "msg tutor dim"; espera.innerHTML = '<span class="spin"></span>';
+  $("#chat").appendChild(espera);
+  try{
+    const r = await api(`/api/conversatorio/${indice}`, {mensaje});
+    espera.className = "msg tutor"; espera.innerHTML = md(r.texto);
+  }catch(e){ espera.remove(); mostrarError(e.message); }
+  espera.scrollIntoView({behavior:"smooth", block:"end"});
 }
 
 cargarEstado(true);

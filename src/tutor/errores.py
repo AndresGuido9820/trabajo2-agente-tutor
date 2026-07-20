@@ -19,3 +19,7 @@ class ErrorLLM(ErrorTutor):
 
 class ErrorDatos(ErrorTutor):
     """Archivo de datos locales (perfil/curso/progreso) inválido o corrupto."""
+
+
+class ErrorBloqueada(ErrorTutor):
+    """La unidad está bloqueada: falta aprobar la anterior (HU-12)."""

@@ -23,9 +23,11 @@ from tutor.progreso import Resultado
 consola = Console()
 
 _ETIQUETA_ESTADO = {
+    EstadoUnidad.BLOQUEADA: "[dim]🔒 bloqueada[/]",
     EstadoUnidad.PENDIENTE: "[dim]pendiente[/]",
     EstadoUnidad.VISTA: "[yellow]vista[/]",
-    EstadoUnidad.EVALUADA: "[green]evaluada[/]",
+    EstadoUnidad.EVALUADA: "[yellow]evaluada[/]",
+    EstadoUnidad.APROBADA: "[green]aprobada ✔[/]",
 }
 
 

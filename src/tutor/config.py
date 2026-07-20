@@ -34,6 +34,14 @@ PREGUNTAS_POR_QUIZ = 4
 # Charla con el tutor (ver plan/HU-09): turnos de historial que se conservan
 MAX_TURNOS_CHARLA = 8
 
+# Guía interactiva y progresión (ver plan/HU-12)
+NOTA_APROBATORIA = 70
+PUNTOS_PRIMER_INTENTO = 10
+PUNTOS_SEGUNDO_INTENTO = 5
+PUNTOS_QUIZ_APROBADO = 30
+MIN_SECCIONES_GUIA = 3
+MAX_SECCIONES_GUIA = 5
+
 
 @dataclass(frozen=True)
 class Configuracion:

@@ -19,8 +19,8 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from tutor.agente import ARCHIVO_PERFIL, Agente, perfil_o_none
-from tutor.config import Configuracion, cargar_configuracion
-from tutor.errores import ErrorConfiguracion, ErrorLLM
+from tutor.config import NOTA_APROBATORIA, Configuracion, cargar_configuracion
+from tutor.errores import ErrorBloqueada, ErrorConfiguracion, ErrorLLM
 from tutor.evaluacion import Quiz
 from tutor.llm import ClienteLLM, ClienteOpenAI
 from tutor.models import Nivel, Objetivo, PerfilEstudiante
@@ -55,6 +55,20 @@ class CuerpoRespuestas(BaseModel):
     respuestas: list[int]
 
 
+class CuerpoCheckpoint(BaseModel):
+    """Body de respuesta a un checkpoint de la guía."""
+
+    seccion: int
+    opcion: int
+    intento: int
+
+
+class CuerpoMensaje(BaseModel):
+    """Body de un turno del conversatorio."""
+
+    mensaje: str = ""
+
+
 class _Estado:
     """Estado del servidor: agente (si hay perfil) y quizzes en curso."""
 
@@ -87,9 +101,11 @@ def crear_app(
         return estado.agente
 
     def _con_llm(operacion: Any) -> Any:
-        """Ejecuta una operación que llama al LLM mapeando ErrorLLM a 502."""
+        """Ejecuta una operación mapeando errores de dominio a HTTP."""
         try:
             return operacion()
+        except ErrorBloqueada as error:
+            raise HTTPException(403, str(error)) from error
         except ErrorLLM as error:
             raise HTTPException(502, str(error)) from error
 
@@ -108,6 +124,8 @@ def crear_app(
         return {
             "perfil": True,
             "lenguaje": curso.temario.lenguaje,
+            "puntos": agente.progreso.puntos,
+            "nota_aprobatoria": NOTA_APROBATORIA,
             "unidades": [
                 {
                     "indice": fila.indice,
@@ -183,6 +201,60 @@ def crear_app(
         resultado: dict[str, Any] = _con_llm(operacion)
         return resultado
 
+    @app.post("/api/guia/{indice}")
+    def api_guia(indice: int) -> dict[str, Any]:
+        """Guía interactiva de la unidad, SIN correctas/pistas/explicaciones."""
+        agente = _agente()
+
+        def operacion() -> Any:
+            try:
+                return agente.guia_de_unidad(indice)
+            except IndexError as error:
+                raise HTTPException(404, str(error)) from error
+
+        guia = _con_llm(operacion)
+        return {
+            "puntos": agente.progreso.puntos,
+            "secciones": [
+                {
+                    "objetivo": s.objetivo,
+                    "contenido": s.contenido,
+                    "checkpoint": {
+                        "pregunta": s.checkpoint.pregunta,
+                        "opciones": s.checkpoint.opciones,
+                    },
+                }
+                for s in guia.secciones
+            ],
+        }
+
+    @app.post("/api/guia/{indice}/checkpoint")
+    def api_checkpoint(indice: int, cuerpo: CuerpoCheckpoint) -> dict[str, Any]:
+        """Califica un checkpoint en el servidor y asigna puntos."""
+        agente = _agente()
+        try:
+            r = agente.responder_checkpoint(
+                indice, cuerpo.seccion, cuerpo.opcion, cuerpo.intento
+            )
+        except KeyError as error:
+            raise HTTPException(409, "La guía no está generada.") from error
+        except ValueError as error:
+            raise HTTPException(400, str(error)) from error
+        return {
+            "correcto": r.correcto,
+            "texto": r.texto,
+            "revelada": r.revelada,
+            "puntos": r.puntos,
+            "puntos_totales": r.puntos_totales,
+        }
+
+    @app.post("/api/conversatorio/{indice}")
+    def api_conversatorio(indice: int, cuerpo: CuerpoMensaje) -> dict[str, Any]:
+        """Turno del conversatorio socrático de dudas tras reprobar."""
+        agente = _agente()
+        texto = _con_llm(lambda: agente.conversatorio(indice, cuerpo.mensaje))
+        return {"texto": texto}
+
     @app.post("/api/quiz/{indice}")
     def api_quiz(indice: int) -> dict[str, Any]:
         """Genera el quiz y lo devuelve SIN respuestas correctas."""
@@ -216,6 +288,9 @@ def crear_app(
             raise HTTPException(400, str(error)) from error
         return {
             "nota": resultado.nota,
+            "aprobado": resultado.nota >= NOTA_APROBATORIA,
+            "nota_aprobatoria": NOTA_APROBATORIA,
+            "puntos_totales": agente.progreso.puntos,
             "conceptos_fallados": resultado.conceptos_fallados,
             "detalle": [
                 {
