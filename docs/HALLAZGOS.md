@@ -49,6 +49,30 @@ conoce al proveedor"; se mantiene para la HU-02. Los errores tipados del SDK
 
 ---
 
+## 2026-07-20 — HU-02: cliente LLM
+
+**Contexto:** implementación del cliente OpenAI con reintentos y `pedir_json`.
+
+**Hallazgos:**
+
+1. La cuenta nueva de OpenAI devolvía `429 insufficient_quota` aun con key
+   válida: el crédito de API es independiente de ChatGPT Plus. Se resolvió
+   cargando saldo en Billing. Nota: ese 429 no es transitorio, pero el SDK lo
+   reporta como `RateLimitError`; se acepta el costo de 3 reintentos en ese
+   caso raro a cambio de mantener simple la regla "429 ⇒ reintentar".
+2. mypy estricto marca `int ** int` como `Any` (typeshed: puede dar `float`
+   con exponente negativo). Solución: base flotante explícita `2.0**intento`.
+3. Los tests que comparten dobles (`ClienteLLMFalso`, `SDKFalso`) necesitaron
+   `tests/__init__.py` para importar desde `conftest` como paquete.
+4. La prueba de humo real confirmó el contrato completo: `gpt-5-mini` respeta
+   la instrucción "responde SOLO este JSON" y `pedir_json` valida y convierte
+   sin reintentos en el caso feliz.
+
+**Decisión/acción:** inyección de dependencias en `ClienteOpenAI` (SDK y
+función de espera) para probar reintentos sin red ni demoras reales.
+
+---
+
 <!-- Plantilla:
 
 ## AAAA-MM-DD — Título corto

@@ -33,14 +33,14 @@ def pedir_json(cliente: ClienteLLM, system: str, prompt: str,
 
 ## Tareas
 
-- [ ] `llm.py`: protocolo, cliente real, mapeo de errores del SDK a `ErrorLLM`.
-- [ ] Backoff exponencial con jitter (función pura calculable en tests).
-- [ ] `pedir_json` con extracción tolerante (JSON dentro de fences ```...```)
+- [x] `llm.py`: protocolo, cliente real, mapeo de errores del SDK a `ErrorLLM`.
+- [x] Backoff exponencial con jitter (función pura calculable en tests).
+- [x] `pedir_json` con extracción tolerante (JSON dentro de fences ```...```)
       y bucle de reintento de parseo.
-- [ ] `tests/conftest.py`: `ClienteLLMFalso` (respuestas en cola, modo fallar
+- [x] `tests/conftest.py`: `ClienteLLMFalso` (respuestas en cola, modo fallar
       N veces, contador de llamadas).
-- [ ] `scripts/humo_llm.py`: prueba de humo manual contra la API real.
-- [ ] Pruebas unitarias (abajo).
+- [x] `scripts/humo_llm.py`: prueba de humo manual contra la API real.
+- [x] Pruebas unitarias (abajo).
 
 ## Pruebas
 
