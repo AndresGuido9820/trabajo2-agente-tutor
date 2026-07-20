@@ -19,12 +19,18 @@ Opciones evaluadas:
 
 | Opción | Pros | Contras |
 |---|---|---|
-| **Anthropic Claude (elegida)** | SDK Python simple, buen seguimiento de instrucciones de formato JSON, system prompts potentes | requiere API key de pago |
-| OpenAI GPT | muy documentado | mismo costo; el equipo ya tiene crédito Anthropic |
+| **OpenAI GPT (elegida)** | SDK Python simple y muy documentado, soporte nativo de salida JSON (`response_format`), acceso a crédito del equipo | requiere API key de pago |
+| Anthropic Claude | buen seguimiento de instrucciones, system prompts potentes | el equipo no tiene crédito de API disponible |
 | Modelos locales (Ollama) | gratis | calidad/latencia insuficiente para contenido educativo largo |
 
-Modelo por defecto: `claude-sonnet-5` (balance costo/calidad); configurable
-por env var para poder bajar a Haiku en pruebas manuales.
+Modelo por defecto: `gpt-5-mini` (balance costo/calidad para contenido
+educativo); configurable por `TUTOR_MODEL` para subir a `gpt-5` en la
+generación de los cursos de muestra si hace falta más calidad.
+
+> Nota (2026-07-20): la elección inicial fue Claude; se cambió a OpenAI antes
+> de implementar el cliente (ver HALLAZGOS). Gracias a que el diseño aísla el
+> proveedor tras la interfaz `ClienteLLM`, el cambio solo tocó configuración
+> y documentación.
 
 ## 3. Salida estructurada del LLM
 
@@ -68,7 +74,7 @@ pequeñas, legible para depurar y para mostrar en el video.
 
 ## 6. Manejo de errores de API (investigado en docs del SDK)
 
-- Errores tipados del SDK: `APIConnectionError`, `RateLimitError`,
+- Errores tipados del SDK `openai`: `APIConnectionError`, `RateLimitError`,
   `APIStatusError`. Estrategia: reintentos con backoff exponencial
   (máx. 3) para conexión/429/5xx; sin reintento para 401 (key mala → mensaje
   de configuración).
@@ -93,7 +99,7 @@ sobre-ingeniería para el alcance.
 
 ## 9. Conclusión
 
-Stack final: **Python 3.12+, uv, SDK `anthropic`, `rich`, `python-dotenv`;
+Stack final: **Python 3.12+, uv, SDK `openai`, `rich`, `python-dotenv`;
 pytest + ruff + mypy**. Arquitectura en capas: `ui` (CLI) → `agente`
 (orquestación/estado) → `llm` (cliente API) + `almacen` (persistencia), con
 `prompts.py` centralizando todos los prompts versionados.

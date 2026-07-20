@@ -29,6 +29,26 @@ de "desafíos y soluciones" del reporte técnico (10 % de la nota).
 
 ---
 
+## 2026-07-20 — Cambio de proveedor: Anthropic → OpenAI
+
+**Contexto:** antes de implementar la HU-02 (cliente LLM) se decidió usar la
+API de OpenAI en lugar de la de Anthropic (disponibilidad de crédito del
+equipo).
+
+**Hallazgo:** el costo del cambio fue casi nulo porque el diseño ya aislaba el
+proveedor detrás de la interfaz `ClienteLLM` y centralizaba constantes en
+`config.py`: solo se tocaron la dependencia (`openai` por `anthropic`), la
+env var (`OPENAI_API_KEY`), el modelo por defecto (`gpt-5-mini`) y la
+documentación. Cero cambios en `perfil.py`, `models.py` o las pruebas de
+lógica.
+
+**Decisión/acción:** validada la regla de diseño "el código de negocio nunca
+conoce al proveedor"; se mantiene para la HU-02. Los errores tipados del SDK
+`openai` (`APIConnectionError`, `RateLimitError`, `APIStatusError`) mapean
+1:1 con la estrategia de reintentos ya especificada.
+
+---
+
 <!-- Plantilla:
 
 ## AAAA-MM-DD — Título corto

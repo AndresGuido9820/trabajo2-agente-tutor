@@ -1,13 +1,13 @@
 # HU-02 — Cliente LLM con manejo de errores
 
-**Como** desarrollador del agente **quiero** un cliente de la API de Claude
+**Como** desarrollador del agente **quiero** un cliente de la API de OpenAI
 con reintentos, timeout y errores tipados **para** que ninguna falla de red o
 de la API tumbe la sesión del estudiante. *(RF-2.1, RF-2.5; PA-07, PA-08, PA-09)*
 
 ## Criterios de aceptación
 
 - Interfaz `ClienteLLM` (protocolo) con `generar(system, prompt) -> str`;
-  implementación real `ClienteAnthropic` e implementación falsa para tests.
+  implementación real `ClienteOpenAI` e implementación falsa para tests.
 - Reintentos con backoff exponencial (máx. `MAX_REINTENTOS_API = 3`) ante
   error de conexión, 429 y 5xx; **sin** reintento ante 401/400.
 - Timeout por request de 60 s.
@@ -24,7 +24,7 @@ de la API tumbe la sesión del estudiante. *(RF-2.1, RF-2.5; PA-07, PA-08, PA-09
 class ClienteLLM(Protocol):
     def generar(self, system: str, prompt: str) -> str: ...
 
-class ClienteAnthropic:  # usa config: modelo, timeout, max_tokens
+class ClienteOpenAI:  # usa config: modelo, timeout, max_tokens
     def generar(self, system: str, prompt: str) -> str: ...
 
 def pedir_json(cliente: ClienteLLM, system: str, prompt: str,
