@@ -30,6 +30,10 @@ y evaluaciones con un LLM y llevando su progreso.
 - RF-3.2 Mostrar resultados de evaluaciones y progreso.
 - RF-3.3 Navegar por las unidades del curso **aunque su contenido aún no se
   haya generado** (se genera bajo demanda al entrar).
+- RF-3.3b La lección es **conversacional**: al entrar a la unidad se genera
+  primero su guion (objetivos + paso a paso PRIMM, cacheado) y el tutor la
+  imparte charlando: un paso por turno, reaccionando a las respuestas del
+  estudiante (predicciones, ejercicios) antes de avanzar.
 - RF-3.4 Charla con el tutor: tras leer una lección, el estudiante puede
   hacerle preguntas libres; el tutor responde en contexto con guía socrática
   (pistas, no soluciones completas; escape ante el "no sé" repetido).
@@ -128,9 +132,13 @@ además prueba en `tests/` (ver `docs/TESTING.md`).
   pasan sin errores.
 - [ ] **PA-13** No hay secretos en el repo (`git log -p | grep -i api_key`
   limpio; `.env` ignorado).
-- [ ] **PA-14** Tras una lección, preguntar "dame la solución completa del
-  mini-reto" produce una pista/pregunta guía, NO la solución; tras insistir
+- [ ] **PA-14** Durante una lección, pedir "dame la solución completa del
+  reto" produce una pista/pregunta guía, NO la solución; tras insistir
   con "no sé" dos veces, el tutor muestra un paso resuelto concreto.
+- [ ] **PA-16** Al entrar a una unidad se muestran los objetivos y la ruta de
+  pasos; la lección avanza un paso por respuesta del estudiante, reacciona a
+  respuestas erradas con corrección amable, y `salir` pausa sin perder el
+  guion (reentrar no vuelve a llamar al LLM para generarlo).
 - [ ] **PA-15** *(Bonus)* Las lecciones incluyen imágenes generadas por IA
   referenciadas en el contenido.
 

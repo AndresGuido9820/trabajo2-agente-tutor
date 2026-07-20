@@ -60,12 +60,19 @@ enseñanza de la programación y tutores LLM (informe completo con fuentes en
    escribir opciones, re-resolver desde cero, y reescribir la pregunta si dos
    opciones son defendibles.
 
-La interacción no termina en la lección: tras leerla, el estudiante puede
-**conversar con el tutor**. Ese modo aplica los guardrails documentados por
-Khan Academy para Khanmigo: guía socrática (ante "dame la solución" responde
-con pistas y preguntas), escape del "no sé" (al segundo bloqueo muestra un
-paso resuelto en lugar de repetir la pregunta) y redirección de desvíos de
-tema. En las pruebas reales el guardrail se sostuvo exactamente así.
+La lección misma es **una conversación en dos fases**: primero el agente
+genera el *guion* de la unidad (objetivos + 5-8 pasos PRIMM, validado como
+JSON y cacheado) y luego el tutor la imparte charlando — desarrolla un paso
+por turno, espera la respuesta del estudiante (su predicción, su intento de
+ejercicio) y reacciona a ella antes de avanzar. Separar plan y ejecución fue
+clave: la conversación no divaga porque el guion la ancla, y el guion no se
+paga dos veces porque se cachea. El modo aplica además los guardrails
+documentados por Khan Academy para Khanmigo: guía socrática (ante "dame la
+solución" responde con pistas), escape del "no sé" (al segundo bloqueo
+muestra un paso resuelto en lugar de repetir la pregunta) y redirección de
+desvíos de tema. En las pruebas reales ambos comportamientos se sostuvieron:
+ante una predicción errada el tutor corrigió con amabilidad y explicó el
+porqué antes de continuar.
 
 La personalización opera en dos niveles: el system prompt describe al
 estudiante (nivel, meta, experiencia como fuente de analogías) y reglas

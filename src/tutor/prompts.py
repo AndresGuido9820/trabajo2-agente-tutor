@@ -206,6 +206,124 @@ Extensión total: 500-900 palabras (5-10 min de lectura). Solo el Markdown \
 de la lección, sin preámbulos."""
 
 
+TIPOS_PASO = (
+    "gancho",
+    "prediccion",
+    "explicacion",
+    "error_tipico",
+    "modificacion",
+    "reto",
+    "recap",
+)
+
+
+def prompt_guion(temario: Temario, indice: int, conceptos_fallados: list[str]) -> str:
+    """Prompt del guion de lección: objetivos + paso a paso (JSON validado).
+
+    El guion se genera ANTES de conversar la lección, para que la charla
+    siga una estructura PRIMM planeada (HU-10).
+    """
+    unidad = temario.unidades[indice]
+    vistas = ", ".join(u.titulo for u in temario.unidades[:indice]) or "ninguna"
+    refuerzo = ""
+    if conceptos_fallados:
+        refuerzo = (
+            "\n- Incluye repaso de estos conceptos que el estudiante falló en "
+            f"quizzes: {', '.join(conceptos_fallados)}."
+        )
+
+    return f"""Diseña el GUION de la lección conversada de la unidad \
+{indice + 1} del curso de {temario.lenguaje}: "{unidad.titulo}".
+
+Contexto:
+- Objetivo de la unidad: {unidad.objetivo}
+- Conceptos a cubrir: {", ".join(unidad.conceptos)}
+- Unidades ya estudiadas: {vistas}. Los ejemplos solo pueden usar lo visto \
+ahí más lo de esta unidad.{refuerzo}
+
+La lección se dará como conversación paso a paso (método PRIMM). Diseña
+entre 5 y 8 pasos ordenados; tipos permitidos y su intención:
+- "gancho": conectar la unidad con la meta del estudiante.
+- "prediccion": mostrar código corto y pedir predecir qué hace (sin explicar).
+- "explicacion": explicar un concepto con analogía + worked example con \
+subgoal labels y estado de variables.
+- "error_tipico": desmontar una misconception documentada del tema.
+- "modificacion": pedir modificar 1-2 líneas del ejemplo para cambiar algo.
+- "reto": mini-ejercicio de creación ligado a la meta (con pista).
+- "recap": cerrar con lo esencial en 3 puntos y celebrar el avance.
+
+Cada "instruccion" dice QUÉ debe hacer el tutor en ese paso (tema, ejemplo
+concreto a usar, qué preguntar), en 1-3 frases; no es el texto literal.
+
+Responde ÚNICAMENTE este JSON:
+{{
+  "objetivos": ["<qué sabrá hacer el estudiante>", "..."],
+  "pasos": [
+    {{"tipo": "gancho", "instruccion": "<qué hacer en este paso>"}}
+  ]
+}}"""
+
+
+def system_leccion(perfil: PerfilEstudiante) -> str:
+    """System prompt del modo lección conversada (HU-10)."""
+    return f"""{system_tutor(perfil)}
+
+Además, estás DANDO UNA LECCIÓN EN MODO CONVERSACIÓN, siguiendo un guion de
+pasos. Reglas del modo:
+9. Desarrolla SOLO el paso actual que se te indica; no te adelantes a los
+siguientes pasos.
+10. Si hay una respuesta del estudiante, reacciona a ella primero: celebra
+lo correcto de forma concreta y corrige lo incorrecto con amabilidad
+explicando el porqué (sin regañar; equivocarse en predicciones es parte del
+método).
+11. Si el estudiante pregunta algo fuera del paso, respóndelo brevemente con
+las reglas socráticas (pistas, no soluciones de ejercicios) y retoma el paso.
+12. Termina SIEMPRE tu turno con una pregunta o una instrucción clara para
+el estudiante (en el paso "recap", termina invitando a presentar el quiz).
+13. Mensajes cortos (3-10 frases o un bloque de código pequeño): es una
+conversación, no un documento."""
+
+
+def prompt_turno_leccion(
+    guion_texto: str,
+    numero_paso: int,
+    total_pasos: int,
+    paso_tipo: str,
+    paso_instruccion: str,
+    historial: list[tuple[str, str]],
+    mensaje: str | None,
+) -> str:
+    """Prompt de un turno de la lección conversada.
+
+    Args:
+        guion_texto: Objetivos del guion (contexto de a dónde va la lección).
+        numero_paso: Paso actual, base 1.
+        total_pasos: Total de pasos del guion.
+        paso_tipo: Tipo del paso actual.
+        paso_instruccion: Instrucción del guion para este paso.
+        historial: Turnos previos (respuesta_estudiante, texto_tutor).
+        mensaje: Última respuesta del estudiante; ``None`` en el primer turno.
+    """
+    transcripcion = ""
+    if historial:
+        lineas = []
+        for mensaje_previo, respuesta_previa in historial:
+            if mensaje_previo:
+                lineas.append(f"Estudiante: {mensaje_previo}")
+            lineas.append(f"Tú: {respuesta_previa}")
+        transcripcion = "\nConversación hasta ahora:\n" + "\n".join(lineas) + "\n"
+
+    ultima = f"\nEstudiante: {mensaje}\n" if mensaje else ""
+    return f"""Objetivos de esta lección:
+{guion_texto}
+{transcripcion}{ultima}
+Estás en el paso {numero_paso} de {total_pasos} (tipo: {paso_tipo}).
+Instrucción del guion para este paso: {paso_instruccion}
+
+Desarrolla este paso (reaccionando primero al estudiante si respondió algo).
+Solo tu mensaje, sin prefijos."""
+
+
 def system_charla(perfil: PerfilEstudiante) -> str:
     """System prompt del modo charla: persona + reglas socráticas (HU-09).
 

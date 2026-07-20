@@ -146,6 +146,30 @@ la charla es efímera por diseño; lo durable es el progreso.
 
 ---
 
+## 2026-07-20 — HU-10: lección conversacional guiada por guion
+
+**Contexto:** retroalimentación de revisión: las lecciones debían ser
+"habladitas" con el chat, generando antes los objetivos y el paso a paso.
+
+**Hallazgos:**
+
+1. **Plan y ejecución separados**: generar primero el guion (objetivos +
+   pasos PRIMM como JSON validado y cacheado en `curso.json`) y luego
+   conversarlo un paso por turno resolvió los dos riesgos del chat libre:
+   que la conversación divague (el guion la ancla) y el costo (el guion se
+   genera una vez; cada turno es una llamada corta).
+2. En el humo real, el tutor reaccionó a una predicción errada ("creo que
+   imprime 10") corrigiendo con amabilidad y explicando el porqué antes de
+   avanzar — el comportamiento pedido por PRIMM sin instrucciones extra.
+3. Las lecciones Markdown de HU-03 se conservan para exportar los cursos de
+   muestra (E4); la experiencia dentro de la app es la conversacional.
+
+**Decisión/acción:** avance determinista (una respuesta = un paso) en vez de
+dejar que el LLM decida cuándo avanzar: más predecible, testeable y barato.
+El estado de la conversación es efímero (sesión); lo durable es el guion.
+
+---
+
 <!-- Plantilla:
 
 ## AAAA-MM-DD — Título corto

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 import sys
-from functools import partial
 
 from tutor import ui
 from tutor.agente import ARCHIVO_PERFIL, Agente, perfil_o_none
@@ -47,16 +46,8 @@ def _bucle_principal(agente: Agente) -> None:
         if accion.tipo == "progreso":
             ui.mostrar_progreso(agente)
         elif accion.tipo == "unidad":
-            indice = accion.indice
-            assert indice is not None
-            mensaje = (
-                "Abriendo la lección..."
-                if agente.leccion_ya_generada(indice)
-                else "Escribiendo tu lección personalizada..."
-            )
-            leccion = ui.con_spinner(mensaje, partial(agente.abrir_unidad, indice))
-            ui.mostrar_leccion(leccion)
-            ui.bucle_charla(agente, indice)
+            assert accion.indice is not None
+            ui.bucle_leccion(agente, accion.indice)
         elif accion.tipo == "evaluar":
             assert accion.indice is not None
             calificacion = ui.preguntar_respuestas(agente, accion.indice)
