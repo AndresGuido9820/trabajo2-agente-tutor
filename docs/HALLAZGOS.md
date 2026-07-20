@@ -73,6 +73,36 @@ función de espera) para probar reintentos sin red ni demoras reales.
 
 ---
 
+## 2026-07-20 — HU-03: investigación pedagógica y prompts v2
+
+**Contexto:** antes de fijar los prompts definitivos se investigó en fuentes
+de computing education y tutores LLM (informe completo en
+`docs/INVESTIGACION-PEDAGOGIA.md`).
+
+**Hallazgos:**
+
+1. Los prompts v1 ("explica y pon un ejemplo") ignoraban evidencia clave:
+   PRIMM (predecir antes de explicar), worked examples con subgoal labeling,
+   y la "máquina nocional" de Sorva. Los prompts v2 codifican esa estructura
+   como secciones obligatorias de la lección.
+2. Los LLM no generan distractores realistas espontáneamente (literatura de
+   2025-2026): hay que inyectarles un banco de misconceptions documentadas.
+   Se agregó `MISCONCEPTIONS` en `prompts.py`, compartido por lección (para
+   desmontarlas) y quiz (para encarnarlas en distractores).
+3. El CoT aumenta la confianza del modelo incluso cuando se equivoca, así
+   que el prompt del quiz exige verificación independiente: trazar el código
+   y derivar la salida ANTES de escribir opciones, y re-resolver desde cero.
+4. Humo real con perfil "Excel → datos": el temario insertó pandas/CSV en
+   unidades tempranas con títulos tipo "Variables y tipos: tus celdas de
+   Excel, pero programables", y la lección 1 salió con 824 palabras,
+   predicción inicial y subgoal labels. Prompts v2 validados.
+
+**Decisión/acción:** `PROMPTS_VERSION = 2`; los cursos de muestra citarán la
+versión. La especificación pedagógica vive en el doc de investigación y los
+prompts son su implementación.
+
+---
+
 <!-- Plantilla:
 
 ## AAAA-MM-DD — Título corto
