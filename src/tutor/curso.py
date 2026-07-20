@@ -98,6 +98,8 @@ class Curso:
     lecciones: dict[int, str] = field(default_factory=dict)
     guiones: dict[int, GuionLeccion] = field(default_factory=dict)
     guias: dict[int, Guia] = field(default_factory=dict)
+    # Mini-artefactos HTML por "unidad-seccion" (HU-14)
+    artefactos: dict[str, str] = field(default_factory=dict)
 
 
 def validar_temario(datos: Any) -> Temario:
@@ -378,6 +380,7 @@ def guardar_curso(curso: Curso, ruta: Path) -> None:
             }
             for i, g in curso.guias.items()
         },
+        "artefactos": curso.artefactos,
     }
     ruta.write_text(json.dumps(datos, ensure_ascii=False, indent=2), "utf-8")
 
@@ -399,7 +402,16 @@ def cargar_curso(ruta: Path) -> Curso | None:
             int(i): validar_guion(g) for i, g in datos.get("guiones", {}).items()
         }
         guias = {int(i): validar_guia(g) for i, g in datos.get("guias", {}).items()}
-        return Curso(temario=temario, lecciones=lecciones, guiones=guiones, guias=guias)
+        artefactos = {
+            str(clave): str(html) for clave, html in datos.get("artefactos", {}).items()
+        }
+        return Curso(
+            temario=temario,
+            lecciones=lecciones,
+            guiones=guiones,
+            guias=guias,
+            artefactos=artefactos,
+        )
     except (json.JSONDecodeError, ValueError, KeyError, TypeError) as error:
         logger.warning(
             "Curso corrupto en %s (%s); se regenerará el temario.", ruta, error

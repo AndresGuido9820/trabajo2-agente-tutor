@@ -253,6 +253,36 @@ en el reporte.
 
 ---
 
+## 2026-07-20 — HU-14: renovación UX e interacción total con el agente
+
+**Contexto:** retroalimentación de visión ("el alumno interactúa con el
+agente e ilustra mejor, como los Artifacts de Claude") + auditoría contra
+guías abiertas de producto/UX (`docs/INVESTIGACION-UX.md`).
+
+**Hallazgos:**
+
+1. **Mini-artefactos**: el LLM genera páginas HTML autocontenidas e
+   interactivas sorprendentemente bien (humo real: 12.8 KB, interactiva, sin
+   recursos externos, con el mismo ejemplo de la sección). El
+   `iframe sandbox="allow-scripts"` da el aislamiento de los Artifacts sin
+   infraestructura: sin red, sin acceso al DOM de la app.
+2. La mayor deuda UX era la **espera opaca**: NN/g exige progreso con
+   expectativa para >10 s; ahora todas las generaciones tienen loader por
+   fases + tiempo estimado + skeleton, la guía es no bloqueante y el quiz se
+   prefetch-ea en la última sección.
+3. **Doble ganancia inesperada**: al basar el quiz en la guía (en vez de
+   regenerar la lección Markdown), se ahorra ~1 min por evaluación Y la
+   evaluación queda alineada con lo que el estudiante realmente estudió.
+4. Accesibilidad barata y de alto impacto: paleta AA verificada, badges con
+   texto (no solo emoji/color), `:focus-visible`, `aria-live`,
+   `prefers-reduced-motion` — todo CSS/HTML, cero dependencias.
+
+**Decisión/acción:** streaming de generación queda como el siguiente salto
+de percepción (requiere SSE en `ClienteLLM`); documentado como trabajo
+futuro en el reporte.
+
+---
+
 <!-- Plantilla:
 
 ## AAAA-MM-DD — Título corto

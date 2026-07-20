@@ -69,6 +69,19 @@ class CuerpoMensaje(BaseModel):
     mensaje: str = ""
 
 
+class CuerpoPreguntaGuia(BaseModel):
+    """Body de una pregunta al tutor durante la guía."""
+
+    seccion: int
+    mensaje: str
+
+
+class CuerpoArtefacto(BaseModel):
+    """Body de solicitud de mini-artefacto de una sección."""
+
+    seccion: int
+
+
 class _Estado:
     """Estado del servidor: agente (si hay perfil) y quizzes en curso."""
 
@@ -248,6 +261,36 @@ def crear_app(
             "puntos": r.puntos,
             "puntos_totales": r.puntos_totales,
         }
+
+    @app.post("/api/guia/{indice}/artefacto")
+    def api_artefacto(indice: int, cuerpo: CuerpoArtefacto) -> dict[str, Any]:
+        """Mini-artefacto HTML interactivo de la sección (iframe sandbox)."""
+        agente = _agente()
+
+        def operacion() -> str:
+            try:
+                return agente.artefacto_de_seccion(indice, cuerpo.seccion)
+            except KeyError as error:
+                raise HTTPException(409, "La guía no está generada.") from error
+            except ValueError as error:
+                raise HTTPException(400, str(error)) from error
+
+        return {"html": _con_llm(operacion)}
+
+    @app.post("/api/guia/{indice}/pregunta")
+    def api_pregunta_guia(indice: int, cuerpo: CuerpoPreguntaGuia) -> dict[str, Any]:
+        """Pregunta libre al tutor sobre la sección actual de la guía."""
+        agente = _agente()
+
+        def operacion() -> str:
+            try:
+                return agente.preguntar_guia(indice, cuerpo.seccion, cuerpo.mensaje)
+            except KeyError as error:
+                raise HTTPException(409, "La guía no está generada.") from error
+            except ValueError as error:
+                raise HTTPException(400, str(error)) from error
+
+        return {"texto": _con_llm(operacion)}
 
     @app.post("/api/conversatorio/{indice}")
     def api_conversatorio(indice: int, cuerpo: CuerpoMensaje) -> dict[str, Any]:

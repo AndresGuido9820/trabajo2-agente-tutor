@@ -5,101 +5,191 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Profe Bit — Tutor de programación</title>
 <style>
-  :root{--bg:#0f1420;--panel:#1a2130;--panel2:#222b3d;--tx:#e8ecf3;--dim:#93a0b4;
-        --acc:#4ade80;--acc2:#22d3ee;--bad:#f87171;--warn:#fbbf24;
-        font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+  /* ==== Sistema base (paleta GitHub-dark AA, escalas 1.25/4px, motion M3) ==== */
+  :root{
+    --bg:#0d1117; --superficie:#161b22; --superficie2:#1f2733; --borde:#30363d;
+    --borde-input:#484f58; --tx:#e6edf3; --tx2:#8b949e; --acc:#58a6ff;
+    --ok:#3fb950; --err:#f85149; --warn:#d29922; --fuego:#f0883e;
+    --fs-xs:12px; --fs-sm:14px; --fs-base:16px; --fs-lg:20px; --fs-xl:25px;
+    --r-input:6px; --r-card:10px; --r-chip:999px;
+    --t-rapida:180ms cubic-bezier(.2,0,0,1); --t-media:280ms cubic-bezier(.2,0,0,1);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  }
   *{box-sizing:border-box;margin:0}
-  body{background:var(--bg);color:var(--tx);min-height:100vh}
-  header{padding:14px 22px;border-bottom:1px solid #2a3448;display:flex;gap:12px;align-items:center}
-  header h1{font-size:18px} header .dot{color:var(--acc)}
-  #racha{margin-left:auto;background:var(--panel);border:1px solid #34405a;border-radius:99px;
-         padding:6px 14px;font-weight:600;color:#fb923c}
-  #puntos{background:var(--panel);border:1px solid #34405a;border-radius:99px;
-          padding:6px 14px;font-weight:600;color:var(--warn)}
-  .code-acciones{display:flex;gap:6px;margin:-4px 0 10px}
-  .code-acciones button{font-size:12px;padding:4px 10px}
-  .runner{background:#0b0f18;border:1px solid #34405a;border-radius:8px;padding:10px;margin:6px 0 12px}
-  .runner textarea{width:100%;min-height:110px;background:transparent;border:none;color:var(--tx);
-                   font-family:ui-monospace,monospace;font-size:13px;resize:vertical}
-  .runner textarea:focus{outline:none}
-  .runner .salida{border-top:1px dashed #34405a;margin-top:8px;padding-top:8px;
-                  font-family:ui-monospace,monospace;font-size:13px;white-space:pre-wrap;color:var(--acc2)}
-  .runner .salida.err{color:var(--bad)}
-  main{display:flex;height:calc(100vh - 55px)}
-  #sidebar{width:330px;min-width:260px;border-right:1px solid #2a3448;overflow-y:auto;padding:14px}
-  #contenido{flex:1;overflow-y:auto;padding:22px}
-  .unidad{background:var(--panel);border:1px solid #2a3448;border-radius:10px;
-          padding:10px 12px;margin-bottom:8px}
-  .unidad.bloqueada{opacity:.55}
-  .estado{float:right;font-size:11px;padding:2px 8px;border-radius:99px;background:var(--panel2);color:var(--dim)}
-  .estado.vista,.estado.evaluada{color:var(--warn)} .estado.aprobada{color:var(--acc)}
-  .acciones{display:flex;gap:6px;margin-top:8px}
-  button{background:var(--panel2);color:var(--tx);border:1px solid #34405a;border-radius:8px;
-         padding:7px 13px;cursor:pointer;font-size:13px}
-  button:hover:not(:disabled){border-color:var(--acc)}
-  button.primario{background:#14532d;border-color:var(--acc)}
+  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+  body{background:var(--bg);color:var(--tx);min-height:100vh;font-size:var(--fs-base)}
+  :focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:4px}
+  button{background:var(--superficie2);color:var(--tx);border:1px solid var(--borde-input);
+         border-radius:var(--r-input);padding:8px 14px;cursor:pointer;font-size:var(--fs-sm);
+         transition:filter var(--t-rapida),border-color var(--t-rapida)}
+  button:hover:not(:disabled){filter:brightness(1.12);border-color:var(--acc)}
+  button:active:not(:disabled){filter:brightness(.95)}
+  button.primario{background:var(--acc);border-color:var(--acc);color:#0d1117;font-weight:600}
+  button.sutil{background:transparent;border-color:transparent;color:var(--acc)}
   button:disabled{opacity:.45;cursor:not-allowed}
-  .tarjeta{background:var(--panel);border:1px solid #2a3448;border-radius:14px;
-           padding:22px;max-width:760px;margin:0 auto 16px;width:100%}
-  .tarjeta h2{margin-bottom:12px}
-  .campo{margin-bottom:12px}
-  .campo label{display:block;color:var(--dim);font-size:13px;margin-bottom:4px}
-  .campo select,.campo input{width:100%;background:var(--panel2);border:1px solid #34405a;
-      border-radius:8px;color:var(--tx);padding:9px 11px;font-size:14px}
-  .contenido-md{line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
-  .contenido-md pre{background:#0b0f18;border:1px solid #2a3448;border-radius:8px;padding:11px;
-                    overflow-x:auto;margin:8px 0;font-size:13px;white-space:pre}
-  .contenido-md code{background:#0b0f18;border-radius:4px;padding:1px 5px;font-size:13px}
-  .objetivo-chip{display:inline-block;background:#0e2a3a;color:var(--acc2);border-radius:99px;
-                 padding:4px 12px;font-size:12px;margin-bottom:10px}
-  .checkpoint{background:var(--panel2);border:1px solid #34405a;border-radius:12px;padding:16px;margin-top:14px}
-  .opcion{display:block;margin:7px 0;padding:9px 11px;border:1px solid #2a3448;border-radius:8px;
-          cursor:pointer;white-space:pre-wrap}
-  .opcion:hover{border-color:var(--acc2)}
-  .opcion.correcta{border-color:var(--acc);background:#12291c}
-  .opcion.incorrecta{border-color:var(--bad);background:#2b1416}
-  .feedback{border-left:3px solid var(--acc2);padding:8px 12px;margin-top:10px;color:var(--dim);white-space:pre-wrap}
-  .feedback.pista{border-color:var(--warn)}
-  #barra-avance{height:6px;background:var(--panel2);border-radius:99px;margin:10px 0 18px;overflow:hidden}
-  #barra-avance div{height:100%;background:var(--acc);transition:width .4s}
-  .msg{max-width:82%;padding:12px 15px;border-radius:14px;line-height:1.55;margin-bottom:10px;
-       white-space:pre-wrap;overflow-wrap:anywhere}
-  .msg.tutor{background:var(--panel);border:1px solid #2a3448;margin-right:auto}
-  .msg.yo{background:#173a2a;margin-left:auto}
-  .msg pre{background:#0b0f18;border-radius:8px;padding:10px;overflow-x:auto;white-space:pre;font-size:13px}
-  #chat-barra{display:flex;gap:10px;margin-top:8px}
-  #chat-barra input{flex:1;background:var(--panel);border:1px solid #34405a;border-radius:10px;
-                    color:var(--tx);padding:11px 14px;font-size:14px}
-  .ok{color:var(--acc)} .mal{color:var(--bad)} .dim{color:var(--dim)}
+
+  header{padding:12px 22px;border-bottom:1px solid var(--borde);display:flex;gap:14px;
+         align-items:center;flex-wrap:wrap}
+  header h1{font-size:var(--fs-lg)} header .dot{color:var(--ok)}
+  #progreso-curso{flex:1;min-width:160px;max-width:340px}
+  #progreso-curso .texto{font-size:var(--fs-xs);color:var(--tx2);margin-bottom:4px}
+  .chip-stat{background:var(--superficie);border:1px solid var(--borde);border-radius:var(--r-chip);
+             padding:5px 12px;font-weight:600;font-size:var(--fs-sm);cursor:help}
+  #racha{color:var(--fuego)} #puntos{color:var(--warn)}
+
+  .barra{height:6px;background:var(--superficie2);border-radius:var(--r-chip);overflow:hidden}
+  .barra > div{height:100%;background:var(--ok);transition:width 400ms cubic-bezier(0,0,0,1)}
+
+  main{display:flex;height:calc(100vh - 61px)}
+  #sidebar{width:340px;min-width:270px;border-right:1px solid var(--borde);
+           overflow-y:auto;padding:16px}
+  #contenido{flex:1;overflow-y:auto;padding:24px}
+  .lectura{max-width:70ch}
+
+  .unidad{background:var(--superficie);border:1px solid var(--borde);border-radius:var(--r-card);
+          padding:12px 14px;margin-bottom:8px;transition:border-color var(--t-rapida)}
+  .unidad.siguiente{border-color:var(--ok)}
+  .unidad.bloqueada{opacity:.55}
+  .unidad b{font-size:var(--fs-sm);line-height:1.4;display:block;margin:2px 24px 0 0}
+  .badge{float:right;font-size:var(--fs-xs);padding:2px 10px;border-radius:var(--r-chip);
+         background:var(--superficie2);color:var(--tx2);border:1px solid var(--borde)}
+  .badge.aprobada{color:var(--ok);border-color:var(--ok)}
+  .badge.vista,.badge.evaluada{color:var(--warn)}
+  .badge.generando{color:var(--acc)}
+  .unidad .cta{margin-top:10px;display:flex;gap:8px;align-items:center}
+
+  .tarjeta{background:var(--superficie);border:1px solid var(--borde);
+           border-radius:var(--r-card);padding:24px;max-width:780px;margin:0 auto 16px}
+  .tarjeta h2{font-size:var(--fs-xl);margin-bottom:12px}
+  h3{font-size:var(--fs-lg);margin:16px 0 8px}
+  .dim{color:var(--tx2)} .ok{color:var(--ok)} .mal{color:var(--err)}
   .puntos-pop{color:var(--warn);font-weight:700}
-  #error{position:fixed;bottom:16px;right:16px;background:#7f1d1d;border-radius:10px;
-         padding:12px 16px;max-width:420px;display:none;z-index:9}
-  .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--dim);
-        border-top-color:var(--acc);border-radius:50%;animation:g .8s linear infinite;vertical-align:-2px}
+
+  /* Formulario (GOV.UK style) */
+  .campo{margin-bottom:24px}
+  .campo label{display:block;font-weight:600;margin-bottom:4px;font-size:var(--fs-sm)}
+  .campo .hint{display:block;color:var(--tx2);font-size:var(--fs-sm);margin-bottom:8px}
+  .campo select,.campo input{width:100%;background:var(--bg);border:1px solid var(--borde-input);
+      border-radius:var(--r-input);color:var(--tx);padding:10px 12px;font-size:var(--fs-base)}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .chips button{font-size:var(--fs-xs);padding:4px 10px;border-radius:var(--r-chip)}
+
+  /* Contenido markdown */
+  .contenido-md{line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+  .contenido-md pre,.msg pre{background:var(--bg);border:1px solid var(--borde);
+      border-radius:var(--r-input);padding:12px;overflow-x:auto;margin:8px 0;
+      font-size:var(--fs-sm);white-space:pre;line-height:1.5}
+  .contenido-md code,.msg code{background:var(--bg);border-radius:4px;padding:1px 5px;
+      font-size:var(--fs-sm);font-family:ui-monospace,monospace}
+
+  .objetivo-chip{display:inline-block;background:#0d2137;color:var(--acc);
+      border-radius:var(--r-chip);padding:5px 14px;font-size:var(--fs-xs);
+      font-weight:600;margin-bottom:12px}
+  .code-acciones{display:flex;gap:6px;margin:-4px 0 10px}
+  .code-acciones button{font-size:var(--fs-xs);padding:4px 10px}
+  .runner{background:var(--bg);border:1px solid var(--borde-input);
+          border-radius:var(--r-input);padding:10px;margin:6px 0 12px}
+  .runner textarea{width:100%;min-height:110px;background:transparent;border:none;
+      color:var(--tx);font-family:ui-monospace,monospace;font-size:var(--fs-sm);resize:vertical}
+  .runner textarea:focus{outline:none}
+  .runner .salida{border-top:1px dashed var(--borde-input);margin-top:8px;padding-top:8px;
+      font-family:ui-monospace,monospace;font-size:var(--fs-sm);white-space:pre-wrap;color:var(--acc)}
+  .runner .salida.err{color:var(--err)}
+
+  .checkpoint{background:var(--superficie2);border:1px solid var(--borde-input);
+      border-radius:var(--r-card);padding:16px;margin-top:16px}
+  .opcion{display:block;margin:8px 0;padding:10px 12px;border:1px solid var(--borde);
+      border-radius:var(--r-input);cursor:pointer;white-space:pre-wrap;
+      transition:border-color var(--t-rapida)}
+  .opcion:hover{border-color:var(--acc)}
+  .opcion.correcta{border-color:var(--ok);background:#12291c}
+  .opcion.incorrecta{border-color:var(--err);background:#2b1416}
+  .feedback{border-left:3px solid var(--acc);padding:10px 14px;margin-top:12px;
+      color:var(--tx);white-space:pre-wrap;background:var(--superficie);
+      border-radius:0 var(--r-input) var(--r-input) 0;animation:aparecer 280ms cubic-bezier(0,0,0,1)}
+  .feedback.pista{border-color:var(--warn)}
+  .feedback.exito{border-color:var(--ok)}
+  @keyframes aparecer{from{opacity:0;transform:translateY(4px)}to{opacity:1}}
+
+  #barra-guia{position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:2}
+
+  /* Skeletons */
+  .sk{background:linear-gradient(90deg,var(--superficie2) 25%,#2a3444 50%,var(--superficie2) 75%);
+      background-size:200% 100%;animation:sk 1.2s infinite;border-radius:var(--r-input)}
+  @keyframes sk{to{background-position:-200% 0}}
+
+  /* Chat */
+  .msg{max-width:82%;padding:12px 15px;border-radius:14px;line-height:1.55;
+       margin-bottom:10px;white-space:pre-wrap;overflow-wrap:anywhere;
+       animation:aparecer 250ms cubic-bezier(0,0,0,1)}
+  .msg.tutor{background:var(--superficie);border:1px solid var(--borde);margin-right:auto}
+  .msg.yo{background:#173a2a;margin-left:auto}
+  .chat-barra{display:flex;gap:8px;margin-top:10px}
+  .chat-barra input{flex:1;background:var(--bg);border:1px solid var(--borde-input);
+      border-radius:var(--r-card);color:var(--tx);padding:11px 14px;font-size:var(--fs-sm)}
+  .escribiendo::after{content:"···";animation:puntos 1.2s infinite;letter-spacing:2px;font-weight:700}
+  @keyframes puntos{0%{opacity:.2}50%{opacity:1}100%{opacity:.2}}
+
+  .panel-tutor{margin-top:16px;border-top:1px dashed var(--borde);padding-top:12px}
+  iframe.artefacto{width:100%;height:480px;border:1px solid var(--borde);
+      border-radius:var(--r-card);background:var(--bg);margin-top:10px}
+
+  /* Celebración (≤600ms, proporcional) */
+  .celebra{animation:celebra 500ms cubic-bezier(0,0,0,1)}
+  @keyframes celebra{0%{transform:scale(.92);opacity:0}60%{transform:scale(1.03)}100%{transform:scale(1);opacity:1}}
+
+  /* Toast (solo confirmaciones; errores van inline) */
+  #toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);
+      background:var(--superficie);border:1px solid var(--ok);border-radius:var(--r-card);
+      padding:12px 18px;display:none;z-index:9;animation:aparecer 250ms}
+  #error{position:fixed;bottom:16px;right:16px;background:#3d1214;border:1px solid var(--err);
+      border-radius:var(--r-card);padding:12px 16px;max-width:420px;display:none;z-index:9}
+  .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--tx2);
+      border-top-color:var(--acc);border-radius:50%;animation:g .8s linear infinite;vertical-align:-2px}
   @keyframes g{to{transform:rotate(360deg)}}
-  @media(max-width:760px){main{flex-direction:column}#sidebar{width:100%;max-height:36vh}}
+  @media(max-width:780px){main{flex-direction:column}#sidebar{width:100%;max-height:38vh}}
 </style>
 </head>
 <body>
-<header><h1>Profe Bit <span class="dot">●</span></h1>
-  <span class="dim" id="subtitulo">tu tutor de programación</span>
-  <span id="racha" style="display:none">🔥 0</span>
-  <span id="puntos" style="display:none">⭐ 0 pts</span></header>
+<header>
+  <h1>Profe Bit <span class="dot">●</span></h1>
+  <div id="progreso-curso" style="display:none">
+    <div class="texto" id="progreso-texto"></div>
+    <div class="barra"><div id="progreso-barra" style="width:0%"></div></div>
+  </div>
+  <span class="chip-stat" id="racha" style="display:none"
+        title="Tu racha: días seguidos estudiando. No se pierde por descansar un día de vez en cuando."></span>
+  <span class="chip-stat" id="puntos" style="display:none"
+        title="Puntos por checkpoints (10 al primer intento, 5 al segundo) y por aprobar unidades (+30)."></span>
+</header>
 <main>
-  <nav id="sidebar"></nav>
+  <nav id="sidebar" aria-label="Unidades del curso"></nav>
   <section id="contenido"></section>
 </main>
-<div id="error"></div>
+<div id="toast" role="status"></div>
+<div id="error" role="alert"></div>
 <script>
 "use strict";
 const $ = (sel) => document.querySelector(sel);
-let guiaActual = null;   // {indice, titulo, secciones, seccion, intento}
+let lenguajeCurso = "";
+let guiaActual = null;             // {indice, titulo, secciones, seccion, intento}
+const guiasEnCurso = new Map();    // indice -> Promise (generación no bloqueante)
+let quizPrefetch = null;           // {indice, promesa}
+
+/* ---------- utilidades ---------- */
 
 function mostrarError(texto){
   const caja = $("#error");
   caja.textContent = texto;
   caja.style.display = "block";
   setTimeout(() => caja.style.display = "none", 7000);
+}
+
+function toast(texto){
+  const caja = $("#toast");
+  caja.textContent = texto;
+  caja.style.display = "block";
+  setTimeout(() => caja.style.display = "none", 3500);
 }
 
 async function api(ruta, cuerpo, metodo){
@@ -130,142 +220,127 @@ function md(texto){
   return html;
 }
 
-let lenguajeCurso = "";
-
-function ponerPuntos(n){
-  const chip = $("#puntos");
-  chip.style.display = "inline-block";
-  chip.textContent = `⭐ ${n} pts`;
+function ponerStats(estado){
+  $("#puntos").style.display = "inline-block";
+  $("#puntos").textContent = `⭐ ${estado.puntos} pts`;
+  $("#racha").style.display = "inline-block";
+  $("#racha").textContent = `🔥 ${estado.racha} ${estado.racha === 1 ? "día" : "días"}`;
+  const aprobadas = estado.unidades.filter(u => u.estado === "aprobada").length;
+  $("#progreso-curso").style.display = "block";
+  $("#progreso-texto").textContent = `${aprobadas} de ${estado.unidades.length} unidades aprobadas`;
+  $("#progreso-barra").style.width = `${Math.round(100 * aprobadas / estado.unidades.length)}%`;
 }
 
-function ponerRacha(n){
-  const chip = $("#racha");
-  chip.style.display = "inline-block";
-  chip.textContent = `🔥 ${n} ${n === 1 ? "día" : "días"}`;
+// Loader por fases para esperas largas (NN/g: >10 s exige progreso + expectativa)
+function loaderFases(contenedor, fases, duracionTotalMs){
+  contenedor.innerHTML = `<p class="dim" style="margin-bottom:10px" aria-live="polite">
+      <span class="spin"></span> <span class="fase">${fases[0]}</span></p>
+    <div class="barra"><div style="width:4%"></div></div>
+    <p class="dim" style="font-size:var(--fs-xs);margin-top:8px">Suele tardar ~${Math.round(duracionTotalMs/1000)} s. Puedes seguir navegando por el curso mientras tanto.</p>`;
+  const barra = contenedor.querySelector(".barra > div");
+  const fase = contenedor.querySelector(".fase");
+  const inicio = Date.now();
+  const timer = setInterval(() => {
+    const t = (Date.now() - inicio) / duracionTotalMs;
+    barra.style.width = `${Math.min(92, Math.round(100 * (1 - Math.exp(-2.2 * t))))}%`;
+    fase.textContent = fases[Math.min(fases.length - 1, Math.floor(t * fases.length))];
+  }, 900);
+  return () => clearInterval(timer);
 }
 
-/* ---------- Ejecutar Python en el navegador (Pyodide, estilo futurecoder) ---------- */
-
-let pyodideListo = null;
-
-function cargarPyodide(){
-  if(!pyodideListo){
-    pyodideListo = new Promise((resolver, rechazar) => {
-      const s = document.createElement("script");
-      s.src = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js";
-      s.onload = () => loadPyodide().then(resolver, rechazar);
-      s.onerror = () => rechazar(new Error("No se pudo descargar Pyodide (¿sin internet?)."));
-      document.head.appendChild(s);
-    });
-  }
-  return pyodideListo;
+function skeletonGuia(){
+  return `<div class="tarjeta">
+    <div class="sk" style="width:180px;height:24px;margin-bottom:14px"></div>
+    <div class="sk" style="height:14px;margin-bottom:8px"></div>
+    <div class="sk" style="height:14px;width:92%;margin-bottom:8px"></div>
+    <div class="sk" style="height:14px;width:85%;margin-bottom:14px"></div>
+    <div class="sk" style="height:110px;margin-bottom:14px"></div>
+    <div class="sk" style="height:14px;width:60%"></div></div>`;
 }
 
-async function ejecutarPython(codigo, salida){
-  salida.className = "salida";
-  salida.textContent = "⏳ Cargando Python en tu navegador (solo la primera vez)…";
-  let py;
-  try{ py = await cargarPyodide(); }
-  catch(e){ salida.className = "salida err"; salida.textContent = e.message; return; }
-  salida.textContent = "▶ Ejecutando…";
-  py.runPython("import sys, io\nsys.stdout = sys.stderr = io.StringIO()");
-  let error = null;
-  try{ py.runPython(codigo); }
-  catch(e){ error = String(e.message || e).split("\n").filter(l => !l.includes("pyodide")).slice(-8).join("\n"); }
-  const impreso = py.runPython("sys.stdout.getvalue()");
-  if(error){
-    salida.className = "salida err";
-    salida.textContent = (impreso ? impreso + "\n" : "") + error;
-  }else{
-    salida.textContent = impreso || "(el código corrió sin imprimir nada — agrega un print())";
-  }
-}
-
-function urlPythonTutor(codigo){
-  return "https://pythontutor.com/render.html#code=" + encodeURIComponent(codigo) +
-         "&cumulative=false&py=311&curInstr=0";
-}
-
-// Agrega a cada bloque <pre> de la guía los botones ▶ Pruébalo y 🔍 Paso a paso
-function activarBloquesDeCodigo(raiz){
-  if(lenguajeCurso !== "python") return;
-  raiz.querySelectorAll("pre").forEach(pre => {
-    const codigo = pre.textContent;
-    if(!codigo.trim() || codigo.split("\n").length < 2) return;
-    const barra = document.createElement("div");
-    barra.className = "code-acciones";
-    barra.innerHTML = `<button>▶ Pruébalo aquí</button><button>🔍 Paso a paso</button>`;
-    const [bRun, bViz] = barra.querySelectorAll("button");
-    bViz.onclick = () => window.open(urlPythonTutor(codigo), "_blank");
-    bRun.onclick = () => {
-      bRun.disabled = true;
-      const runner = document.createElement("div");
-      runner.className = "runner";
-      runner.innerHTML = `<textarea spellcheck="false"></textarea>
-        <div><button class="primario">▶ Ejecutar</button></div><div class="salida dim">Edita el código y ejecútalo: corre en TU navegador.</div>`;
-      runner.querySelector("textarea").value = codigo.trimEnd();
-      const salida = runner.querySelector(".salida");
-      runner.querySelector("button").onclick = () =>
-        ejecutarPython(runner.querySelector("textarea").value, salida);
-      barra.after(runner);
-    };
-    pre.after(barra);
-  });
-}
+/* ---------- estado / sidebar ---------- */
 
 async function cargarEstado(mostrarInicio){
-  if(mostrarInicio) $("#sidebar").innerHTML = '<p class="dim"><span class="spin"></span> Preparando tu curso…</p>';
   let estado;
   try{ estado = await api("/api/estado"); }
   catch(e){ mostrarError(e.message); return; }
   if(!estado.perfil){ verFormPerfil(); $("#sidebar").innerHTML = ""; return; }
-  $("#subtitulo").textContent = "curso de " + estado.lenguaje;
   lenguajeCurso = estado.lenguaje;
-  ponerPuntos(estado.puntos);
-  ponerRacha(estado.racha);
+  ponerStats(estado);
   const nav = $("#sidebar");
   nav.innerHTML = "";
+  const siguiente = estado.unidades.find(u => u.estado !== "aprobada" && u.estado !== "bloqueada");
   estado.unidades.forEach(u => {
     const bloqueada = u.estado === "bloqueada";
+    const esSiguiente = siguiente && u.indice === siguiente.indice;
     const div = document.createElement("div");
-    div.className = "unidad" + (bloqueada ? " bloqueada" : "");
-    const nota = u.mejor_nota === null ? "" : ` · ${u.mejor_nota}`;
-    div.innerHTML = `<span class="estado ${u.estado}">${bloqueada ? "🔒 " : ""}${u.estado}${nota}</span>
-      <b>${u.indice + 1}. ${u.titulo}</b>
-      <div class="acciones">
-        <button class="primario" ${bloqueada ? "disabled" : ""}>Estudiar la guía</button>
-        <button ${bloqueada ? "disabled" : ""}>Evaluación</button>
-      </div>`;
-    const [bGuia, bEval] = div.querySelectorAll("button");
-    bGuia.onclick = () => iniciarGuia(u.indice, u.titulo);
-    bEval.onclick = () => iniciarQuiz(u.indice);
+    div.className = "unidad" + (bloqueada ? " bloqueada" : "") + (esSiguiente ? " siguiente" : "");
+    const generando = guiasEnCurso.has(u.indice);
+    const etiqueta = generando ? "Generando…"
+      : {bloqueada:"🔒 Bloqueada", pendiente:"Pendiente", vista:"En curso",
+         evaluada:`Nota ${u.mejor_nota}`, aprobada:`✓ Aprobada · ${u.mejor_nota}`}[u.estado];
+    div.innerHTML = `<span class="badge ${generando ? "generando" : u.estado}">${etiqueta}</span>
+      <b>${u.indice + 1}. ${u.titulo}</b><div class="cta"></div>`;
+    const cta = div.querySelector(".cta");
+    if(!bloqueada){
+      // Un solo CTA primario según el estado (Hick's Law)
+      const principal = document.createElement("button");
+      if(u.estado === "aprobada"){
+        principal.textContent = "Repasar";
+      }else if(u.estado === "vista" || u.estado === "evaluada"){
+        principal.textContent = u.estado === "evaluada" ? "Reintentar evaluación" : "Continuar guía";
+        principal.className = esSiguiente ? "primario" : "";
+      }else{
+        principal.textContent = "Estudiar";
+        principal.className = esSiguiente ? "primario" : "";
+      }
+      principal.onclick = () => (u.estado === "evaluada")
+        ? iniciarQuiz(u.indice) : iniciarGuia(u.indice, u.titulo);
+      cta.appendChild(principal);
+      if(u.estado === "vista" || u.estado === "aprobada"){
+        const b = document.createElement("button");
+        b.className = "sutil";
+        b.textContent = u.estado === "aprobada" ? "Evaluar de nuevo" : "Ir a la evaluación";
+        b.onclick = () => iniciarQuiz(u.indice);
+        cta.appendChild(b);
+      }
+    }
     nav.appendChild(div);
   });
   if(mostrarInicio) verBienvenida(estado);
 }
 
 function verBienvenida(estado){
-  $("#contenido").innerHTML = `<div class="tarjeta">
+  $("#contenido").innerHTML = `<div class="tarjeta lectura">
     <h2>Así funciona tu curso</h2>
-    <p class="dim" style="line-height:1.7">1️⃣ Cada unidad tiene una <b>guía interactiva por objetivos</b>: aprendes y
-    respondes checkpoints que dan <span class="puntos-pop">⭐ puntos</span> (10 al primer intento, 5 al segundo).<br>
-    2️⃣ Al final presentas la <b>evaluación</b>: con ${estado.nota_aprobatoria} o más apruebas
-    (+30 pts) y <b>desbloqueas la siguiente unidad</b>.<br>
-    3️⃣ Si no apruebas, abrimos un <b>conversatorio socrático</b> sobre tus dudas y reintentas.<br><br>
-    Empieza por la unidad 1 👈</p></div>`;
+    <p class="dim" style="line-height:1.7">1. Cada unidad tiene una <b>guía por objetivos</b>: aprendes, respondes
+    checkpoints y ganas <span class="puntos-pop">⭐ puntos</span>. Puedes <b>preguntarle al tutor</b> lo que sea
+    y pedirle <b>demos interactivas ✨</b> en cualquier sección.<br>
+    2. Al final, la <b>evaluación</b>: con ${estado.nota_aprobatoria}+ apruebas y desbloqueas la siguiente unidad.<br>
+    3. Si no apruebas, el tutor abre un <b>conversatorio</b> para cerrar tus dudas y reintentas.<br><br>
+    La unidad resaltada en verde es tu siguiente paso 👈</p></div>`;
 }
 
+/* ---------- perfil ---------- */
+
+const SUGERENCIAS_EXP = ["Fórmulas y tablas dinámicas en Excel", "Nunca he programado, uso bien el PC", "Hice una página en Wordpress"];
+const SUGERENCIAS_LEN = ["python", "javascript", "que el tutor decida"];
+
 function verFormPerfil(){
-  $("#contenido").innerHTML = `<div class="tarjeta"><h2>Cuéntame de ti</h2>
-    <div class="campo"><label>¿Cuál es tu experiencia?</label>
+  $("#contenido").innerHTML = `<div class="tarjeta lectura"><h2>Tu curso, a tu medida</h2>
+    <p class="dim" style="margin-bottom:24px">Con 4 respuestas, el tutor diseña un curso solo para ti —
+    por ejemplo: <i>“Abrir y explorar tablas: CSV → DataFrame (tu hoja de cálculo en Python)”</i>
+    para alguien que viene de Excel.</p>
+    <div class="campo"><label for="f-nivel">¿Cuál es tu experiencia programando?</label>
       <select id="f-nivel">
         <option value="nunca">Nunca he programado</option>
         <option value="basico">Sé algo básico (variables, condicionales)</option>
         <option value="scripts">He escrito scripts o programas pequeños</option>
       </select></div>
-    <div class="campo"><label>¿Qué has hecho antes? (opcional)</label>
-      <input id="f-exp" placeholder="p. ej. fórmulas y tablas dinámicas en Excel"></div>
-    <div class="campo"><label>¿Qué quieres lograr?</label>
+    <div class="campo"><label for="f-exp">¿Qué has hecho antes? (opcional)</label>
+      <span class="hint">El tutor lo usa para explicarte con analogías de tu mundo</span>
+      <input id="f-exp"><div class="chips" id="chips-exp"></div></div>
+    <div class="campo"><label for="f-objetivo">¿Qué quieres lograr?</label>
       <select id="f-objetivo">
         <option value="datos">Ciencia de datos / análisis</option>
         <option value="front">Desarrollo front-end</option>
@@ -273,37 +348,80 @@ function verFormPerfil(){
         <option value="automatizacion">Automatizar tareas</option>
         <option value="otro">Otro…</option>
       </select></div>
-    <div class="campo" id="f-detalle-campo" style="display:none"><label>Cuéntame tu objetivo</label>
+    <div class="campo" id="f-detalle-campo" style="display:none"><label for="f-detalle">Cuéntame tu objetivo</label>
       <input id="f-detalle"></div>
-    <div class="campo"><label>¿Lenguaje preferido? (vacío = que el tutor decida)</label>
-      <input id="f-lenguaje" placeholder="python, javascript…"></div>
-    <button class="primario" id="f-enviar">Crear mi curso</button></div>`;
+    <div class="campo"><label for="f-lenguaje">¿Lenguaje preferido? (opcional)</label>
+      <span class="hint">Si lo dejas vacío, el tutor elige el mejor para tu meta</span>
+      <input id="f-lenguaje"><div class="chips" id="chips-len"></div></div>
+    <button class="primario" id="f-enviar">Crear mi curso</button>
+    <div id="f-progreso" style="margin-top:16px"></div></div>`;
+  SUGERENCIAS_EXP.forEach(s => agregarChip("#chips-exp", "#f-exp", s));
+  SUGERENCIAS_LEN.forEach(s => agregarChip("#chips-len", "#f-lenguaje", s === "que el tutor decida" ? "" : s, s));
   $("#f-objetivo").onchange = (e) =>
     $("#f-detalle-campo").style.display = e.target.value === "otro" ? "block" : "none";
-  $("#f-enviar").onclick = async () => {
-    const boton = $("#f-enviar");
-    boton.disabled = true; boton.innerHTML = '<span class="spin"></span> Diseñando tu curso…';
-    try{
-      await api("/api/perfil", {
-        nivel: $("#f-nivel").value, objetivo: $("#f-objetivo").value,
-        experiencia: $("#f-exp").value,
-        objetivo_detalle: $("#f-detalle") ? $("#f-detalle").value : "",
-        lenguaje: $("#f-lenguaje").value,
-      });
-      await cargarEstado(true);
-    }catch(e){ mostrarError(e.message); boton.disabled = false; boton.textContent = "Crear mi curso"; }
-  };
+  $("#f-nivel").focus();
+  $("#f-enviar").onclick = crearPerfil;
 }
 
-/* ---------- Guía interactiva ---------- */
+function agregarChip(contenedor, input, valor, etiqueta){
+  const b = document.createElement("button");
+  b.type = "button";
+  b.textContent = etiqueta || valor;
+  b.onclick = () => { $(input).value = valor; };
+  $(contenedor).appendChild(b);
+}
+
+async function crearPerfil(){
+  const boton = $("#f-enviar");
+  boton.disabled = true; boton.textContent = "Diseñando tu curso…";
+  const parar = loaderFases($("#f-progreso"), [
+    "Analizando tu perfil…", "Eligiendo la secuencia de temas…",
+    "Diseñando unidades a tu medida…", "Puliendo los títulos…", "Casi listo…",
+  ], 60000);
+  try{
+    await api("/api/perfil", {
+      nivel: $("#f-nivel").value, objetivo: $("#f-objetivo").value,
+      experiencia: $("#f-exp").value,
+      objetivo_detalle: $("#f-detalle") ? $("#f-detalle").value : "",
+      lenguaje: $("#f-lenguaje").value.replace("que el tutor decida",""),
+    });
+    await cargarEstado(true);
+    toast("¡Tu curso está listo! 🎉");
+  }catch(e){
+    mostrarError(e.message);
+    boton.disabled = false; boton.textContent = "Crear mi curso";
+  }finally{ parar(); const p = $("#f-progreso"); if(p) p.innerHTML = ""; }
+}
+
+/* ---------- guía interactiva ---------- */
+
+function pedirGuia(indice){
+  if(!guiasEnCurso.has(indice)){
+    const promesa = api(`/api/guia/${indice}`, undefined, "POST")
+      .finally(() => { guiasEnCurso.delete(indice); cargarEstado(false); });
+    guiasEnCurso.set(indice, promesa);
+  }
+  return guiasEnCurso.get(indice);
+}
 
 async function iniciarGuia(indice, titulo){
-  $("#contenido").innerHTML = `<div class="tarjeta"><h2>${titulo}</h2>
-    <p class="dim"><span class="spin"></span> El tutor está escribiendo tu guía por objetivos…</p></div>`;
+  const cont = $("#contenido");
+  cont.innerHTML = `<div class="tarjeta lectura"><h2>${titulo || `Unidad ${indice + 1}`}</h2>
+    <div id="g-progreso"></div>
+    <div style="margin-top:12px"><button class="sutil" id="g-volver">← Volver al curso (la guía se sigue preparando)</button></div>
+    </div>` + skeletonGuia();
+  const parar = loaderFases($("#g-progreso"), [
+    "Leyendo tu perfil y tu progreso…", "Definiendo los objetivos de la unidad…",
+    "Escribiendo la guía con tus analogías…", "Preparando los checkpoints…", "Últimos toques…",
+  ], 75000);
+  $("#g-volver").onclick = () => { parar(); cargarEstado(true); toast("Te aviso cuando tu guía esté lista."); };
   let guia;
-  try{ guia = await api(`/api/guia/${indice}`, undefined, "POST"); }
-  catch(e){ mostrarError(e.message); cargarEstado(true); return; }
-  ponerPuntos(guia.puntos);
+  try{ guia = await pedirGuia(indice); }
+  catch(e){ parar(); mostrarError(e.message); cargarEstado(true); return; }
+  parar();
+  toast("Tu guía está lista ✅");
+  // Si el usuario se fue a otra vista, no lo interrumpimos (no bloqueante)
+  if(!document.getElementById("g-progreso")) return;
   guiaActual = {indice, titulo, secciones: guia.secciones, seccion: 0, intento: 1};
   verSeccion();
 }
@@ -314,27 +432,45 @@ function verSeccion(){
   g.intento = 1;
   const pct = Math.round(100 * g.seccion / g.secciones.length);
   $("#contenido").innerHTML = `
-    <div class="tarjeta">
-      <div class="dim">Guía: ${g.titulo} — objetivo ${g.seccion + 1} de ${g.secciones.length}</div>
-      <div id="barra-avance"><div style="width:${pct}%"></div></div>
+    <div class="lectura" style="margin:0 auto">
+    <div id="barra-guia">
+      <div class="dim" style="font-size:var(--fs-xs);margin-bottom:4px">
+        ${g.titulo} — objetivo ${g.seccion + 1} de ${g.secciones.length}
+        · <a href="#" id="g-salir" style="color:var(--acc)">volver al curso</a></div>
+      <div class="barra"><div style="width:${pct}%"></div></div>
+    </div>
+    <div class="tarjeta" style="margin-top:12px">
       <span class="objetivo-chip">🎯 ${s.objetivo}</span>
       <div class="contenido-md">${md(s.contenido)}</div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button id="b-artefacto">✨ Ver demo interactiva</button>
+        <button id="b-preguntar">💬 Preguntar al tutor</button>
+      </div>
+      <div id="zona-artefacto"></div>
+      <div id="zona-chat"></div>
       <div class="checkpoint">
         <b>✅ Checkpoint</b>
         <div class="contenido-md" style="margin:8px 0">${md(s.checkpoint.pregunta)}</div>
-        <div id="opciones"></div>
-        <div id="feedback"></div>
+        <div id="opciones" role="radiogroup"></div>
+        <div id="feedback" aria-live="polite"></div>
         <div id="siguiente"></div>
       </div>
-    </div>`;
+    </div></div>`;
+  $("#g-salir").onclick = (e) => { e.preventDefault(); guiaActual = null; cargarEstado(true); };
+  $("#b-artefacto").onclick = () => verArtefacto(g.indice, g.seccion);
+  $("#b-preguntar").onclick = () => abrirChatGuia(g.indice, g.seccion);
   s.checkpoint.opciones.forEach((op, j) => {
     const b = document.createElement("div");
     b.className = "opcion";
+    b.tabIndex = 0;
     b.innerHTML = md(op);
     b.onclick = () => responderCheckpoint(j, b);
+    b.onkeydown = (e) => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); responderCheckpoint(j, b); } };
     $("#opciones").appendChild(b);
   });
   activarBloquesDeCodigo($("#contenido"));
+  // Prefetch del quiz en la última sección (Polaris: elimina la espera después)
+  if(g.seccion === g.secciones.length - 1) prefetchQuiz(g.indice);
 }
 
 async function responderCheckpoint(opcion, elemento){
@@ -344,29 +480,34 @@ async function responderCheckpoint(opcion, elemento){
     r = await api(`/api/guia/${g.indice}/checkpoint`,
                   {seccion: g.seccion, opcion, intento: g.intento});
   }catch(e){ mostrarError(e.message); return; }
-  ponerPuntos(r.puntos_totales);
   const feedback = $("#feedback");
   if(r.correcto){
     elemento.classList.add("correcta");
     desactivarOpciones();
-    feedback.innerHTML = `<div class="feedback"><b class="ok">¡Correcto!</b>
+    feedback.innerHTML = `<div class="feedback exito"><b class="ok">¡Correcto!</b>
       ${r.puntos ? `<span class="puntos-pop"> +${r.puntos} pts</span>` : ""}<br>${md(r.texto)}</div>`;
+    actualizarPuntos(r.puntos_totales);
     botonSiguiente();
   }else if(!r.revelada){
     elemento.classList.add("incorrecta");
     g.intento = 2;
-    feedback.innerHTML = `<div class="feedback pista"><b class="mal">Aún no.</b> Pista 🤔: ${md(r.texto)}<br>
-      <span class="dim">Inténtalo una vez más.</span></div>`;
+    feedback.innerHTML = `<div class="feedback pista"><b>Pista 🤔</b> ${md(r.texto)}<br>
+      <span class="dim">Piénsalo de nuevo y elige otra opción — al segundo intento aún ganas puntos.</span></div>`;
   }else{
     elemento.classList.add("incorrecta");
     desactivarOpciones();
-    feedback.innerHTML = `<div class="feedback"><b class="mal">Esta vez no fue.</b><br>${md(r.texto)}</div>`;
+    feedback.innerHTML = `<div class="feedback"><b>Así funciona:</b><br>${md(r.texto)}<br>
+      <span class="dim">Equivocarse aquí es parte del método — el concepto se refuerza más adelante.</span></div>`;
     botonSiguiente();
   }
 }
 
+function actualizarPuntos(total){
+  $("#puntos").textContent = `⭐ ${total} pts`;
+}
+
 function desactivarOpciones(){
-  document.querySelectorAll(".opcion").forEach(o => o.onclick = null);
+  document.querySelectorAll(".opcion").forEach(o => { o.onclick = null; o.onkeydown = null; o.tabIndex = -1; });
 }
 
 function botonSiguiente(){
@@ -374,33 +515,195 @@ function botonSiguiente(){
   const ultimo = g.seccion === g.secciones.length - 1;
   const b = document.createElement("button");
   b.className = "primario";
-  b.style.marginTop = "10px";
+  b.style.marginTop = "12px";
   b.textContent = ultimo ? "Presentar la evaluación final →" : "Siguiente objetivo →";
   b.onclick = () => {
     if(ultimo){ iniciarQuiz(g.indice); }
-    else{ g.seccion += 1; verSeccion(); }
+    else{ g.seccion += 1; verSeccion(); window.scrollTo(0, 0); }
   };
   $("#siguiente").appendChild(b);
+  b.focus();
 }
 
-/* ---------- Evaluación ---------- */
+/* ---------- mini-artefactos (patrón Artifacts) ---------- */
+
+async function verArtefacto(indice, seccion){
+  const zona = $("#zona-artefacto");
+  const boton = $("#b-artefacto");
+  if(zona.querySelector("iframe")){ zona.innerHTML = ""; boton.textContent = "✨ Ver demo interactiva"; return; }
+  boton.disabled = true; boton.innerHTML = '<span class="spin"></span> Creando tu demo…';
+  try{
+    const r = await api(`/api/guia/${indice}/artefacto`, {seccion});
+    const iframe = document.createElement("iframe");
+    iframe.className = "artefacto";
+    iframe.setAttribute("sandbox", "allow-scripts");   // aislado: sin red ni acceso a la app
+    iframe.srcdoc = r.html;
+    zona.innerHTML = "";
+    zona.appendChild(iframe);
+    boton.textContent = "✨ Ocultar demo";
+  }catch(e){ mostrarError(e.message); boton.textContent = "✨ Ver demo interactiva"; }
+  boton.disabled = false;
+}
+
+/* ---------- chat con el tutor dentro de la guía ---------- */
+
+function abrirChatGuia(indice, seccion){
+  const zona = $("#zona-chat");
+  if(zona.dataset.abierto){ zona.innerHTML = ""; delete zona.dataset.abierto; return; }
+  zona.dataset.abierto = "1";
+  zona.innerHTML = `<div class="panel-tutor">
+    <div class="dim" style="font-size:var(--fs-xs);margin-bottom:8px">
+      Pregunta lo que quieras sobre esta sección. El tutor (una IA) te guía con pistas — no te dará la respuesta del checkpoint.</div>
+    <div id="chat-guia"></div>
+    <div class="chips" id="chat-sugerencias"></div>
+    <div class="chat-barra">
+      <input id="chat-guia-in" placeholder="Escribe tu duda… (Enter para enviar)" autocomplete="off">
+      <button class="primario" id="chat-guia-btn">Enviar</button>
+    </div></div>`;
+  ["Explícamelo con otro ejemplo", "¿Para qué me sirve esto en la vida real?", "No entiendo el código"]
+    .forEach(s => {
+      const b = document.createElement("button");
+      b.textContent = s;
+      b.onclick = () => enviarPreguntaGuia(indice, seccion, s);
+      $("#chat-sugerencias").appendChild(b);
+    });
+  const input = $("#chat-guia-in");
+  input.focus();
+  input.addEventListener("keydown", e => { if(e.key === "Enter") enviarPreguntaGuia(indice, seccion); });
+  $("#chat-guia-btn").onclick = () => enviarPreguntaGuia(indice, seccion);
+}
+
+async function enviarPreguntaGuia(indice, seccion, textoDirecto){
+  const input = $("#chat-guia-in");
+  const mensaje = textoDirecto || input.value.trim();
+  if(!mensaje) return;
+  if(!textoDirecto) input.value = "";
+  const chat = $("#chat-guia");
+  const yo = document.createElement("div"); yo.className = "msg yo"; yo.textContent = mensaje;
+  chat.appendChild(yo);
+  const espera = document.createElement("div");
+  espera.className = "msg tutor dim escribiendo"; espera.textContent = "El tutor escribe";
+  chat.appendChild(espera);
+  try{
+    const r = await api(`/api/guia/${indice}/pregunta`, {seccion, mensaje});
+    espera.classList.remove("escribiendo", "dim");
+    espera.innerHTML = md(r.texto);
+  }catch(e){ espera.remove(); mostrarError(e.message); }
+  espera.scrollIntoView({behavior:"smooth", block:"end"});
+  input.focus();
+}
+
+/* ---------- código ejecutable (Pyodide) y Python Tutor ---------- */
+
+let pyodideListo = null;
+
+function cargarPyodide(){
+  if(!pyodideListo){
+    pyodideListo = new Promise((resolver, rechazar) => {
+      const s = document.createElement("script");
+      s.src = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js";
+      s.onload = () => loadPyodide().then(resolver, rechazar);
+      s.onerror = () => rechazar(new Error("No se pudo descargar Python (¿sin internet?)."));
+      document.head.appendChild(s);
+    });
+  }
+  return pyodideListo;
+}
+
+async function ejecutarPython(codigo, salida, boton){
+  salida.className = "salida";
+  boton.disabled = true; boton.textContent = "Ejecutando…";
+  salida.textContent = pyodideListo ? "▶ Ejecutando…" : "⏳ Preparando Python en tu navegador (solo la primera vez, ~10 s)…";
+  let py;
+  try{ py = await cargarPyodide(); }
+  catch(e){ salida.className = "salida err"; salida.textContent = e.message; boton.disabled = false; boton.textContent = "▶ Ejecutar"; return; }
+  py.runPython("import sys, io\nsys.stdout = sys.stderr = io.StringIO()");
+  let error = null;
+  try{ py.runPython(codigo); }
+  catch(e){ error = String(e.message || e).split("\n").filter(l => !l.includes("pyodide")).slice(-8).join("\n"); }
+  const impreso = py.runPython("sys.stdout.getvalue()");
+  if(error){
+    salida.className = "salida err";
+    salida.textContent = (impreso ? impreso + "\n" : "") + error;
+  }else{
+    salida.textContent = impreso || "(corrió sin imprimir nada — agrega un print())";
+  }
+  boton.disabled = false; boton.textContent = "▶ Ejecutar";
+}
+
+function urlPythonTutor(codigo){
+  return "https://pythontutor.com/render.html#code=" + encodeURIComponent(codigo) +
+         "&cumulative=false&py=311&curInstr=0";
+}
+
+function activarBloquesDeCodigo(raiz){
+  if(lenguajeCurso !== "python") return;
+  raiz.querySelectorAll(".contenido-md pre").forEach(pre => {
+    const codigo = pre.textContent;
+    if(!codigo.trim() || codigo.split("\n").length < 2) return;
+    const barra = document.createElement("div");
+    barra.className = "code-acciones";
+    barra.innerHTML = `<button>▶ Pruébalo aquí</button><button>🔍 Paso a paso</button>`;
+    const [bRun, bViz] = barra.querySelectorAll("button");
+    bViz.title = "Visualiza el estado de las variables línea a línea (Python Tutor)";
+    bViz.onclick = () => window.open(urlPythonTutor(codigo), "_blank");
+    bRun.onclick = () => {
+      bRun.disabled = true;
+      const runner = document.createElement("div");
+      runner.className = "runner";
+      runner.innerHTML = `<textarea spellcheck="false" aria-label="Editor de código"></textarea>
+        <div><button class="primario">▶ Ejecutar</button></div>
+        <div class="salida dim">Edita el código y ejecútalo: corre en TU navegador, rómpelo sin miedo.</div>`;
+      runner.querySelector("textarea").value = codigo.trimEnd();
+      const salida = runner.querySelector(".salida");
+      const bEjecutar = runner.querySelector("button");
+      bEjecutar.onclick = () => ejecutarPython(runner.querySelector("textarea").value, salida, bEjecutar);
+      barra.after(runner);
+    };
+    pre.after(barra);
+  });
+}
+
+/* ---------- evaluación ---------- */
+
+function prefetchQuiz(indice){
+  if(quizPrefetch && quizPrefetch.indice === indice) return;
+  quizPrefetch = {indice, promesa: api(`/api/quiz/${indice}`, undefined, "POST").catch(() => null)};
+}
 
 async function iniciarQuiz(indice){
   guiaActual = null;
-  $("#contenido").innerHTML = `<div class="tarjeta"><h2>Evaluación — unidad ${indice + 1}</h2>
-    <p class="dim"><span class="spin"></span> El tutor está escribiendo tus preguntas…</p></div>`;
-  let quiz;
-  try{ quiz = await api(`/api/quiz/${indice}`, undefined, "POST"); }
-  catch(e){ mostrarError(e.message); cargarEstado(true); return; }
   const cont = $("#contenido");
-  cont.innerHTML = `<div class="tarjeta"><h2>Evaluación — unidad ${indice + 1}</h2>
-    <p class="dim">Apruebas con 70 o más. ¡Tú puedes!</p>
-    <div id="preguntas"></div><button class="primario" id="calificar">Calificar</button></div>`;
+  cont.innerHTML = `<div class="tarjeta lectura"><h2>Evaluación — unidad ${indice + 1}</h2>
+    <div id="q-progreso"></div></div>` +
+    Array.from({length: 2}, () => `<div class="tarjeta lectura">
+      <div class="sk" style="height:16px;width:70%;margin-bottom:12px"></div>
+      <div class="sk" style="height:38px;margin-bottom:8px"></div>
+      <div class="sk" style="height:38px;margin-bottom:8px"></div></div>`).join("");
+  const usarPrefetch = quizPrefetch && quizPrefetch.indice === indice;
+  const parar = usarPrefetch ? () => {} : loaderFases($("#q-progreso"), [
+    "Repasando lo que estudiaste…", "Escribiendo preguntas de comprensión…",
+    "Verificando cada respuesta…",
+  ], 45000);
+  let quiz = null;
+  try{
+    quiz = usarPrefetch ? await quizPrefetch.promesa : null;
+    if(!quiz) quiz = await api(`/api/quiz/${indice}`, undefined, "POST");
+  }catch(e){ parar(); mostrarError(e.message); cargarEstado(true); return; }
+  parar();
+  quizPrefetch = null;
+  const cuerpo = $("#contenido");
+  cuerpo.innerHTML = `<div class="tarjeta lectura"><h2>Evaluación — unidad ${indice + 1}</h2>
+    <p class="dim">Apruebas con 70 o más y desbloqueas la siguiente unidad. Con calma: puedes reintentar las veces que necesites.</p>
+    <div id="q-resumen-error"></div>
+    <form id="preguntas"></form><button class="primario" id="calificar">Calificar</button></div>`;
   quiz.preguntas.forEach((p, i) => {
-    const div = document.createElement("div");
+    const div = document.createElement("fieldset");
     div.className = "checkpoint";
     div.style.marginBottom = "12px";
-    div.innerHTML = `<b>Pregunta ${i + 1}.</b><div class="contenido-md">${md(p.enunciado)}</div>` +
+    div.style.border = "none";
+    div.innerHTML = `<legend><b>Pregunta ${i + 1} de ${quiz.preguntas.length}</b></legend>
+      <div class="contenido-md">${md(p.enunciado)}</div>` +
       p.opciones.map((op, j) =>
         `<label class="opcion"><input type="radio" name="p${i}" value="${j}"> ${md(op)}</label>`).join("");
     $("#preguntas").appendChild(div);
@@ -410,78 +713,104 @@ async function iniciarQuiz(indice){
       const marcada = document.querySelector(`input[name="p${i}"]:checked`);
       return marcada ? Number(marcada.value) : -1;
     });
-    if(respuestas.includes(-1)){ mostrarError("Responde todas las preguntas."); return; }
+    const faltantes = respuestas.map((r, i) => r === -1 ? i + 1 : null).filter(Boolean);
+    if(faltantes.length){
+      $("#q-resumen-error").innerHTML = `<div class="feedback pista" role="alert">
+        Te faltan por responder: pregunta${faltantes.length > 1 ? "s" : ""} ${faltantes.join(", ")}.</div>`;
+      return;
+    }
+    const boton = $("#calificar");
+    boton.disabled = true; boton.textContent = "Calificando…";
     try{
       const r = await api(`/api/quiz/${indice}/calificar`, {respuestas});
       verResultado(indice, r);
-    }catch(e){ mostrarError(e.message); }
+    }catch(e){ mostrarError(e.message); boton.disabled = false; boton.textContent = "Calificar"; }
   };
 }
 
 function verResultado(indice, r){
-  ponerPuntos(r.puntos_totales);
-  let html = `<div class="tarjeta"><h2>Resultado:
-    <span class="${r.aprobado ? "ok" : "mal"}">${r.nota}/100</span></h2>`;
-  html += r.aprobado
-    ? `<p class="ok" style="margin-bottom:12px">🎉 ¡Aprobaste! Desbloqueaste la siguiente unidad (+30 pts).</p>`
-    : `<p class="mal" style="margin-bottom:12px">Aún no llegas a ${r.nota_aprobatoria}. Conversemos tus dudas y reintenta.</p>`;
+  actualizarPuntos(r.puntos_totales);
+  let html = `<div class="tarjeta lectura ${r.aprobado ? "celebra" : ""}">`;
+  if(r.aprobado){
+    html += `<h2 class="ok">🎉 ¡Unidad aprobada! ${r.nota}/100</h2>
+      <p class="dim" style="margin:8px 0 16px">Sumaste puntos y desbloqueaste la siguiente unidad. Esto ya es tuyo.</p>`;
+  }else{
+    const buenas = r.detalle.filter(d => d.acierto).length;
+    html += `<h2>${buenas} de ${r.detalle.length} — vamos a cerrar esas brechas</h2>
+      <p class="dim" style="margin:8px 0 16px">Aún no llegas a ${r.nota_aprobatoria}, y está bien: el tutor te ayuda
+      con lo que falló y reintentas con preguntas nuevas.</p>`;
+  }
   r.detalle.forEach((d, i) => {
     html += `<div class="checkpoint" style="margin-bottom:10px">${d.acierto ? "✅" : "❌"}
       <b>P${i + 1}</b> — elegiste: <span class="contenido-md">${md(d.elegida)}</span>`;
     if(!d.acierto) html += `<div>Correcta: <span class="ok contenido-md">${md(d.correcta)}</span></div>`;
-    html += `<div class="dim" style="margin-top:6px">${md(d.explicacion)}</div></div>`;
+    html += `<div class="dim" style="margin-top:6px;font-size:var(--fs-sm)">${md(d.explicacion)}</div></div>`;
   });
-  html += `<div style="display:flex;gap:8px;margin-top:12px">`;
+  html += `<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">`;
   if(r.aprobado){
-    html += `<button class="primario" id="b-volver">Continuar el curso →</button>`;
+    html += `<button class="primario" id="b-volver">Siguiente unidad →</button>`;
   }else{
-    html += `<button class="primario" id="b-conversatorio">💬 Conversatorio de dudas</button>
-             <button id="b-reintentar">Reintentar la evaluación</button>
-             <button id="b-volver">Volver al curso</button>`;
+    html += `<button class="primario" id="b-conversatorio">💬 Conversar mis dudas con el tutor</button>
+             <button id="b-reintentar">Reintentar (preguntas nuevas)</button>
+             <button class="sutil" id="b-volver">Volver al curso</button>`;
   }
   html += `</div></div>`;
   $("#contenido").innerHTML = html;
   $("#b-volver").onclick = () => cargarEstado(true);
   const bc = $("#b-conversatorio");
-  if(bc) bc.onclick = () => iniciarConversatorio(indice);
+  if(bc) bc.onclick = () => iniciarConversatorio(indice, r);
   const br = $("#b-reintentar");
   if(br) br.onclick = () => iniciarQuiz(indice);
+  if(r.aprobado) toast(`+30 pts · Unidad ${indice + 1} aprobada`);
   cargarEstado(false);
 }
 
-/* ---------- Conversatorio socrático ---------- */
+/* ---------- conversatorio ---------- */
 
-async function iniciarConversatorio(indice){
-  $("#contenido").innerHTML = `<div class="tarjeta"><h2>💬 Conversatorio de dudas — unidad ${indice + 1}</h2>
-    <p class="dim">El tutor te guiará con preguntas (método socrático). Cuando te sientas al día,
-    reintenta la evaluación.</p>
+async function iniciarConversatorio(indice, resultado){
+  $("#contenido").innerHTML = `<div class="tarjeta lectura"><h2>💬 Cerremos tus dudas — unidad ${indice + 1}</h2>
+    <p class="dim">Tu tutor (una IA que puede equivocarse) te guía con preguntas, no con respuestas hechas.
+    Cuando te sientas al día, reintenta: las preguntas serán nuevas.</p>
     <div id="chat"></div>
-    <div id="chat-barra">
-      <input id="chat-entrada" placeholder="Escribe tu respuesta o tu duda…" autocomplete="off">
+    <div class="chips" id="conv-sugerencias"></div>
+    <div class="chat-barra">
+      <input id="chat-entrada" placeholder="Tu respuesta o tu duda… (Enter para enviar)" autocomplete="off">
       <button class="primario" id="chat-enviar">Enviar</button>
-      <button id="chat-reintentar">Reintentar evaluación</button>
-    </div></div>`;
+    </div>
+    <div style="margin-top:10px"><button id="chat-reintentar">Ya estoy listo: reintentar la evaluación →</button></div>
+    </div>`;
+  const falladas = (resultado?.detalle || []).map((d, i) => !d.acierto ? i + 1 : null).filter(Boolean);
+  falladas.slice(0, 3).forEach(n => {
+    const b = document.createElement("button");
+    b.textContent = `Explícame la pregunta ${n}`;
+    b.onclick = () => turnoConversatorio(indice, false, `Explícame en qué me equivoqué en la pregunta ${n}`);
+    $("#conv-sugerencias").appendChild(b);
+  });
   $("#chat-enviar").onclick = () => turnoConversatorio(indice);
-  $("#chat-entrada").addEventListener("keydown", e => { if(e.key === "Enter") turnoConversatorio(indice); });
+  const input = $("#chat-entrada");
+  input.addEventListener("keydown", e => { if(e.key === "Enter") turnoConversatorio(indice); });
   $("#chat-reintentar").onclick = () => iniciarQuiz(indice);
-  await turnoConversatorio(indice, true);   // el tutor abre la conversación
+  await turnoConversatorio(indice, true);
+  input.focus();
 }
 
-async function turnoConversatorio(indice, apertura){
+async function turnoConversatorio(indice, apertura, textoDirecto){
   const entrada = $("#chat-entrada");
-  const mensaje = apertura ? "" : entrada.value.trim();
+  const mensaje = apertura ? "" : (textoDirecto || entrada.value.trim());
   if(!apertura && !mensaje) return;
+  if(!apertura && !textoDirecto) entrada.value = "";
   if(!apertura){
-    entrada.value = "";
     const yo = document.createElement("div"); yo.className = "msg yo"; yo.textContent = mensaje;
     $("#chat").appendChild(yo);
   }
   const espera = document.createElement("div");
-  espera.className = "msg tutor dim"; espera.innerHTML = '<span class="spin"></span>';
+  espera.className = "msg tutor dim escribiendo";
+  espera.textContent = "El tutor escribe";
   $("#chat").appendChild(espera);
   try{
     const r = await api(`/api/conversatorio/${indice}`, {mensaje});
-    espera.className = "msg tutor"; espera.innerHTML = md(r.texto);
+    espera.classList.remove("escribiendo", "dim");
+    espera.innerHTML = md(r.texto);
   }catch(e){ espera.remove(); mostrarError(e.message); }
   espera.scrollIntoView({behavior:"smooth", block:"end"});
 }
