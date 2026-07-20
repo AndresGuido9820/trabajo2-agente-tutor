@@ -190,6 +190,34 @@ multilínea de los enunciados.
 
 ---
 
+## 2026-07-20 — HU-12: guía interactiva, puntos y progresión con candado
+
+**Contexto:** retroalimentación de visión 1.0: guías súper específicas por
+objetivos donde el estudiante responde y "va ganando", evaluación que
+decide el paso a la siguiente unidad, y conversatorio socrático si reprueba.
+
+**Hallazgos:**
+
+1. La estructura "una sección = un objetivo + un checkpoint" hace la guía
+   verificable: el validador exige 3-5 secciones con checkpoint completo
+   (pista socrática + explicación), y la calificación de checkpoints es
+   local (el LLM solo genera; nunca califica).
+2. La pista socrática como campo SEPARADO del checkpoint (generada junto
+   con la pregunta) resultó mejor que pedirla en caliente: cero latencia al
+   fallar y el prompt puede exigir "prohibido revelar cuál opción es".
+3. En el E2E real el flujo de reprobar funcionó completo: nota 25 → unidad
+   siguiente sigue bloqueada → el conversatorio abrió preguntando por el
+   concepto fallado más fundamental → reintento disponible.
+4. Gamificación mínima pero efectiva: puntos por checkpoint (10/5/0 según
+   intento) + 30 por aprobar, persistidos en `progreso.json` y visibles en
+   el header. Sin insignias ni rachas: alcance contenido.
+
+**Decisión/acción:** el candado vive en el `Agente` (una sola fuente de
+verdad) y la web lo mapea a HTTP 403; la CLI lo muestra como error amable
+sin tumbar la sesión.
+
+---
+
 <!-- Plantilla:
 
 ## AAAA-MM-DD — Título corto

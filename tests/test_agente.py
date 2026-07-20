@@ -58,33 +58,35 @@ class TestParsearAccion:
 class TestAgente:
     def test_flujo_completo_con_llm_falso(self, tmp_path, perfil):
         """Integración: temario → lección bajo demanda → quiz → progreso."""
-        falso = ClienteLLMFalso([temario_respuesta(), "# Lección 3", quiz_respuesta()])
+        falso = ClienteLLMFalso([temario_respuesta(), "# Lección 1", quiz_respuesta()])
         agente = Agente(cliente=falso, dir_datos=tmp_path, perfil=perfil)
 
-        # Se puede navegar todas las unidades sin contenido generado (RF-3.3)
+        # Todas las unidades listadas aunque sin contenido (RF-3.3); solo la
+        # primera desbloqueada (HU-12)
         filas = agente.filas_unidades()
         assert len(filas) == 5
-        assert all(f.estado is EstadoUnidad.PENDIENTE for f in filas)
+        assert filas[0].estado is EstadoUnidad.PENDIENTE
+        assert all(f.estado is EstadoUnidad.BLOQUEADA for f in filas[1:])
 
         # Entrar a una unidad no generada dispara la generación
-        assert not agente.leccion_ya_generada(2)
-        leccion = agente.abrir_unidad(2)
-        assert leccion == "# Lección 3"
-        assert agente.filas_unidades()[2].estado is EstadoUnidad.VISTA
+        assert not agente.leccion_ya_generada(0)
+        leccion = agente.abrir_unidad(0)
+        assert leccion == "# Lección 1"
+        assert agente.filas_unidades()[0].estado is EstadoUnidad.VISTA
 
         # Evaluar: quiz del LLM, calificación local, progreso actualizado
-        quiz = agente.quiz_de_unidad(2)  # la lección sale del cache
+        quiz = agente.quiz_de_unidad(0)  # la lección sale del cache
         resultado, _detalle = agente.calificar_quiz(quiz, [0, 0, 1, 1])
         assert resultado.nota == 50
-        assert agente.filas_unidades()[2].estado is EstadoUnidad.EVALUADA
+        assert agente.filas_unidades()[0].estado is EstadoUnidad.EVALUADA
         assert len(falso.llamadas) == 3  # temario + lección + quiz, sin extras
 
         # La persistencia sobrevive a una "nueva sesión"
         falso2 = ClienteLLMFalso([])
         agente2 = Agente(cliente=falso2, dir_datos=tmp_path, perfil=perfil)
         assert agente2.curso_ya_generado()
-        assert agente2.progreso.mejor_nota(2) == 50
-        assert agente2.abrir_unidad(2) == "# Lección 3"  # cache, sin LLM
+        assert agente2.progreso.mejor_nota(0) == 50
+        assert agente2.abrir_unidad(0) == "# Lección 1"  # cache, sin LLM
         assert falso2.llamadas == []
 
     def test_rehacer_perfil_descarta_curso_pero_no_progreso(self, tmp_path, perfil):

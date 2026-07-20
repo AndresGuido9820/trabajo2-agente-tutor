@@ -46,8 +46,10 @@ class TestPerfilYEstado:
         datos = web.get("/api/estado").json()
         assert datos["perfil"] is True
         assert datos["lenguaje"] == "python"
+        assert datos["puntos"] == 0
         assert len(datos["unidades"]) == 5
         assert datos["unidades"][0]["estado"] == "pendiente"
+        assert all(u["estado"] == "bloqueada" for u in datos["unidades"][1:])
 
     def test_accion_sin_perfil_da_409(self, crear_cliente_web):
         web, _ = crear_cliente_web([], con_perfil=False)
@@ -86,6 +88,54 @@ class TestLeccionWeb:
         assert "se cayó" in r.json()["detail"]
 
 
+class TestGuiaWeb:
+    def test_guia_no_expone_correctas_pistas_ni_explicaciones(self, crear_cliente_web):
+        from .test_guia import guia_respuesta
+
+        web, _ = crear_cliente_web([temario_respuesta(), guia_respuesta()])
+        r = web.post("/api/guia/0")
+        assert r.status_code == 200
+        cuerpo = r.text
+        assert "correcta" not in cuerpo
+        assert "pista" not in cuerpo
+        assert "explicacion" not in cuerpo
+        assert len(r.json()["secciones"]) == 3
+
+    def test_checkpoint_flujo_pista_y_puntos(self, crear_cliente_web):
+        from .test_guia import guia_respuesta
+
+        web, _ = crear_cliente_web([temario_respuesta(), guia_respuesta()])
+        web.post("/api/guia/0")
+        # Falla el intento 1: pista, sin revelar
+        r = web.post(
+            "/api/guia/0/checkpoint", json={"seccion": 0, "opcion": 0, "intento": 1}
+        ).json()
+        assert r["correcto"] is False and r["revelada"] is False
+        assert "pista" in r["texto"]
+        # Acierta el intento 2: +5
+        r = web.post(
+            "/api/guia/0/checkpoint", json={"seccion": 0, "opcion": 1, "intento": 2}
+        ).json()
+        assert r["correcto"] is True and r["puntos"] == 5
+        assert r["puntos_totales"] == 5
+
+    def test_guia_de_unidad_bloqueada_da_403(self, crear_cliente_web):
+        web, _ = crear_cliente_web([temario_respuesta()])
+        web.get("/api/estado")
+        assert web.post("/api/guia/1").status_code == 403
+
+    def test_conversatorio_responde(self, crear_cliente_web):
+        from .test_guia import guia_respuesta
+
+        web, _ = crear_cliente_web(
+            [temario_respuesta(), guia_respuesta(), "¿qué crees que hace x = 5?"]
+        )
+        web.post("/api/guia/0")
+        r = web.post("/api/conversatorio/0", json={"mensaje": ""})
+        assert r.status_code == 200
+        assert "x = 5" in r.json()["texto"]
+
+
 class TestQuizWeb:
     def test_quiz_no_expone_respuesta_correcta(self, crear_cliente_web):
         web, _ = crear_cliente_web([temario_respuesta(), "# lección", quiz_respuesta()])
@@ -111,6 +161,16 @@ class TestQuizWeb:
         web.get("/api/estado")
         r = web.post("/api/quiz/0/calificar", json={"respuestas": [0, 0, 0, 0]})
         assert r.status_code == 409
+
+    def test_calificar_indica_aprobado_y_desbloquea(self, crear_cliente_web):
+        web, _ = crear_cliente_web([temario_respuesta(), "# lección", quiz_respuesta()])
+        web.post("/api/quiz/0")
+        r = web.post("/api/quiz/0/calificar", json={"respuestas": [0, 0, 0, 0]}).json()
+        assert r["aprobado"] is True and r["nota"] == 100
+        assert r["puntos_totales"] > 0
+        estado = web.get("/api/estado").json()
+        assert estado["unidades"][0]["estado"] == "aprobada"
+        assert estado["unidades"][1]["estado"] == "pendiente"
 
     def test_pagina_principal_sirve_html(self, crear_cliente_web):
         web, _ = crear_cliente_web([], con_perfil=False)

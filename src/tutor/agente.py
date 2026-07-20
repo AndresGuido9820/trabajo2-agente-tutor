@@ -11,17 +11,25 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 
-from tutor.config import MAX_TURNOS_CHARLA
+from tutor.config import (
+    MAX_TURNOS_CHARLA,
+    NOTA_APROBATORIA,
+    PUNTOS_PRIMER_INTENTO,
+    PUNTOS_QUIZ_APROBADO,
+    PUNTOS_SEGUNDO_INTENTO,
+)
 from tutor.curso import (
     Curso,
+    Guia,
     GuionLeccion,
     cargar_curso,
+    generar_guia,
     generar_guion,
     generar_leccion,
     generar_temario,
     guardar_curso,
 )
-from tutor.errores import ErrorDatos
+from tutor.errores import ErrorBloqueada, ErrorDatos
 from tutor.evaluacion import Quiz, Retroalimentacion, calificar, generar_quiz
 from tutor.llm import ClienteLLM
 from tutor.models import PerfilEstudiante
@@ -31,6 +39,7 @@ from tutor.prompts import (
     prompt_charla,
     prompt_turno_leccion,
     system_charla,
+    system_conversatorio,
     system_leccion,
     system_tutor,
 )
@@ -45,9 +54,22 @@ ARCHIVO_PROGRESO = "progreso.json"
 class EstadoUnidad(Enum):
     """Estado de una unidad para el menú de navegación."""
 
+    BLOQUEADA = "bloqueada"
     PENDIENTE = "pendiente"
     VISTA = "vista"
     EVALUADA = "evaluada"
+    APROBADA = "aprobada"
+
+
+@dataclass(frozen=True)
+class RespuestaCheckpoint:
+    """Resultado de responder un checkpoint de la guía (HU-12)."""
+
+    correcto: bool
+    texto: str
+    puntos: int
+    puntos_totales: int
+    revelada: bool
 
 
 @dataclass
@@ -91,6 +113,8 @@ class Agente:
         self._charlas: dict[int, list[tuple[str, str]]] = {}
         # Lecciones conversadas en curso; solo en la sesión (HU-10).
         self._lecciones_activas: dict[int, _SesionLeccion] = {}
+        # Conversatorios de dudas por unidad; solo en la sesión (HU-12).
+        self._conversatorios: dict[int, list[tuple[str, str]]] = {}
 
     @property
     def curso(self) -> Curso:
@@ -105,13 +129,39 @@ class Agente:
         """Indica si el temario ya existe (para que la UI avise antes de generar)."""
         return self._curso is not None
 
+    def desbloqueada(self, indice: int) -> bool:
+        """La unidad 1 siempre; las demás requieren aprobar la anterior."""
+        if indice == 0:
+            return True
+        nota_anterior = self.progreso.mejor_nota(indice - 1)
+        return nota_anterior is not None and nota_anterior >= NOTA_APROBATORIA
+
+    def _exigir_desbloqueada(self, indice: int) -> None:
+        """Candado de progresión (HU-12).
+
+        Raises:
+            IndexError: Si la unidad no existe (prima sobre el candado).
+            ErrorBloqueada: Si falta aprobar la unidad anterior.
+        """
+        if not 0 <= indice < len(self.curso.temario.unidades):
+            raise IndexError(f"No existe la unidad {indice}.")
+        if not self.desbloqueada(indice):
+            raise ErrorBloqueada(
+                f"La unidad {indice + 1} está bloqueada: aprueba la unidad "
+                f"{indice} (nota ≥ {NOTA_APROBATORIA}) para desbloquearla."
+            )
+
     def filas_unidades(self) -> list[FilaUnidad]:
         """Estado de todas las unidades para el menú (RF-3.3)."""
         filas = []
         for indice, unidad in enumerate(self.curso.temario.unidades):
             nota = self.progreso.mejor_nota(indice)
-            if nota is not None:
+            if nota is not None and nota >= NOTA_APROBATORIA:
+                estado = EstadoUnidad.APROBADA
+            elif nota is not None:
                 estado = EstadoUnidad.EVALUADA
+            elif not self.desbloqueada(indice):
+                estado = EstadoUnidad.BLOQUEADA
             elif indice in self.progreso.vistas:
                 estado = EstadoUnidad.VISTA
             else:
@@ -141,7 +191,12 @@ class Agente:
         return leccion
 
     def quiz_de_unidad(self, indice: int) -> Quiz:
-        """Genera el quiz de la unidad (requiere abrir la lección primero)."""
+        """Genera el quiz de la unidad (requiere abrir la lección primero).
+
+        Raises:
+            ErrorBloqueada: Si falta aprobar la unidad anterior.
+        """
+        self._exigir_desbloqueada(indice)
         leccion = self.abrir_unidad(indice)
         unidad = self.curso.temario.unidades[indice]
         return generar_quiz(
@@ -156,11 +211,117 @@ class Agente:
     def calificar_quiz(
         self, quiz: Quiz, respuestas: list[int]
     ) -> tuple[Resultado, list[Retroalimentacion]]:
-        """Califica, registra el resultado en el progreso y persiste."""
+        """Califica, registra el resultado y otorga puntos si aprueba.
+
+        Los puntos por aprobar se dan solo la primera vez que la unidad
+        alcanza la nota aprobatoria.
+        """
+        aprobada_antes = (
+            self.progreso.mejor_nota(quiz.unidad) or 0
+        ) >= NOTA_APROBATORIA
         resultado, detalle = calificar(quiz, respuestas)
         self.progreso.registrar(resultado)
+        if resultado.nota >= NOTA_APROBATORIA and not aprobada_antes:
+            self.progreso.sumar_puntos(PUNTOS_QUIZ_APROBADO)
         self.guardar()
         return resultado, detalle
+
+    def guia_de_unidad(self, indice: int) -> Guia:
+        """Guía interactiva de la unidad (con candado y cache; HU-12).
+
+        Marca la unidad como vista y persiste.
+
+        Raises:
+            ErrorBloqueada: Si falta aprobar la unidad anterior.
+            IndexError: Si la unidad no existe.
+            ErrorLLM: Si la generación falla tras reintentos.
+        """
+        self._exigir_desbloqueada(indice)
+        guia = generar_guia(
+            self._cliente, self.perfil, self.curso, indice, self.progreso
+        )
+        guardar_curso(self.curso, self._dir / ARCHIVO_CURSO)
+        self.progreso.marcar_vista(indice)
+        self.guardar()
+        return guia
+
+    def responder_checkpoint(
+        self, indice: int, seccion: int, opcion: int, intento: int
+    ) -> RespuestaCheckpoint:
+        """Califica localmente un checkpoint de la guía y asigna puntos.
+
+        Puntos: acierto al intento 1 → ``PUNTOS_PRIMER_INTENTO``; al 2 →
+        ``PUNTOS_SEGUNDO_INTENTO``; después, 0. Al fallar el intento 1 se
+        devuelve la pista socrática; al fallar el 2 se revela la explicación.
+
+        Raises:
+            KeyError: Si la guía de la unidad no está generada.
+            ValueError: Si la sección, opción o intento son inválidos.
+        """
+        guia = self.curso.guias[indice]
+        if not 0 <= seccion < len(guia.secciones):
+            raise ValueError(f"No existe la sección {seccion}.")
+        checkpoint = guia.secciones[seccion].checkpoint
+        if not 0 <= opcion < len(checkpoint.opciones):
+            raise ValueError(f"Opción inválida: {opcion}.")
+        if intento < 1:
+            raise ValueError(f"Intento inválido: {intento}.")
+
+        correcto = opcion == checkpoint.correcta
+        if correcto:
+            puntos = {1: PUNTOS_PRIMER_INTENTO, 2: PUNTOS_SEGUNDO_INTENTO}.get(
+                intento, 0
+            )
+            self.progreso.sumar_puntos(puntos)
+            self.guardar()
+            return RespuestaCheckpoint(
+                correcto=True,
+                texto=checkpoint.explicacion,
+                puntos=puntos,
+                puntos_totales=self.progreso.puntos,
+                revelada=True,
+            )
+        if intento == 1:
+            return RespuestaCheckpoint(
+                correcto=False,
+                texto=checkpoint.pista,
+                puntos=0,
+                puntos_totales=self.progreso.puntos,
+                revelada=False,
+            )
+        return RespuestaCheckpoint(
+            correcto=False,
+            texto=checkpoint.explicacion,
+            puntos=0,
+            puntos_totales=self.progreso.puntos,
+            revelada=True,
+        )
+
+    def conversatorio(self, indice: int, mensaje: str) -> str:
+        """Turno del conversatorio socrático de dudas tras reprobar (HU-12).
+
+        El contexto incluye la guía de la unidad y los conceptos fallados.
+        ``mensaje`` vacío produce la apertura del tutor.
+
+        Raises:
+            ErrorLLM: Si la API falla tras los reintentos.
+        """
+        guia = self.curso.guias.get(indice)
+        contexto = (
+            "\n\n".join(f"### {s.objetivo}\n{s.contenido}" for s in guia.secciones)
+            if guia
+            else "(la guía no está disponible; usa los conceptos fallados)"
+        )
+        historial = self._conversatorios.setdefault(indice, [])
+        respuesta = self._cliente.generar(
+            system=system_conversatorio(
+                self.perfil, self.progreso.conceptos_fallados_recientes()
+            ),
+            prompt=prompt_charla(contexto, historial, mensaje or "(inicia tú)"),
+        )
+        historial.append((mensaje, respuesta))
+        del historial[:-MAX_TURNOS_CHARLA]
+        return respuesta
 
     def iniciar_leccion(self, indice: int) -> GuionLeccion:
         """Prepara la lección conversada: guion (con cache) y sesión limpia.
@@ -168,9 +329,11 @@ class Agente:
         Marca la unidad como vista y persiste curso y progreso.
 
         Raises:
+            ErrorBloqueada: Si falta aprobar la unidad anterior.
             IndexError: Si la unidad no existe.
             ErrorLLM: Si la generación del guion falla tras reintentos.
         """
+        self._exigir_desbloqueada(indice)
         guion = generar_guion(
             self._cliente, self.perfil, self.curso, indice, self.progreso
         )

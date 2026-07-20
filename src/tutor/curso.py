@@ -14,7 +14,12 @@ from pathlib import Path
 from typing import Any
 
 from tutor import prompts
-from tutor.config import MAX_UNIDADES, MIN_UNIDADES
+from tutor.config import (
+    MAX_SECCIONES_GUIA,
+    MAX_UNIDADES,
+    MIN_SECCIONES_GUIA,
+    MIN_UNIDADES,
+)
 from tutor.llm import ClienteLLM, pedir_json
 from tutor.models import PerfilEstudiante
 from tutor.progreso import Progreso
@@ -57,13 +62,42 @@ class GuionLeccion:
     pasos: list[PasoLeccion]
 
 
+@dataclass(frozen=True)
+class Checkpoint:
+    """Pregunta de verificación de una sección de la guía (HU-12)."""
+
+    pregunta: str
+    opciones: list[str]
+    correcta: int
+    pista: str
+    explicacion: str
+    concepto: str
+
+
+@dataclass(frozen=True)
+class SeccionGuia:
+    """Una sección de la guía: enseña un objetivo y lo verifica."""
+
+    objetivo: str
+    contenido: str
+    checkpoint: Checkpoint
+
+
+@dataclass(frozen=True)
+class Guia:
+    """Guía interactiva de una unidad: una sección por objetivo."""
+
+    secciones: list[SeccionGuia]
+
+
 @dataclass
 class Curso:
-    """Temario + lecciones y guiones generados hasta ahora (cache)."""
+    """Temario + contenido generado hasta ahora (cache)."""
 
     temario: Temario
     lecciones: dict[int, str] = field(default_factory=dict)
     guiones: dict[int, GuionLeccion] = field(default_factory=dict)
+    guias: dict[int, Guia] = field(default_factory=dict)
 
 
 def validar_temario(datos: Any) -> Temario:
@@ -214,6 +248,96 @@ def generar_guion(
     return guion
 
 
+def _validar_checkpoint(datos: Any, conceptos: list[str] | None = None) -> Checkpoint:
+    """Valida el checkpoint de una sección de la guía."""
+    opciones = [str(o) for o in datos["opciones"]]
+    correcta = int(datos["correcta"])
+    if len(opciones) != 4:
+        raise ValueError("el checkpoint debe tener exactamente 4 opciones")
+    if not 0 <= correcta < 4:
+        raise ValueError("índice 'correcta' del checkpoint fuera de rango")
+    campos = {
+        campo: str(datos[campo]).strip()
+        for campo in ("pregunta", "pista", "explicacion", "concepto")
+    }
+    if not all(campos.values()):
+        raise ValueError("el checkpoint tiene campos vacíos")
+    return Checkpoint(
+        pregunta=campos["pregunta"],
+        opciones=opciones,
+        correcta=correcta,
+        pista=campos["pista"],
+        explicacion=campos["explicacion"],
+        concepto=campos["concepto"],
+    )
+
+
+def validar_guia(datos: Any) -> Guia:
+    """Convierte y valida el JSON crudo de la guía interactiva (HU-12).
+
+    Raises:
+        ValueError: Si el número de secciones está fuera de rango o alguna
+            sección/checkpoint es inválido.
+    """
+    crudas = datos["secciones"]
+    if not isinstance(crudas, list) or not (
+        MIN_SECCIONES_GUIA <= len(crudas) <= MAX_SECCIONES_GUIA
+    ):
+        raise ValueError(
+            f"se esperaban entre {MIN_SECCIONES_GUIA} y {MAX_SECCIONES_GUIA} secciones"
+        )
+    secciones = []
+    for numero, cruda in enumerate(crudas):
+        objetivo = str(cruda["objetivo"]).strip()
+        contenido = str(cruda["contenido"]).strip()
+        if not objetivo or not contenido:
+            raise ValueError(f"la sección {numero} tiene campos vacíos")
+        secciones.append(
+            SeccionGuia(
+                objetivo=objetivo,
+                contenido=contenido,
+                checkpoint=_validar_checkpoint(cruda["checkpoint"]),
+            )
+        )
+    return Guia(secciones=secciones)
+
+
+def generar_guia(
+    cliente: ClienteLLM,
+    perfil: PerfilEstudiante,
+    curso: Curso,
+    indice: int,
+    progreso: Progreso,
+) -> Guia:
+    """Devuelve la guía de la unidad ``indice``, generándola si no existe.
+
+    Queda cacheada en ``curso.guias`` (el llamador persiste con
+    ``guardar_curso``).
+
+    Raises:
+        IndexError: Si ``indice`` no corresponde a una unidad del temario.
+        ErrorLLM: Si la generación falla tras reintentos.
+    """
+    if not 0 <= indice < len(curso.temario.unidades):
+        raise IndexError(f"No existe la unidad {indice}.")
+    if indice in curso.guias:
+        return curso.guias[indice]
+
+    logger.info("Generando guía de la unidad %d", indice)
+    guia = pedir_json(
+        cliente,
+        system=prompts.system_tutor(perfil),
+        prompt=prompts.prompt_guia(
+            temario=curso.temario,
+            indice=indice,
+            conceptos_fallados=progreso.conceptos_fallados_recientes(),
+        ),
+        validar=validar_guia,
+    )
+    curso.guias[indice] = guia
+    return guia
+
+
 def guardar_curso(curso: Curso, ruta: Path) -> None:
     """Serializa el curso (temario + lecciones cacheadas) a ``ruta``."""
     ruta.parent.mkdir(parents=True, exist_ok=True)
@@ -234,6 +358,26 @@ def guardar_curso(curso: Curso, ruta: Path) -> None:
             }
             for i, g in curso.guiones.items()
         },
+        "guias": {
+            str(i): {
+                "secciones": [
+                    {
+                        "objetivo": s.objetivo,
+                        "contenido": s.contenido,
+                        "checkpoint": {
+                            "pregunta": s.checkpoint.pregunta,
+                            "opciones": s.checkpoint.opciones,
+                            "correcta": s.checkpoint.correcta,
+                            "pista": s.checkpoint.pista,
+                            "explicacion": s.checkpoint.explicacion,
+                            "concepto": s.checkpoint.concepto,
+                        },
+                    }
+                    for s in g.secciones
+                ]
+            }
+            for i, g in curso.guias.items()
+        },
     }
     ruta.write_text(json.dumps(datos, ensure_ascii=False, indent=2), "utf-8")
 
@@ -250,11 +394,12 @@ def cargar_curso(ruta: Path) -> Curso | None:
         datos = json.loads(ruta.read_text("utf-8"))
         temario = validar_temario(datos)
         lecciones = {int(i): str(md) for i, md in datos["lecciones"].items()}
-        # "guiones" es opcional para retro-compatibilidad con cursos previos.
+        # "guiones" y "guias" son opcionales (retro-compatibilidad).
         guiones = {
             int(i): validar_guion(g) for i, g in datos.get("guiones", {}).items()
         }
-        return Curso(temario=temario, lecciones=lecciones, guiones=guiones)
+        guias = {int(i): validar_guia(g) for i, g in datos.get("guias", {}).items()}
+        return Curso(temario=temario, lecciones=lecciones, guiones=guiones, guias=guias)
     except (json.JSONDecodeError, ValueError, KeyError, TypeError) as error:
         logger.warning(
             "Curso corrupto en %s (%s); se regenerará el temario.", ruta, error

@@ -43,21 +43,26 @@ def _bucle_principal(agente: Agente) -> None:
         if accion.tipo == "salir":
             ui.consola.print("¡Hasta la próxima! Tu progreso quedó guardado.")
             return
-        if accion.tipo == "progreso":
-            ui.mostrar_progreso(agente)
-        elif accion.tipo == "unidad":
-            assert accion.indice is not None
-            ui.bucle_leccion(agente, accion.indice)
-        elif accion.tipo == "evaluar":
-            assert accion.indice is not None
-            calificacion = ui.preguntar_respuestas(agente, accion.indice)
-            if calificacion is not None:
-                ui.mostrar_resultado(*calificacion)
-        elif accion.tipo == "rehacer" and ui.confirmar(
-            "Esto rehace tu perfil y regenera el curso "
-            "(el progreso se conserva). ¿Seguro?"
-        ):
-            agente.rehacer_perfil(preguntar_perfil())
+        try:
+            if accion.tipo == "progreso":
+                ui.mostrar_progreso(agente)
+            elif accion.tipo == "unidad":
+                assert accion.indice is not None
+                ui.bucle_leccion(agente, accion.indice)
+            elif accion.tipo == "evaluar":
+                assert accion.indice is not None
+                calificacion = ui.preguntar_respuestas(agente, accion.indice)
+                if calificacion is not None:
+                    ui.mostrar_resultado(*calificacion)
+            elif accion.tipo == "rehacer" and ui.confirmar(
+                "Esto rehace tu perfil y regenera el curso "
+                "(el progreso se conserva). ¿Seguro?"
+            ):
+                agente.rehacer_perfil(preguntar_perfil())
+        except ErrorTutor as error:
+            # Candados y fallas del LLM no tumban la sesión: se informa y
+            # se vuelve al menú (el progreso ya está persistido).
+            ui.consola.print(f"[red]{error}[/]")
 
 
 def main() -> int:

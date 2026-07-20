@@ -324,6 +324,104 @@ Desarrolla este paso (reaccionando primero al estudiante si respondió algo).
 Solo tu mensaje, sin prefijos."""
 
 
+def prompt_guia(temario: Temario, indice: int, conceptos_fallados: list[str]) -> str:
+    """Prompt de la guía interactiva por objetivos (HU-12, JSON validado).
+
+    Una sección por objetivo de aprendizaje; cada sección enseña y luego
+    verifica ESE objetivo con un checkpoint cuyo distractor encarna una
+    misconception y cuya pista es socrática (no revela la respuesta).
+    """
+    unidad = temario.unidades[indice]
+    vistas = ", ".join(u.titulo for u in temario.unidades[:indice]) or "ninguna"
+    refuerzo = ""
+    if conceptos_fallados:
+        refuerzo = (
+            "\n- Refuerza dentro del contenido estos conceptos que el "
+            f"estudiante falló antes: {', '.join(conceptos_fallados)}."
+        )
+
+    return f"""Diseña la GUÍA INTERACTIVA de la unidad {indice + 1} del curso \
+de {temario.lenguaje}: "{unidad.titulo}".
+
+Contexto:
+- Objetivo general de la unidad: {unidad.objetivo}
+- Conceptos a cubrir: {", ".join(unidad.conceptos)}
+- Unidades ya estudiadas: {vistas}. Los ejemplos solo pueden usar lo visto \
+ahí más lo de esta unidad.{refuerzo}
+
+La guía tiene entre 3 y 5 SECCIONES, una por objetivo de aprendizaje
+específico (derívalos del objetivo general y los conceptos; ordénalos de lo
+simple a lo compuesto). Cada sección tiene:
+
+1. "objetivo": qué sabrá HACER el estudiante al terminar la sección (una
+frase que empiece con un verbo).
+2. "contenido" (Markdown, 150-350 palabras): enseñanza SÚPER específica de
+ese objetivo — abre conectando con la meta del estudiante, explica con una
+analogía de su mundo, incluye UN worked example con comentarios de propósito
+(subgoal labels) y la tabla del estado de las variables línea a línea cuando
+haya código. Nada genérico: ejemplos con datos concretos del dominio del
+estudiante.
+3. "checkpoint": UNA pregunta de opción múltiple que verifica ese objetivo:
+   - Prefiere "¿qué imprime este código?" o "¿dónde está el error?".
+   - Exactamente 4 opciones, UNA correcta, sin "todas/ninguna las anteriores".
+   - Cada distractor encarna un error real de este banco de misconceptions:
+{MISCONCEPTIONS}
+   - "pista": ayuda SOCRÁTICA para quien falló — una pregunta orientadora o
+     el primer paso del razonamiento; PROHIBIDO revelar o insinuar cuál
+     opción es la correcta.
+   - "explicacion": justifica la correcta y nombra el error de razonamiento
+     del distractor más tentador (se muestra solo al final).
+   - "concepto": uno de: {", ".join(unidad.conceptos)}.
+
+Verificación OBLIGATORIA antes de emitir cada checkpoint: traza el código y
+deriva la salida ANTES de escribir las opciones; re-resuelve desde cero y
+confirma que coincide con "correcta"; si dos opciones son defendibles,
+reescribe la pregunta.
+
+Responde ÚNICAMENTE este JSON:
+{{
+  "secciones": [
+    {{
+      "objetivo": "<verbo + qué sabrá hacer>",
+      "contenido": "<markdown de la enseñanza>",
+      "checkpoint": {{
+        "pregunta": "<enunciado, con el código si aplica>",
+        "opciones": ["...", "...", "...", "..."],
+        "correcta": 0,
+        "pista": "<pregunta orientadora que NO revela>",
+        "explicacion": "<por qué la correcta y cuál era la trampa>",
+        "concepto": "<uno de los conceptos>"
+      }}
+    }}
+  ]
+}}"""
+
+
+def system_conversatorio(
+    perfil: PerfilEstudiante, conceptos_fallados: list[str]
+) -> str:
+    """System prompt del conversatorio de dudas tras reprobar (HU-12)."""
+    fallados = (
+        f"En la evaluación falló estos conceptos: {', '.join(conceptos_fallados)}. "
+        if conceptos_fallados
+        else ""
+    )
+    return f"""{system_tutor(perfil)}
+
+Además, estás en un CONVERSATORIO DE DUDAS: el estudiante presentó la
+evaluación de la unidad y NO la aprobó. {fallados}Tu meta es que descubra
+por sí mismo dónde está su confusión antes de reintentar. Reglas:
+9. Método socrático estricto: guía con preguntas cortas y pistas graduales;
+nunca des la respuesta de una pregunta de evaluación directamente.
+10. Empieza tú la conversación preguntando por el concepto fallado que
+consideres más fundamental, con una pregunta concreta sobre un ejemplo.
+11. Escape del "no sé": a la segunda vez que exprese que no sabe lo mismo,
+muestra UN paso resuelto y construye desde ahí.
+12. Cuando notes que ya domina los conceptos fallados, díselo y anímalo a
+reintentar la evaluación.
+13. Mensajes cortos (2-6 frases); es una conversación."""
+
+
 def system_charla(perfil: PerfilEstudiante) -> str:
     """System prompt del modo charla: persona + reglas socráticas (HU-09).
 

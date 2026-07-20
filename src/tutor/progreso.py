@@ -56,6 +56,13 @@ class Progreso:
 
     vistas: dict[int, str] = field(default_factory=dict)
     resultados: list[Resultado] = field(default_factory=list)
+    puntos: int = 0
+
+    def sumar_puntos(self, cantidad: int) -> None:
+        """Acumula puntos ganados en checkpoints y evaluaciones (HU-12)."""
+        if cantidad < 0:
+            raise ValueError(f"Los puntos no pueden ser negativos: {cantidad}")
+        self.puntos += cantidad
 
     def marcar_vista(self, unidad: int) -> None:
         """Registra la primera visita a una unidad (idempotente)."""
@@ -94,6 +101,7 @@ def guardar_progreso(progreso: Progreso, ruta: Path) -> None:
     ruta.parent.mkdir(parents=True, exist_ok=True)
     datos = {
         "version": VERSION_ESQUEMA,
+        "puntos": progreso.puntos,
         "vistas": {str(unidad): fecha for unidad, fecha in progreso.vistas.items()},
         "resultados": [
             {
@@ -123,7 +131,10 @@ def _parsear(datos: Any) -> Progreso:
         )
         for r in datos["resultados"]
     ]
-    return Progreso(vistas=vistas, resultados=resultados)
+    # "puntos" es opcional para retro-compatibilidad con progresos previos.
+    return Progreso(
+        vistas=vistas, resultados=resultados, puntos=int(datos.get("puntos", 0))
+    )
 
 
 def cargar_progreso(ruta: Path) -> Progreso:
