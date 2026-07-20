@@ -283,6 +283,32 @@ futuro en el reporte.
 
 ---
 
+## 2026-07-20 — HU-16: todo en un chat + timeout de generaciones largas
+
+**Contexto:** rediseño a chat-total (creación conversacional con propuesta y
+confirmación, plan en `curso.md`, estudio con objetivos que se tachan,
+repaso, quiz y conversatorio inline; nunca se sale del chat).
+
+**Hallazgos:**
+
+1. El protocolo `{mensaje, listo, perfil}` en JSON por turno hace confiable
+   la creación conversacional: el modelo conversa libremente en "mensaje" y
+   la máquina solo actúa cuando `listo=true` con perfil validado. En el E2E
+   real preguntó nivel, propuso temario y solo creó al "ya, dale" (3 turnos).
+2. **Bug de latencia**: `TIMEOUT_API_SEGUNDOS = 60` convertía generaciones
+   exitosas-pero-lentas (artefactos: 1-3 min con modelos razonadores) en
+   ciclos de reintento inútiles — el SDK reporta el timeout como
+   `APIConnectionError` ("no se pudo conectar"), lo que despista. Subido a
+   180 s; los reintentos quedan para fallas reales.
+3. La lección conversada de HU-10 (guion + turno a turno) encajó intacta
+   como motor del estudio en chat: `turno_estudio` solo añade la unidad
+   actual y el marcado de completadas persistente.
+
+**Decisión/acción:** el plan `.md` es un entregable visible del producto
+(mini-ventana con descarga), no solo un artefacto interno.
+
+---
+
 <!-- Plantilla:
 
 ## AAAA-MM-DD — Título corto

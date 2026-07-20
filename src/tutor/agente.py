@@ -121,6 +121,8 @@ class Agente:
         self._quizzes_previos: dict[int, list[str]] = {}
         # Preguntas al tutor durante la guía, por unidad (HU-14).
         self._charlas_guia: dict[int, list[tuple[str, str]]] = {}
+        # Estudio en chat continuo (HU-16): unidad donde va la conversación.
+        self.unidad_actual: int = 0
         # Racha diaria (HU-13): la sesión de hoy cuenta al abrir el agente.
         self.progreso.registrar_sesion(date.today().isoformat())
         self.guardar()
@@ -353,6 +355,36 @@ class Agente:
         guardar_curso(self.curso, self._dir / ARCHIVO_CURSO)
         return html
 
+    def artefacto_de_unidad(self, indice: int) -> str:
+        """Mini-artefacto interactivo de la unidad completa (chat, HU-16).
+
+        Igual que el de sección, pero con el objetivo y conceptos de la
+        unidad como material (no requiere guía generada).
+        """
+        if not 0 <= indice < len(self.curso.temario.unidades):
+            raise ValueError(f"No existe la unidad {indice}.")
+        clave = f"u{indice}"
+        if clave in self.curso.artefactos:
+            return self.curso.artefactos[clave]
+        unidad = self.curso.temario.unidades[indice]
+        html = self._cliente.generar(
+            system=system_tutor(self.perfil),
+            prompt=prompt_artefacto(
+                objetivo=unidad.objetivo,
+                contenido=(
+                    f"Unidad: {unidad.titulo}\n"
+                    f"Conceptos a ilustrar: {', '.join(unidad.conceptos)}"
+                ),
+                lenguaje=self.curso.temario.lenguaje,
+            ),
+        )
+        html = html.strip()
+        if html.startswith("```"):
+            html = html.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+        self.curso.artefactos[clave] = html
+        guardar_curso(self.curso, self._dir / ARCHIVO_CURSO)
+        return html
+
     def preguntar_guia(self, indice: int, seccion: int, mensaje: str) -> str:
         """Pregunta libre al tutor mientras estudia una sección de la guía.
 
@@ -471,6 +503,42 @@ class Agente:
         """Paso actual (base 1) y total de la lección conversada activa."""
         sesion = self._lecciones_activas[indice]
         return sesion.paso + 1, len(sesion.guion.pasos)
+
+    def turno_estudio(
+        self, mensaje: str | None, unidad: int | None = None
+    ) -> dict[str, object]:
+        """Un turno del estudio en chat continuo (HU-16).
+
+        Con ``unidad`` se (re)inicia esa lección (repaso incluido); sin ella
+        continúa la lección activa. Al terminar el último paso, la unidad se
+        marca como completada (el panel la tacha).
+
+        Raises:
+            ErrorBloqueada: Si la unidad pedida está bloqueada.
+            ErrorLLM: Si la API falla tras los reintentos.
+        """
+        if unidad is not None:
+            self.unidad_actual = unidad
+            self.iniciar_leccion(unidad)
+            texto, terminada = self.turno_leccion(unidad, None)
+        else:
+            actual = self.unidad_actual
+            if actual not in self._lecciones_activas:
+                self.iniciar_leccion(actual)
+                texto, terminada = self.turno_leccion(actual, None)
+            else:
+                texto, terminada = self.turno_leccion(actual, mensaje or "ok, sigamos")
+        if terminada:
+            self.progreso.completar(self.unidad_actual)
+            self.guardar()
+        paso, total = self.avance_leccion(self.unidad_actual)
+        return {
+            "texto": texto,
+            "unidad": self.unidad_actual,
+            "paso": paso,
+            "total": total,
+            "terminada": terminada,
+        }
 
     def charlar(self, indice: int, pregunta: str) -> str:
         """Responde una pregunta del estudiante sobre la unidad ``indice``.

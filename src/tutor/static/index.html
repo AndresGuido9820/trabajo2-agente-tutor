@@ -5,198 +5,168 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Profe Bit — Tutor de programación</title>
 <style>
-  /* ===== Sistema visual (dark AA, elevación sutil, motion M3) ===== */
   :root{
-    --bg:#0b0e14; --bg-grad:radial-gradient(1200px 500px at 50% -10%, #131b2c 0%, #0b0e14 60%);
-    --card:#12161f; --card2:#181d29; --linea:rgba(255,255,255,.07); --linea-fuerte:rgba(255,255,255,.14);
+    --bg:#0b0e14; --bg-grad:radial-gradient(1100px 480px at 50% -10%, #131b2c 0%, #0b0e14 60%);
+    --card:#12161f; --card2:#181d29; --linea:rgba(255,255,255,.07); --linea-fuerte:rgba(255,255,255,.15);
     --tx:#e8ecf3; --tx2:#98a2b3; --tx3:#667085;
     --acc:#7aa2ff; --acc-fondo:#16233f; --ok:#4ade80; --ok-fondo:#122619;
     --err:#f87171; --err-fondo:#2a1516; --warn:#fbbf24; --fuego:#fb923c;
     --sombra:0 1px 2px rgba(0,0,0,.5), 0 8px 24px -12px rgba(0,0,0,.6);
     --r:12px; --r-sm:8px; --r-pill:999px;
-    --t1:160ms cubic-bezier(.2,0,0,1); --t2:280ms cubic-bezier(.2,0,0,1);
+    --t1:160ms cubic-bezier(.2,0,0,1);
     font-family:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
   }
   *{box-sizing:border-box;margin:0}
   @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
-  html{scroll-behavior:smooth}
   body{background:var(--bg);background-image:var(--bg-grad);background-attachment:fixed;
-       color:var(--tx);min-height:100vh;font-size:15.5px;line-height:1.6;
-       -webkit-font-smoothing:antialiased}
-  h1,h2,h3{letter-spacing:-.015em;line-height:1.25}
+       color:var(--tx);height:100vh;font-size:15px;line-height:1.6;overflow:hidden;
+       -webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
+  h1,h2,h3{letter-spacing:-.015em;line-height:1.3}
   :focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:6px}
-
   button{background:var(--card2);color:var(--tx);border:1px solid var(--linea-fuerte);
-         border-radius:var(--r-sm);padding:8px 14px;cursor:pointer;font-size:13.5px;
+         border-radius:var(--r-sm);padding:7px 13px;cursor:pointer;font-size:13px;
          font-weight:500;font-family:inherit;transition:all var(--t1)}
   button:hover:not(:disabled){border-color:var(--acc);transform:translateY(-1px)}
-  button:active:not(:disabled){transform:translateY(0)}
   button.primario{background:linear-gradient(180deg,#82a8ff,#5c8aff);border-color:transparent;
       color:#0a1020;font-weight:600;box-shadow:0 2px 8px -2px rgba(92,138,255,.5)}
-  button.primario:hover:not(:disabled){filter:brightness(1.06)}
   button.sutil{background:transparent;border-color:transparent;color:var(--acc)}
   button:disabled{opacity:.45;cursor:not-allowed;transform:none}
 
-  /* ---- shell ---- */
-  header{padding:14px 24px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;
-         border-bottom:1px solid var(--linea);backdrop-filter:blur(8px);position:sticky;top:0;
-         background:rgba(11,14,20,.8);z-index:5}
-  .marca{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px}
+  header{padding:12px 22px;display:flex;gap:14px;align-items:center;
+         border-bottom:1px solid var(--linea);background:rgba(11,14,20,.85);
+         backdrop-filter:blur(8px);flex:none}
+  .marca{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px}
   .marca .logo{width:26px;height:26px;border-radius:8px;
       background:linear-gradient(135deg,#4ade80,#5c8aff);display:grid;place-items:center;
-      color:#0a1020;font-size:14px;font-weight:800}
-  #progreso-curso{flex:1;min-width:150px;max-width:320px;display:none}
-  #progreso-curso .texto{font-size:11.5px;color:var(--tx2);margin-bottom:5px}
+      color:#0a1020;font-size:13px;font-weight:800}
+  #progreso-curso{flex:1;min-width:140px;max-width:300px;display:none}
+  #progreso-curso .texto{font-size:11px;color:var(--tx2);margin-bottom:4px}
   .chip-stat{background:var(--card);border:1px solid var(--linea);border-radius:var(--r-pill);
-             padding:5px 13px;font-weight:600;font-size:13px;cursor:help;display:none}
+             padding:4px 12px;font-weight:600;font-size:12.5px;cursor:help;display:none}
   #racha{color:var(--fuego)} #puntos{color:var(--warn)}
   .barra{height:5px;background:var(--card2);border-radius:var(--r-pill);overflow:hidden}
   .barra > div{height:100%;background:linear-gradient(90deg,#4ade80,#5c8aff);
       transition:width 400ms cubic-bezier(0,0,0,1)}
 
-  main{display:flex;min-height:calc(100vh - 61px)}
-  #sidebar{width:330px;min-width:270px;border-right:1px solid var(--linea);
-           overflow-y:auto;padding:18px 14px;max-height:calc(100vh - 61px);position:sticky;top:61px}
-  #contenido{flex:1;overflow-y:auto;padding:28px 32px}
-  .lectura{max-width:72ch;margin:0 auto}
-
-  /* ---- sidebar ---- */
-  .sidebar-titulo{font-size:11px;text-transform:uppercase;letter-spacing:.08em;
-      color:var(--tx3);margin:2px 8px 10px;font-weight:600}
-  .unidad{background:transparent;border:1px solid transparent;border-radius:var(--r);
-          padding:10px 12px;margin-bottom:4px;transition:all var(--t1)}
-  .unidad:hover:not(.bloqueada){background:var(--card)}
-  .unidad.siguiente{background:var(--card);border-color:var(--linea-fuerte);box-shadow:var(--sombra)}
-  .unidad.bloqueada{opacity:.45}
-  .unidad .fila{display:flex;gap:10px;align-items:flex-start}
-  .num{flex:none;width:24px;height:24px;border-radius:50%;border:1.5px solid var(--linea-fuerte);
-       display:grid;place-items:center;font-size:11.5px;font-weight:700;color:var(--tx2);margin-top:1px}
-  .num.aprobada{background:var(--ok);border-color:var(--ok);color:#0a1020}
-  .num.activa{border-color:var(--acc);color:var(--acc)}
-  .unidad b{font-size:13.5px;line-height:1.4;font-weight:600}
-  .unidad .meta{font-size:11.5px;color:var(--tx3);margin-top:2px}
-  .unidad .cta{margin-top:8px;display:flex;gap:6px;padding-left:34px}
-  .unidad .cta button{font-size:12px;padding:5px 12px}
-
-  /* ---- tarjetas ---- */
-  .tarjeta{background:var(--card);border:1px solid var(--linea);border-radius:var(--r);
-           padding:26px 28px;margin:0 auto 16px;max-width:72ch;box-shadow:var(--sombra)}
-  .tarjeta h2{font-size:22px;margin-bottom:10px}
-  .dim{color:var(--tx2)} .ok{color:var(--ok)} .mal{color:var(--err)}
-  .puntos-pop{color:var(--warn);font-weight:700}
-
-  /* ---- hero (crear curso por prompt) ---- */
-  .hero{min-height:70vh;display:flex;flex-direction:column;justify-content:center;
-        align-items:center;text-align:center;max-width:640px;margin:0 auto;padding:24px}
-  .hero .logo-xl{width:56px;height:56px;border-radius:16px;margin-bottom:20px;
-      background:linear-gradient(135deg,#4ade80,#5c8aff);display:grid;place-items:center;
-      font-size:26px;font-weight:800;color:#0a1020;box-shadow:0 8px 32px -8px rgba(92,138,255,.5)}
-  .hero h2{font-size:30px;margin-bottom:10px}
-  .hero .sub{color:var(--tx2);margin-bottom:28px;font-size:15px}
-  .prompt-caja{width:100%;background:var(--card);border:1px solid var(--linea-fuerte);
-      border-radius:16px;padding:6px;box-shadow:var(--sombra);transition:border-color var(--t1);
-      text-align:left}
-  .prompt-caja:focus-within{border-color:var(--acc);box-shadow:0 0 0 3px rgba(122,162,255,.15),var(--sombra)}
-  .prompt-caja textarea{width:100%;background:transparent;border:none;color:var(--tx);
-      font-family:inherit;font-size:15.5px;line-height:1.5;padding:14px 14px 4px;resize:none;min-height:76px}
-  .prompt-caja textarea:focus{outline:none}
-  .prompt-pie{display:flex;justify-content:space-between;align-items:center;padding:4px 8px 6px 14px}
-  .prompt-pie .nota{font-size:11.5px;color:var(--tx3)}
-  .ejemplos{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:18px}
-  .ejemplos button{border-radius:var(--r-pill);font-size:12.5px;color:var(--tx2);background:transparent}
-  .ejemplos button:hover{color:var(--tx)}
-
-  /* ---- markdown ---- */
-  .prosa{line-height:1.7}
-  .prosa p{margin:0 0 12px}
-  .prosa ul,.prosa ol{margin:0 0 12px;padding-left:22px}
-  .prosa li{margin-bottom:4px}
-  .prosa h3,.prosa h4{margin:18px 0 8px;font-size:16.5px}
-  .prosa pre{background:#0a0d13;border:1px solid var(--linea);border-radius:var(--r-sm);
-      padding:14px;overflow-x:auto;margin:10px 0;font-size:13px;line-height:1.55;white-space:pre}
-  .prosa code,.msg code{background:#0a0d13;border:1px solid var(--linea);border-radius:5px;
-      padding:1px 6px;font-size:13px;font-family:ui-monospace,"SF Mono",Menlo,monospace}
-  .prosa pre code{border:none;padding:0;background:transparent}
-
-  .objetivo-chip{display:inline-flex;align-items:center;gap:6px;background:var(--acc-fondo);
-      color:var(--acc);border-radius:var(--r-pill);padding:6px 14px;font-size:12px;
-      font-weight:600;margin-bottom:14px}
-  .code-acciones{display:flex;gap:6px;margin:-2px 0 12px}
-  .code-acciones button{font-size:11.5px;padding:4px 10px;color:var(--tx2)}
-  .runner{background:#0a0d13;border:1px solid var(--linea-fuerte);border-radius:var(--r-sm);
-          padding:12px;margin:6px 0 14px}
-  .runner textarea{width:100%;min-height:110px;background:transparent;border:none;color:var(--tx);
-      font-family:ui-monospace,Menlo,monospace;font-size:13px;resize:vertical;line-height:1.55}
-  .runner textarea:focus{outline:none}
-  .runner .salida{border-top:1px dashed var(--linea-fuerte);margin-top:10px;padding-top:10px;
-      font-family:ui-monospace,Menlo,monospace;font-size:13px;white-space:pre-wrap;color:#7dd3fc}
-  .runner .salida.err{color:var(--err)}
-
-  /* ---- checkpoint ---- */
-  .checkpoint{background:var(--card2);border:1px solid var(--linea);border-radius:var(--r);
-      padding:18px;margin-top:18px}
-  .checkpoint .titulo-cp{display:flex;align-items:center;gap:8px;font-weight:700;
-      font-size:13px;color:var(--tx2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
-  .opcion{display:flex;gap:10px;align-items:flex-start;margin:8px 0;padding:11px 13px;
-      border:1px solid var(--linea-fuerte);border-radius:var(--r-sm);cursor:pointer;
-      transition:all var(--t1);background:var(--card)}
-  .opcion:hover{border-color:var(--acc)}
-  .opcion .letra{flex:none;width:22px;height:22px;border-radius:6px;border:1.5px solid var(--linea-fuerte);
-      display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--tx2)}
-  .opcion.correcta{border-color:var(--ok);background:var(--ok-fondo)}
-  .opcion.correcta .letra{background:var(--ok);border-color:var(--ok);color:#0a1020}
-  .opcion.incorrecta{border-color:var(--err);background:var(--err-fondo)}
-  .feedback{border-left:3px solid var(--acc);padding:12px 16px;margin-top:14px;
-      background:var(--card);border-radius:0 var(--r-sm) var(--r-sm) 0;
-      animation:aparecer 280ms cubic-bezier(0,0,0,1)}
-  .feedback.pista{border-color:var(--warn)}
-  .feedback.exito{border-color:var(--ok)}
-  @keyframes aparecer{from{opacity:0;transform:translateY(4px)}to{opacity:1}}
-
-  #barra-guia{position:sticky;top:61px;background:rgba(11,14,20,.9);backdrop-filter:blur(8px);
-      padding:10px 0;z-index:3}
-
-  .sk{background:linear-gradient(90deg,var(--card2) 25%,#232b3b 50%,var(--card2) 75%);
-      background-size:200% 100%;animation:sk 1.2s infinite;border-radius:var(--r-sm)}
-  @keyframes sk{to{background-position:-200% 0}}
-
+  main{flex:1;display:flex;min-height:0}
   /* ---- chat ---- */
-  .msg{max-width:85%;padding:12px 16px;border-radius:14px;margin-bottom:10px;
-       animation:aparecer 250ms cubic-bezier(0,0,0,1)}
-  .msg.tutor{background:var(--card2);border:1px solid var(--linea);margin-right:auto;
-      border-bottom-left-radius:4px}
+  #zona-chat{flex:1;display:flex;flex-direction:column;min-width:0}
+  #chat{flex:1;overflow-y:auto;padding:26px 24px;scroll-behavior:smooth}
+  #chat .interior{max-width:760px;margin:0 auto}
+  .msg{max-width:88%;padding:13px 17px;border-radius:16px;margin-bottom:12px;
+       animation:aparecer 240ms cubic-bezier(0,0,0,1)}
+  .msg.tutor{background:var(--card);border:1px solid var(--linea);margin-right:auto;
+      border-bottom-left-radius:5px;box-shadow:var(--sombra)}
   .msg.yo{background:var(--acc-fondo);border:1px solid rgba(122,162,255,.25);
-      margin-left:auto;border-bottom-right-radius:4px}
-  .msg pre{background:#0a0d13;border-radius:var(--r-sm);padding:10px;overflow-x:auto;
-      white-space:pre;font-size:12.5px;margin:8px 0}
-  .chat-barra{display:flex;gap:8px;margin-top:12px}
-  .chat-barra input{flex:1;background:var(--card2);border:1px solid var(--linea-fuerte);
-      border-radius:var(--r);color:var(--tx);padding:12px 15px;font-size:14px;font-family:inherit}
-  .chat-barra input:focus{outline:none;border-color:var(--acc)}
+      margin-left:auto;border-bottom-right-radius:5px}
+  .msg.ancha{max-width:100%;width:100%}
+  .msg .quien{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+      color:var(--tx3);margin-bottom:6px}
+  @keyframes aparecer{from{opacity:0;transform:translateY(5px)}to{opacity:1}}
   .escribiendo::after{content:"···";animation:puntos 1.2s infinite;letter-spacing:2px;font-weight:700}
   @keyframes puntos{0%{opacity:.2}50%{opacity:1}100%{opacity:.2}}
-  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
-  .chips button{font-size:12px;padding:5px 12px;border-radius:var(--r-pill);color:var(--tx2)}
 
-  .panel-tutor{margin-top:18px;border-top:1px dashed var(--linea-fuerte);padding-top:14px}
-  iframe.artefacto{width:100%;height:480px;border:1px solid var(--linea-fuerte);
-      border-radius:var(--r);background:#0a0d13;margin-top:12px}
+  /* prosa dentro de mensajes */
+  .prosa{line-height:1.65}
+  .prosa p{margin:0 0 10px} .prosa p:last-child{margin-bottom:0}
+  .prosa ul,.prosa ol{margin:0 0 10px;padding-left:22px}
+  .prosa li{margin-bottom:3px}
+  .prosa h3{margin:14px 0 6px;font-size:15.5px}
+  .prosa pre{background:#0a0d13;border:1px solid var(--linea);border-radius:var(--r-sm);
+      padding:13px;overflow-x:auto;margin:10px 0;font-size:12.5px;line-height:1.55;white-space:pre}
+  .prosa code{background:#0a0d13;border:1px solid var(--linea);border-radius:5px;
+      padding:1px 6px;font-size:12.5px;font-family:ui-monospace,"SF Mono",Menlo,monospace}
+  .prosa pre code{border:none;padding:0;background:transparent}
+  .code-acciones{display:flex;gap:6px;margin:-2px 0 10px}
+  .code-acciones button{font-size:11px;padding:3px 9px;color:var(--tx2)}
+  .runner{background:#0a0d13;border:1px solid var(--linea-fuerte);border-radius:var(--r-sm);
+          padding:11px;margin:6px 0 12px}
+  .runner textarea{width:100%;min-height:100px;background:transparent;border:none;color:var(--tx);
+      font-family:ui-monospace,Menlo,monospace;font-size:12.5px;resize:vertical;line-height:1.55}
+  .runner textarea:focus{outline:none}
+  .runner .salida{border-top:1px dashed var(--linea-fuerte);margin-top:9px;padding-top:9px;
+      font-family:ui-monospace,Menlo,monospace;font-size:12.5px;white-space:pre-wrap;color:#7dd3fc}
+  .runner .salida.err{color:var(--err)}
 
+  /* composer */
+  #composer{flex:none;border-top:1px solid var(--linea);padding:12px 24px 16px;
+      background:rgba(11,14,20,.85);backdrop-filter:blur(8px)}
+  #composer .interior{max-width:760px;margin:0 auto}
+  #contexto{font-size:11.5px;color:var(--tx3);margin-bottom:8px;display:flex;
+      gap:10px;align-items:center;flex-wrap:wrap}
+  #contexto .avance{color:var(--acc)}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+  .chips button{font-size:11.5px;padding:4px 11px;border-radius:var(--r-pill);color:var(--tx2)}
+  .caja-input{display:flex;gap:8px;background:var(--card);border:1px solid var(--linea-fuerte);
+      border-radius:14px;padding:6px;transition:border-color var(--t1);align-items:flex-end}
+  .caja-input:focus-within{border-color:var(--acc);box-shadow:0 0 0 3px rgba(122,162,255,.12)}
+  .caja-input textarea{flex:1;background:transparent;border:none;color:var(--tx);
+      font-family:inherit;font-size:14.5px;line-height:1.5;padding:8px 10px;resize:none;
+      max-height:120px;min-height:38px}
+  .caja-input textarea:focus{outline:none}
+  .caja-input .primario{padding:9px 16px}
+  #b-demo{flex:none}
+
+  /* ---- panel del plan ---- */
+  #panel{width:340px;min-width:280px;border-left:1px solid var(--linea);
+      overflow-y:auto;padding:18px 14px;background:rgba(13,17,26,.5);display:none}
+  #panel .cabecera{display:flex;justify-content:space-between;align-items:center;margin:0 6px 12px}
+  #panel .cabecera b{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)}
+  .obj{border:1px solid transparent;border-radius:var(--r);padding:10px 12px;margin-bottom:4px;
+      transition:all var(--t1)}
+  .obj.actual{background:var(--card);border-color:var(--linea-fuerte);box-shadow:var(--sombra)}
+  .obj .fila{display:flex;gap:10px;align-items:flex-start}
+  .num{flex:none;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--linea-fuerte);
+       display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--tx2);margin-top:1px}
+  .num.hecha{background:var(--ok);border-color:var(--ok);color:#0a1020}
+  .num.actual{border-color:var(--acc);color:var(--acc)}
+  .obj b{font-size:13px;line-height:1.35;font-weight:600;display:block}
+  .obj .objetivo{font-size:11.5px;color:var(--tx2);margin-top:3px;line-height:1.45}
+  .obj.completada b{text-decoration:line-through;color:var(--tx2)}
+  .obj.completada .objetivo{text-decoration:line-through;color:var(--tx3)}
+  .obj .meta{font-size:10.5px;color:var(--tx3);margin-top:4px}
+  .obj .acciones{display:flex;gap:6px;margin-top:8px;padding-left:32px}
+  .obj .acciones button{font-size:11px;padding:4px 10px}
+  .obj.bloq{opacity:.45}
+
+  /* hero de creación */
+  .hero-chat{text-align:center;padding:48px 20px 24px}
+  .hero-chat .logo-xl{width:52px;height:52px;border-radius:15px;margin:0 auto 16px;
+      background:linear-gradient(135deg,#4ade80,#5c8aff);display:grid;place-items:center;
+      font-size:24px;font-weight:800;color:#0a1020;box-shadow:0 8px 32px -8px rgba(92,138,255,.5)}
+  .hero-chat h2{font-size:26px;margin-bottom:8px}
+  .hero-chat .sub{color:var(--tx2);font-size:14px;max-width:460px;margin:0 auto}
+
+  /* modal del plan .md */
+  #modal{position:fixed;inset:0;background:rgba(5,8,14,.75);backdrop-filter:blur(4px);
+      display:none;place-items:center;z-index:20;padding:24px}
+  #modal .ventana{background:var(--card);border:1px solid var(--linea-fuerte);
+      border-radius:16px;max-width:720px;width:100%;max-height:84vh;display:flex;
+      flex-direction:column;box-shadow:var(--sombra)}
+  #modal .barra-m{display:flex;justify-content:space-between;align-items:center;
+      padding:14px 20px;border-bottom:1px solid var(--linea)}
+  #modal .cuerpo-m{overflow-y:auto;padding:20px 24px}
+
+  iframe.artefacto{width:100%;height:460px;border:1px solid var(--linea-fuerte);
+      border-radius:var(--r);background:#0a0d13}
+  .opcion{display:flex;gap:10px;align-items:flex-start;margin:8px 0;padding:10px 12px;
+      border:1px solid var(--linea-fuerte);border-radius:var(--r-sm);cursor:pointer;
+      transition:all var(--t1);background:var(--card2)}
+  .opcion:hover{border-color:var(--acc)}
+  .dim{color:var(--tx2)} .ok{color:var(--ok)} .mal{color:var(--err)}
+  .puntos-pop{color:var(--warn);font-weight:700}
   .celebra{animation:celebra 500ms cubic-bezier(0,0,0,1)}
-  @keyframes celebra{0%{transform:scale(.94);opacity:0}60%{transform:scale(1.02)}100%{transform:scale(1);opacity:1}}
-
-  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  @keyframes celebra{0%{transform:scale(.95);opacity:0}60%{transform:scale(1.02)}100%{transform:scale(1)}}
+  #toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%);
       background:var(--card);border:1px solid var(--ok);border-radius:var(--r);
-      padding:12px 20px;display:none;z-index:9;box-shadow:var(--sombra);animation:aparecer 250ms}
-  #error{position:fixed;bottom:20px;right:20px;background:var(--err-fondo);
-      border:1px solid var(--err);border-radius:var(--r);padding:12px 16px;
-      max-width:420px;display:none;z-index:9;box-shadow:var(--sombra)}
-  .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--tx3);
+      padding:11px 18px;display:none;z-index:30;box-shadow:var(--sombra)}
+  #error{position:fixed;bottom:88px;right:20px;background:var(--err-fondo);
+      border:1px solid var(--err);border-radius:var(--r);padding:11px 15px;
+      max-width:400px;display:none;z-index:30}
+  .spin{display:inline-block;width:13px;height:13px;border:2px solid var(--tx3);
       border-top-color:var(--acc);border-radius:50%;animation:g .8s linear infinite;vertical-align:-2px}
   @keyframes g{to{transform:rotate(360deg)}}
-  @media(max-width:800px){main{flex-direction:column}
-    #sidebar{width:100%;max-height:none;position:static;border-right:none;border-bottom:1px solid var(--linea)}
-    #contenido{padding:20px 16px}}
+  @media(max-width:840px){#panel{display:none!important}}
 </style>
 </head>
 <body>
@@ -206,462 +176,395 @@
     <div class="texto" id="progreso-texto"></div>
     <div class="barra"><div id="progreso-barra" style="width:0%"></div></div>
   </div>
-  <span class="chip-stat" id="racha"
-        title="Días seguidos estudiando. Descansar un día de vez en cuando no la rompe de por vida."></span>
-  <span class="chip-stat" id="puntos"
-        title="Puntos por checkpoints (10 al primer intento, 5 al segundo) y +30 por aprobar cada unidad."></span>
+  <span class="chip-stat" id="racha" title="Días seguidos estudiando."></span>
+  <span class="chip-stat" id="puntos" title="Puntos por avanzar y aprobar unidades."></span>
 </header>
 <main>
-  <nav id="sidebar" aria-label="Unidades del curso"></nav>
-  <section id="contenido"></section>
+  <div id="zona-chat">
+    <div id="chat"><div class="interior" id="mensajes"></div></div>
+    <div id="composer"><div class="interior">
+      <div id="contexto"></div>
+      <div class="chips" id="sugerencias"></div>
+      <div class="caja-input">
+        <textarea id="entrada" rows="1" placeholder="Escribe aquí…"></textarea>
+        <button id="b-demo" title="Pídele al tutor una demo interactiva de lo que estás viendo">✨</button>
+        <button class="primario" id="b-enviar">Enviar</button>
+      </div>
+    </div></div>
+  </div>
+  <nav id="panel" aria-label="Plan del curso"></nav>
 </main>
+<div id="modal"><div class="ventana">
+  <div class="barra-m"><b>📄 Plan del curso</b>
+    <div style="display:flex;gap:8px">
+      <button id="m-descargar">Descargar .md</button>
+      <button id="m-cerrar">Cerrar ✕</button>
+    </div></div>
+  <div class="cuerpo-m prosa" id="m-cuerpo"></div>
+</div></div>
 <div id="toast" role="status"></div>
 <div id="error" role="alert"></div>
 <script>
 "use strict";
-const $ = (sel) => document.querySelector(sel);
+const $ = (s) => document.querySelector(s);
+let modo = "creacion";          // creacion | estudio | quiz | conversatorio
 let lenguajeCurso = "";
-let guiaActual = null;
-const guiasEnCurso = new Map();
-let quizPrefetch = null;
+let quizActual = null;           // {indice, preguntas}
+let convIndice = null;
+let planMd = "";
 
 /* ===== utilidades ===== */
-
-function mostrarError(texto){
-  const caja = $("#error");
-  caja.textContent = texto;
-  caja.style.display = "block";
-  setTimeout(() => caja.style.display = "none", 7000);
-}
-
-function toast(texto){
-  const caja = $("#toast");
-  caja.textContent = texto;
-  caja.style.display = "block";
-  setTimeout(() => caja.style.display = "none", 3500);
-}
+function mostrarError(t){ const c = $("#error"); c.textContent = t; c.style.display = "block";
+  setTimeout(() => c.style.display = "none", 7000); }
+function toast(t){ const c = $("#toast"); c.textContent = t; c.style.display = "block";
+  setTimeout(() => c.style.display = "none", 3200); }
 
 async function api(ruta, cuerpo, metodo){
   const usarPost = metodo === "POST" || cuerpo !== undefined;
-  const opciones = usarPost
-    ? {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(cuerpo ?? {})}
-    : {};
-  const r = await fetch(ruta, opciones);
-  if(!r.ok){
-    const datos = await r.json().catch(() => ({}));
-    throw new Error(datos.detail || `Error ${r.status}`);
-  }
+  const op = usarPost ? {method:"POST", headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(cuerpo ?? {})} : {};
+  const r = await fetch(ruta, op);
+  if(!r.ok){ const d = await r.json().catch(() => ({})); throw new Error(d.detail || `Error ${r.status}`); }
   return r.json();
 }
 
-/* Render de Markdown: párrafos, listas, headings y código — sin librerías */
 function md(texto){
   const esc = (s) => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-  const enLinea = (s) => esc(s)
-    .replace(/`([^`\n]+)`/g, "<code>$1</code>")
-    .replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>")
-    .replace(/\*([^*\n]+)\*/g, "<i>$1</i>");
+  const inl = (s) => esc(s).replace(/`([^`\n]+)`/g,"<code>$1</code>")
+    .replace(/\*\*([^*\n]+)\*\*/g,"<b>$1</b>").replace(/\*([^*\n]+)\*/g,"<i>$1</i>");
   const partes = String(texto).split(/```(?:\w*)\n?/);
   let html = "";
-  partes.forEach((parte, idx) => {
-    if(idx % 2 === 1){ html += `<pre><code>${esc(parte.replace(/\n$/,""))}</code></pre>`; return; }
-    parte.split(/\n{2,}/).forEach(bloque => {
-      const lineas = bloque.split("\n").filter(l => l.trim() !== "");
-      if(!lineas.length) return;
-      if(lineas.every(l => /^\s*[-*•] /.test(l))){
-        html += "<ul>" + lineas.map(l => `<li>${enLinea(l.replace(/^\s*[-*•] /,""))}</li>`).join("") + "</ul>";
-      }else if(lineas.every(l => /^\s*\d+[.)] /.test(l))){
-        html += "<ol>" + lineas.map(l => `<li>${enLinea(l.replace(/^\s*\d+[.)] /,""))}</li>`).join("") + "</ol>";
-      }else if(/^#{1,4} /.test(lineas[0]) && lineas.length === 1){
-        html += `<h3>${enLinea(lineas[0].replace(/^#{1,4} /,""))}</h3>`;
-      }else{
-        html += "<p>" + lineas.map(l =>
-          /^#{1,4} /.test(l) ? `</p><h3>${enLinea(l.replace(/^#{1,4} /,""))}</h3><p>` : enLinea(l)
-        ).join("<br>") + "</p>";
-      }
+  partes.forEach((p, i) => {
+    if(i % 2 === 1){ html += `<pre><code>${esc(p.replace(/\n$/,""))}</code></pre>`; return; }
+    p.split(/\n{2,}/).forEach(b => {
+      const ls = b.split("\n").filter(l => l.trim() !== "");
+      if(!ls.length) return;
+      if(ls.every(l => /^\s*[-*•] /.test(l)))
+        html += "<ul>" + ls.map(l => `<li>${inl(l.replace(/^\s*[-*•] /,""))}</li>`).join("") + "</ul>";
+      else if(ls.every(l => /^\s*\d+[.)] /.test(l)))
+        html += "<ol>" + ls.map(l => `<li>${inl(l.replace(/^\s*\d+[.)] /,""))}</li>`).join("") + "</ol>";
+      else if(/^#{1,4} /.test(ls[0]) && ls.length === 1)
+        html += `<h3>${inl(ls[0].replace(/^#{1,4} /,""))}</h3>`;
+      else html += "<p>" + ls.map(l => /^#{1,4} /.test(l)
+        ? `</p><h3>${inl(l.replace(/^#{1,4} /,""))}</h3><p>` : inl(l)).join("<br>") + "</p>";
     });
   });
   return html;
 }
 
-function ponerStats(estado){
-  $("#puntos").style.display = "inline-block";
-  $("#puntos").textContent = `⭐ ${estado.puntos}`;
-  $("#racha").style.display = "inline-block";
-  $("#racha").textContent = `🔥 ${estado.racha}`;
-  const aprobadas = estado.unidades.filter(u => u.estado === "aprobada").length;
+/* ===== chat ===== */
+function burbuja(clase, html, quien){
+  const d = document.createElement("div");
+  d.className = "msg " + clase;
+  d.innerHTML = (quien ? `<div class="quien">${quien}</div>` : "") + html;
+  $("#mensajes").appendChild(d);
+  $("#chat").scrollTop = $("#chat").scrollHeight;
+  return d;
+}
+function burbujaTutor(texto){
+  const d = burbuja("tutor", `<div class="prosa">${md(texto)}</div>`, "Profe Bit");
+  activarBloquesDeCodigo(d);
+  return d;
+}
+function burbujaEspera(){
+  return burbuja("tutor dim escribiendo", "El tutor escribe");
+}
+function reemplazarEspera(espera, texto){
+  espera.classList.remove("dim","escribiendo");
+  espera.innerHTML = `<div class="quien">Profe Bit</div><div class="prosa">${md(texto)}</div>`;
+  activarBloquesDeCodigo(espera);
+  $("#chat").scrollTop = $("#chat").scrollHeight;
+}
+
+function ponerContexto(texto, chips){
+  $("#contexto").innerHTML = texto || "";
+  const zona = $("#sugerencias");
+  zona.innerHTML = "";
+  (chips || []).forEach(([etiqueta, accion]) => {
+    const b = document.createElement("button");
+    b.textContent = etiqueta;
+    b.onclick = accion;
+    zona.appendChild(b);
+  });
+}
+
+/* ===== estado / panel ===== */
+async function cargarEstado(){
+  let e;
+  try{ e = await api("/api/estado"); }
+  catch(err){ mostrarError(err.message); return null; }
+  if(!e.perfil) return e;
+  lenguajeCurso = e.lenguaje;
+  $("#puntos").style.display = "inline-block"; $("#puntos").textContent = `⭐ ${e.puntos}`;
+  $("#racha").style.display = "inline-block"; $("#racha").textContent = `🔥 ${e.racha}`;
+  const aprob = e.unidades.filter(u => u.estado === "aprobada").length;
   $("#progreso-curso").style.display = "block";
-  $("#progreso-texto").textContent = `${aprobadas} de ${estado.unidades.length} unidades · curso de ${estado.lenguaje}`;
-  $("#progreso-barra").style.width = `${Math.round(100 * aprobadas / estado.unidades.length)}%`;
+  $("#progreso-texto").textContent = `${aprob} de ${e.unidades.length} unidades · ${e.lenguaje}`;
+  $("#progreso-barra").style.width = `${Math.round(100 * aprob / e.unidades.length)}%`;
+  pintarPanel(e);
+  return e;
 }
 
-function loaderFases(contenedor, fases, duracionTotalMs){
-  contenedor.innerHTML = `<p class="dim" style="margin-bottom:10px" aria-live="polite">
-      <span class="spin"></span> <span class="fase">${fases[0]}</span></p>
-    <div class="barra"><div style="width:4%"></div></div>
-    <p class="dim" style="font-size:11.5px;margin-top:8px">Suele tardar ~${Math.round(duracionTotalMs/1000)} s.</p>`;
-  const barra = contenedor.querySelector(".barra > div");
-  const fase = contenedor.querySelector(".fase");
-  const inicio = Date.now();
-  const timer = setInterval(() => {
-    const t = (Date.now() - inicio) / duracionTotalMs;
-    barra.style.width = `${Math.min(92, Math.round(100 * (1 - Math.exp(-2.2 * t))))}%`;
-    fase.textContent = fases[Math.min(fases.length - 1, Math.floor(t * fases.length))];
-  }, 900);
-  return () => clearInterval(timer);
-}
-
-function skeletonGuia(){
-  return `<div class="tarjeta">
-    <div class="sk" style="width:180px;height:24px;margin-bottom:14px"></div>
-    <div class="sk" style="height:13px;margin-bottom:8px"></div>
-    <div class="sk" style="height:13px;width:92%;margin-bottom:8px"></div>
-    <div class="sk" style="height:13px;width:85%;margin-bottom:14px"></div>
-    <div class="sk" style="height:110px;margin-bottom:14px"></div>
-    <div class="sk" style="height:13px;width:60%"></div></div>`;
-}
-
-/* ===== estado / sidebar ===== */
-
-async function cargarEstado(mostrarInicio){
-  let estado;
-  try{ estado = await api("/api/estado"); }
-  catch(e){ mostrarError(e.message); return; }
-  if(!estado.perfil){ verHero(); $("#sidebar").innerHTML = ""; return; }
-  lenguajeCurso = estado.lenguaje;
-  ponerStats(estado);
-  const nav = $("#sidebar");
-  nav.innerHTML = `<div class="sidebar-titulo">Tu curso</div>`;
-  const siguiente = estado.unidades.find(u => u.estado !== "aprobada" && u.estado !== "bloqueada");
-  estado.unidades.forEach(u => {
-    const bloqueada = u.estado === "bloqueada";
-    const esSiguiente = siguiente && u.indice === siguiente.indice;
-    const generando = guiasEnCurso.has(u.indice);
+function pintarPanel(e){
+  const panel = $("#panel");
+  panel.style.display = "block";
+  panel.innerHTML = `<div class="cabecera"><b>Plan del curso</b>
+    <button class="sutil" id="p-ver">📄 Ver .md</button></div>`;
+  $("#p-ver").onclick = abrirPlan;
+  e.unidades.forEach(u => {
+    const esActual = u.indice === e.unidad_actual;
     const div = document.createElement("div");
-    div.className = "unidad" + (bloqueada ? " bloqueada" : "") + (esSiguiente ? " siguiente" : "");
-    const meta = generando ? "Generando tu guía…"
-      : {bloqueada:"Se desbloquea aprobando la anterior", pendiente:"Lista para empezar",
-         vista:"En curso", evaluada:`Último intento: ${u.mejor_nota}/100`,
-         aprobada:`Aprobada con ${u.mejor_nota}/100`}[u.estado];
-    const numClase = u.estado === "aprobada" ? "aprobada" : (esSiguiente ? "activa" : "");
+    div.className = "obj" + (u.completada ? " completada" : "") +
+      (esActual ? " actual" : "") + (u.estado === "bloqueada" ? " bloq" : "");
+    const numCl = u.completada || u.estado === "aprobada" ? "hecha" : (esActual ? "actual" : "");
+    const meta = u.estado === "aprobada" ? `Aprobada · ${u.mejor_nota}/100`
+      : u.estado === "bloqueada" ? "🔒 Aprueba la anterior para desbloquear"
+      : u.completada ? "Objetivo cumplido — puedes evaluarte o repasar"
+      : esActual ? "En el chat ahora" : "";
     div.innerHTML = `<div class="fila">
-        <span class="num ${numClase}">${u.estado === "aprobada" ? "✓" : u.indice + 1}</span>
-        <div><b>${u.titulo}</b><div class="meta">${bloqueada ? "🔒 " : ""}${meta}</div></div>
-      </div><div class="cta"></div>`;
-    const cta = div.querySelector(".cta");
-    if(!bloqueada){
-      const principal = document.createElement("button");
-      if(u.estado === "aprobada"){ principal.textContent = "Repasar"; }
-      else if(u.estado === "evaluada"){ principal.textContent = "Reintentar evaluación";
-        if(esSiguiente) principal.className = "primario"; }
-      else{ principal.textContent = u.estado === "vista" ? "Continuar" : "Empezar";
-        if(esSiguiente) principal.className = "primario"; }
-      principal.onclick = () => (u.estado === "evaluada")
-        ? iniciarQuiz(u.indice) : iniciarGuia(u.indice, u.titulo);
-      cta.appendChild(principal);
-      if(u.estado === "vista" || u.estado === "aprobada"){
+        <span class="num ${numCl}">${u.completada || u.estado === "aprobada" ? "✓" : u.indice + 1}</span>
+        <div style="min-width:0"><b>${u.titulo}</b>
+          <div class="objetivo">${u.objetivo}</div>
+          ${meta ? `<div class="meta">${meta}</div>` : ""}</div>
+      </div><div class="acciones"></div>`;
+    const acc = div.querySelector(".acciones");
+    if(u.estado !== "bloqueada"){
+      if(u.completada || u.estado === "aprobada"){
         const b = document.createElement("button");
-        b.className = "sutil";
-        b.textContent = "Evaluación";
+        b.textContent = "↩ Repasar en el chat";
+        b.onclick = () => repasar(u.indice, u.titulo);
+        acc.appendChild(b);
+      }
+      if(u.completada && u.estado !== "aprobada"){
+        const b = document.createElement("button");
+        b.className = "primario";
+        b.textContent = "🎯 Evaluarme";
         b.onclick = () => iniciarQuiz(u.indice);
-        cta.appendChild(b);
+        acc.appendChild(b);
       }
     }
-    nav.appendChild(div);
+    panel.appendChild(div);
   });
-  if(mostrarInicio) verBienvenida(estado);
 }
 
-function verBienvenida(estado){
-  $("#contenido").innerHTML = `<div class="tarjeta lectura">
-    <h2>Tu curso está listo</h2>
-    <div class="prosa"><p class="dim">Cada unidad es una <b>guía interactiva</b>: aprendes por objetivos,
-    respondes checkpoints que suman <span class="puntos-pop">⭐ puntos</span>, le
-    <b>preguntas al tutor</b> lo que quieras y pides <b>demos interactivas ✨</b>.
-    Al final de cada unidad, una evaluación: con ${estado.nota_aprobatoria}+ desbloqueas la siguiente —
-    y si no sale, el tutor conversa contigo tus dudas y reintentas con preguntas nuevas.</p>
-    <p class="dim">Empieza por la unidad resaltada 👈</p></div></div>`;
+async function abrirPlan(){
+  if(!planMd){
+    try{ planMd = (await api("/api/plan")).md; }
+    catch(e){ mostrarError(e.message); return; }
+  }
+  $("#m-cuerpo").innerHTML = md(planMd);
+  $("#modal").style.display = "grid";
+  $("#m-descargar").onclick = () => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([planMd], {type:"text/markdown"}));
+    a.download = "mi-curso.md"; a.click();
+  };
 }
+$("#m-cerrar").onclick = () => $("#modal").style.display = "none";
 
-/* ===== hero: crear curso por prompt ===== */
-
-const EJEMPLOS_PROMPT = [
-  "Hazme un curso de Python para analizar las ventas de mi negocio; manejo bien Excel",
-  "Quiero aprender a hacer páginas web desde cero, nunca he programado",
-  "Enséñame a automatizar reportes aburridos de mi trabajo",
-];
-
-function verHero(){
-  $("#contenido").innerHTML = `<div class="hero">
+/* ===== flujo: creación conversacional ===== */
+function arrancarCreacion(){
+  modo = "creacion";
+  $("#mensajes").innerHTML = `<div class="hero-chat">
     <div class="logo-xl">Pb</div>
     <h2>¿Qué quieres aprender?</h2>
-    <p class="sub">Descríbelo con tus palabras y tu tutor diseña un curso único para ti:
-    guías interactivas, un tutor que responde tus dudas y evaluaciones a tu medida.</p>
-    <div class="prompt-caja">
-      <textarea id="h-prompt" rows="3"
-        placeholder="Hazme un curso de… (cuéntame qué quieres lograr y qué sabes ya)"></textarea>
-      <div class="prompt-pie">
-        <span class="nota">Enter para crear · Shift+Enter para otra línea</span>
-        <button class="primario" id="h-crear">Crear mi curso ✨</button>
-      </div>
-    </div>
-    <div class="ejemplos" id="h-ejemplos"></div>
-    <div id="h-progreso" style="width:100%;max-width:480px;margin-top:24px"></div>
-  </div>`;
-  EJEMPLOS_PROMPT.forEach(e => {
-    const b = document.createElement("button");
-    b.textContent = e.length > 58 ? e.slice(0, 58) + "…" : e;
-    b.onclick = () => { $("#h-prompt").value = e; $("#h-prompt").focus(); };
-    $("#h-ejemplos").appendChild(b);
-  });
-  const area = $("#h-prompt");
-  area.focus();
-  area.addEventListener("keydown", e => {
-    if(e.key === "Enter" && !e.shiftKey){ e.preventDefault(); crearCurso(); }
-  });
-  $("#h-crear").onclick = crearCurso;
+    <p class="sub">Cuéntamelo con tus palabras. Te haré un par de preguntas, te propondré
+    un plan y cuando digas “ya, dale” creo tu curso.</p></div>`;
+  ponerContexto("", [
+    ["Quiero analizar datos con Python; sé Excel", () => enviar("Hazme un curso de Python para análisis de datos; manejo bien Excel")],
+    ["Nunca he programado, quiero hacer webs", () => enviar("Quiero aprender a hacer páginas web desde cero, nunca he programado")],
+  ]);
+  $("#entrada").focus();
 }
 
-async function crearCurso(){
-  const texto = $("#h-prompt").value.trim();
-  if(texto.length < 8){ mostrarError("Cuéntame un poco más: ¿qué quieres aprender?"); return; }
-  const boton = $("#h-crear");
-  boton.disabled = true; boton.textContent = "Creando…";
-  $("#h-prompt").disabled = true;
-  const parar = loaderFases($("#h-progreso"), [
-    "Entendiendo tu petición…", "Armando tu perfil…", "Eligiendo la secuencia de temas…",
-    "Diseñando unidades a tu medida…", "Casi listo…",
-  ], 70000);
+async function turnoCreacion(mensaje){
+  const espera = burbujaEspera();
   try{
-    await api("/api/curso", {prompt: texto});
-    await cargarEstado(true);
-    toast("¡Tu curso está listo! 🎉");
-  }catch(e){
-    mostrarError(e.message);
-    boton.disabled = false; boton.textContent = "Crear mi curso ✨";
-    $("#h-prompt").disabled = false;
-  }finally{ parar(); const p = $("#h-progreso"); if(p) p.innerHTML = ""; }
+    const r = await api("/api/creacion", {mensaje});
+    if(!r.listo){ reemplazarEspera(espera, r.mensaje); return; }
+    reemplazarEspera(espera, r.mensaje);
+    const gen = burbuja("tutor dim", '<span class="spin"></span> Diseñando tu curso y guardando el plan (~1 min)…');
+    const e = await cargarEstado();
+    gen.remove();
+    toast("Curso creado · plan guardado en curso.md 📄");
+    burbujaTutor(`**¡Listo!** Tu plan quedó a la derecha 👉 (y en \`curso.md\`). Arranquemos con la primera unidad.`);
+    modo = "estudio";
+    await turnoEstudio(null, e ? e.unidad_actual : 0, true);
+  }catch(err){ espera.remove(); mostrarError(err.message); }
 }
 
-/* ===== guía interactiva ===== */
-
-function pedirGuia(indice){
-  if(!guiasEnCurso.has(indice)){
-    const promesa = api(`/api/guia/${indice}`, undefined, "POST")
-      .finally(() => { guiasEnCurso.delete(indice); cargarEstado(false); });
-    guiasEnCurso.set(indice, promesa);
-  }
-  return guiasEnCurso.get(indice);
+/* ===== flujo: estudio en chat ===== */
+async function turnoEstudio(mensaje, unidad, primera){
+  const espera = burbujaEspera();
+  if(primera) espera.innerHTML = '<span class="spin"></span> Preparando la lección (primera vez en la unidad: ~1 min)…';
+  try{
+    const cuerpo = unidad !== undefined && unidad !== null ? {unidad} : {mensaje};
+    const r = await api("/api/estudio", cuerpo);
+    reemplazarEspera(espera, r.texto);
+    ponerContexto(
+      `<span class="avance">Unidad ${r.unidad + 1} · paso ${r.paso}/${r.total}</span>
+       <span>Responde para avanzar — pregunta lo que quieras</span>`,
+      r.terminada ? [] : [["No entiendo, explícame otra vez", () => enviar("No entiendo, ¿me lo explicas de otra forma?")]]
+    );
+    if(r.terminada){
+      const e = await cargarEstado();
+      burbuja("tutor ancha celebra",
+        `<div class="quien">Profe Bit</div><div class="prosa">
+        <p>🎉 <b>Objetivo de la unidad ${r.unidad + 1} cumplido</b> — quedó tachado en tu plan.</p></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+          <button class="primario" id="c-evaluar">🎯 Presentar la evaluación</button>
+          <button id="c-repasar">↩ Repasar algo</button>
+        </div>`);
+      $("#c-evaluar").onclick = () => iniciarQuiz(r.unidad);
+      $("#c-repasar").onclick = () => enviar("Quiero repasar: tengo dudas todavía");
+      ponerContexto(`<span class="avance">Unidad ${r.unidad + 1} completada</span>
+        <span>Evalúate para desbloquear la siguiente, o sigue preguntando</span>`);
+    }
+  }catch(err){ espera.remove(); mostrarError(err.message); }
 }
 
-async function iniciarGuia(indice, titulo){
-  $("#contenido").innerHTML = `<div class="tarjeta lectura"><h2>${titulo || `Unidad ${indice + 1}`}</h2>
-    <div id="g-progreso" style="margin-top:8px"></div>
-    <div style="margin-top:14px"><button class="sutil" id="g-volver">← Volver al curso (te aviso cuando esté lista)</button></div>
-    </div>` + skeletonGuia();
-  const parar = loaderFases($("#g-progreso"), [
-    "Leyendo tu perfil y tu progreso…", "Definiendo los objetivos de la unidad…",
-    "Escribiendo la guía con tus analogías…", "Preparando los checkpoints…", "Últimos toques…",
-  ], 75000);
-  $("#g-volver").onclick = () => { parar(); cargarEstado(true); };
-  let guia;
-  try{ guia = await pedirGuia(indice); }
-  catch(e){ parar(); mostrarError(e.message); cargarEstado(true); return; }
-  parar();
-  if(!document.getElementById("g-progreso")){ toast("Tu guía está lista ✅"); return; }
-  guiaActual = {indice, titulo, secciones: guia.secciones, seccion: 0, intento: 1};
-  verSeccion();
+async function repasar(indice, titulo){
+  modo = "estudio";
+  burbuja("yo", `Quiero repasar la unidad ${indice + 1}: ${titulo}`);
+  await turnoEstudio(null, indice, true);
 }
 
-function verSeccion(){
-  const g = guiaActual;
-  const s = g.secciones[g.seccion];
-  g.intento = 1;
-  const pct = Math.round(100 * g.seccion / g.secciones.length);
-  $("#contenido").innerHTML = `
-    <div class="lectura">
-    <div id="barra-guia">
-      <div class="dim" style="font-size:11.5px;margin-bottom:5px">
-        ${g.titulo} · objetivo ${g.seccion + 1} de ${g.secciones.length}
-        · <a href="#" id="g-salir" style="color:var(--acc)">volver al curso</a></div>
-      <div class="barra"><div style="width:${pct}%"></div></div>
-    </div>
-    <div class="tarjeta" style="margin-top:14px;max-width:none">
-      <span class="objetivo-chip">🎯 ${s.objetivo}</span>
-      <div class="prosa">${md(s.contenido)}</div>
-      <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
-        <button id="b-artefacto">✨ Demo interactiva</button>
-        <button id="b-preguntar">💬 Preguntar al tutor</button>
-      </div>
-      <div id="zona-artefacto"></div>
-      <div id="zona-chat"></div>
-      <div class="checkpoint">
-        <div class="titulo-cp">Checkpoint · vale ⭐</div>
-        <div class="prosa" style="margin-bottom:6px">${md(s.checkpoint.pregunta)}</div>
-        <div id="opciones" role="radiogroup"></div>
-        <div id="feedback" aria-live="polite"></div>
-        <div id="siguiente"></div>
-      </div>
-    </div></div>`;
-  $("#g-salir").onclick = (e) => { e.preventDefault(); guiaActual = null; cargarEstado(true); };
-  $("#b-artefacto").onclick = () => verArtefacto(g.indice, g.seccion);
-  $("#b-preguntar").onclick = () => abrirChatGuia(g.indice, g.seccion);
-  s.checkpoint.opciones.forEach((op, j) => {
-    const b = document.createElement("div");
-    b.className = "opcion";
-    b.tabIndex = 0;
-    b.innerHTML = `<span class="letra">${"abcd"[j]}</span><span>${md(op)}</span>`;
-    b.onclick = () => responderCheckpoint(j, b);
-    b.onkeydown = (e) => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); responderCheckpoint(j, b); } };
-    $("#opciones").appendChild(b);
+/* ===== flujo: evaluación dentro del chat ===== */
+async function iniciarQuiz(indice){
+  modo = "quiz";
+  burbuja("yo", `Quiero presentar la evaluación de la unidad ${indice + 1}`);
+  const espera = burbujaEspera();
+  espera.innerHTML = '<span class="spin"></span> Escribiendo tus preguntas y verificándolas (~40 s)…';
+  let quiz;
+  try{ quiz = await api(`/api/quiz/${indice}`, undefined, "POST"); }
+  catch(e){ espera.remove(); mostrarError(e.message); modo = "estudio"; return; }
+  espera.remove();
+  quizActual = {indice, preguntas: quiz.preguntas};
+  const card = burbuja("tutor ancha", `<div class="quien">Evaluación · unidad ${indice + 1}</div>
+    <p class="dim" style="font-size:12.5px;margin-bottom:10px">Apruebas con 70+. Puedes reintentar con preguntas nuevas.</p>
+    <div id="q-zona"></div><div id="q-error"></div>
+    <button class="primario" id="q-calificar" style="margin-top:8px">Calificar</button>`);
+  quiz.preguntas.forEach((p, i) => {
+    const f = document.createElement("fieldset");
+    f.style.cssText = "border:1px solid var(--linea);border-radius:10px;padding:12px;margin-bottom:10px";
+    f.innerHTML = `<legend style="font-size:11px;color:var(--tx3);padding:0 6px">PREGUNTA ${i + 1} DE ${quiz.preguntas.length}</legend>
+      <div class="prosa">${md(p.enunciado)}</div>` +
+      p.opciones.map((op, j) =>
+        `<label class="opcion"><input type="radio" name="p${i}" value="${j}" style="margin-top:3px">
+         <span class="prosa">${md(op)}</span></label>`).join("");
+    card.querySelector("#q-zona").appendChild(f);
   });
-  activarBloquesDeCodigo($("#contenido"));
-  if(g.seccion === g.secciones.length - 1) prefetchQuiz(g.indice);
-  window.scrollTo(0, 0);
+  card.querySelector("#q-calificar").onclick = () => calificarQuiz(card);
+  ponerContexto(`<span class="avance">Evaluación en curso</span><span>Responde y pulsa Calificar</span>`);
+  $("#chat").scrollTop = $("#chat").scrollHeight;
 }
 
-async function responderCheckpoint(opcion, elemento){
-  const g = guiaActual;
+async function calificarQuiz(card){
+  const q = quizActual;
+  const respuestas = q.preguntas.map((_, i) => {
+    const m = card.querySelector(`input[name="p${i}"]:checked`);
+    return m ? Number(m.value) : -1;
+  });
+  const faltan = respuestas.map((r, i) => r === -1 ? i + 1 : null).filter(Boolean);
+  if(faltan.length){
+    card.querySelector("#q-error").innerHTML =
+      `<p class="mal" style="font-size:13px">Te falta responder: ${faltan.join(", ")}.</p>`;
+    return;
+  }
   let r;
-  try{
-    r = await api(`/api/guia/${g.indice}/checkpoint`,
-                  {seccion: g.seccion, opcion, intento: g.intento});
-  }catch(e){ mostrarError(e.message); return; }
-  const feedback = $("#feedback");
-  if(r.correcto){
-    elemento.classList.add("correcta");
-    desactivarOpciones();
-    feedback.innerHTML = `<div class="feedback exito"><b class="ok">¡Correcto!</b>
-      ${r.puntos ? `<span class="puntos-pop"> +${r.puntos} ⭐</span>` : ""}
-      <div class="prosa" style="margin-top:6px">${md(r.texto)}</div></div>`;
-    actualizarPuntos(r.puntos_totales);
-    botonSiguiente();
-  }else if(!r.revelada){
-    elemento.classList.add("incorrecta");
-    g.intento = 2;
-    feedback.innerHTML = `<div class="feedback pista"><b>Pista 🤔</b>
-      <div class="prosa" style="margin-top:6px">${md(r.texto)}</div>
-      <span class="dim" style="font-size:12.5px">Piénsalo otra vez — al segundo intento aún ganas ⭐.</span></div>`;
+  try{ r = await api(`/api/quiz/${q.indice}/calificar`, {respuestas}); }
+  catch(e){ mostrarError(e.message); return; }
+  card.querySelector("#q-calificar").remove();
+  $("#puntos").textContent = `⭐ ${r.puntos_totales}`;
+  let html = r.aprobado
+    ? `<div class="quien">Resultado</div><h3 class="ok">🎉 Aprobada · ${r.nota}/100</h3>
+       <p class="dim">Desbloqueaste la siguiente unidad (+30 ⭐).</p>`
+    : `<div class="quien">Resultado</div><h3>${r.detalle.filter(d=>d.acierto).length} de ${r.detalle.length} — cerremos esas brechas</h3>
+       <p class="dim">Conversemos tus dudas y reintentas con preguntas nuevas.</p>`;
+  r.detalle.forEach((d, i) => {
+    html += `<div style="border:1px solid var(--linea);border-radius:10px;padding:10px;margin:8px 0">
+      ${d.acierto ? "✅" : "❌"} <b>P${i + 1}</b> — elegiste: <span class="prosa">${md(d.elegida)}</span>
+      ${d.acierto ? "" : `<div>Correcta: <span class="ok prosa">${md(d.correcta)}</span></div>`}
+      <div class="dim prosa" style="font-size:12.5px;margin-top:4px">${md(d.explicacion)}</div></div>`;
+  });
+  const res = burbuja("tutor ancha" + (r.aprobado ? " celebra" : ""), html);
+  const e = await cargarEstado();
+  if(r.aprobado){
+    toast(`+30 ⭐ · Unidad ${q.indice + 1} aprobada`);
+    const sig = q.indice + 1;
+    const hay = e && sig < e.unidades.length;
+    const botones = document.createElement("div");
+    botones.style.cssText = "display:flex;gap:8px;margin-top:8px";
+    botones.innerHTML = hay ? `<button class="primario" id="r-seguir">Seguir con la unidad ${sig + 1} →</button>`
+      : `<p class="ok"><b>🏆 ¡Terminaste el curso completo!</b></p>`;
+    res.appendChild(botones);
+    if(hay) $("#r-seguir").onclick = () => { modo = "estudio"; turnoEstudio(null, sig, true); };
+    modo = "estudio";
+    ponerContexto(`<span class="avance">Unidad ${q.indice + 1} aprobada 🎉</span>`);
   }else{
-    elemento.classList.add("incorrecta");
-    desactivarOpciones();
-    feedback.innerHTML = `<div class="feedback"><b>Así funciona:</b>
-      <div class="prosa" style="margin-top:6px">${md(r.texto)}</div>
-      <span class="dim" style="font-size:12.5px">Equivocarse es parte del método — lo reforzaremos más adelante.</span></div>`;
-    botonSiguiente();
+    modo = "conversatorio";
+    convIndice = q.indice;
+    const falladas = r.detalle.map((d, i) => !d.acierto ? i + 1 : null).filter(Boolean);
+    ponerContexto(
+      `<span class="avance">Conversatorio de dudas</span><span>Cuando estés al día, reintenta</span>`,
+      [...falladas.slice(0, 2).map(n => [`Explícame la pregunta ${n}`,
+          () => enviar(`Explícame en qué me equivoqué en la pregunta ${n}`)]),
+       ["Ya estoy listo: reintentar 🎯", () => iniciarQuiz(q.indice)]]
+    );
+    const espera = burbujaEspera();
+    try{
+      const c = await api(`/api/conversatorio/${q.indice}`, {mensaje: ""});
+      reemplazarEspera(espera, c.texto);
+    }catch(err){ espera.remove(); mostrarError(err.message); }
   }
+  quizActual = null;
 }
 
-function actualizarPuntos(total){ $("#puntos").textContent = `⭐ ${total}`; }
-
-function desactivarOpciones(){
-  document.querySelectorAll(".opcion").forEach(o => { o.onclick = null; o.onkeydown = null; o.tabIndex = -1; o.style.cursor = "default"; });
-}
-
-function botonSiguiente(){
-  const g = guiaActual;
-  const ultimo = g.seccion === g.secciones.length - 1;
-  const b = document.createElement("button");
-  b.className = "primario";
-  b.style.marginTop = "14px";
-  b.textContent = ultimo ? "Presentar la evaluación final →" : "Siguiente objetivo →";
-  b.onclick = () => {
-    if(ultimo){ iniciarQuiz(g.indice); }
-    else{ g.seccion += 1; verSeccion(); }
-  };
-  $("#siguiente").appendChild(b);
-  b.focus();
-}
-
-/* ===== mini-artefactos ===== */
-
-async function verArtefacto(indice, seccion){
-  const zona = $("#zona-artefacto");
-  const boton = $("#b-artefacto");
-  if(zona.querySelector("iframe")){ zona.innerHTML = ""; boton.textContent = "✨ Demo interactiva"; return; }
-  boton.disabled = true; boton.innerHTML = '<span class="spin"></span> Creando tu demo…';
+async function turnoConversatorio(mensaje){
+  const espera = burbujaEspera();
   try{
-    const r = await api(`/api/guia/${indice}/artefacto`, {seccion});
-    const iframe = document.createElement("iframe");
-    iframe.className = "artefacto";
-    iframe.setAttribute("sandbox", "allow-scripts");
-    iframe.srcdoc = r.html;
-    zona.innerHTML = "";
-    zona.appendChild(iframe);
-    boton.textContent = "✨ Ocultar demo";
-  }catch(e){ mostrarError(e.message); boton.textContent = "✨ Demo interactiva"; }
-  boton.disabled = false;
-}
-
-/* ===== chat en la guía ===== */
-
-function abrirChatGuia(indice, seccion){
-  const zona = $("#zona-chat");
-  if(zona.dataset.abierto){ zona.innerHTML = ""; delete zona.dataset.abierto; return; }
-  zona.dataset.abierto = "1";
-  zona.innerHTML = `<div class="panel-tutor">
-    <div class="dim" style="font-size:11.5px;margin-bottom:10px">
-      Tu tutor (una IA) te guía con pistas — no te dará la respuesta del checkpoint.</div>
-    <div id="chat-guia"></div>
-    <div class="chips" id="chat-sugerencias"></div>
-    <div class="chat-barra">
-      <input id="chat-guia-in" placeholder="Escribe tu duda…" autocomplete="off">
-      <button class="primario" id="chat-guia-btn">Enviar</button>
-    </div></div>`;
-  ["Explícamelo con otro ejemplo", "¿Para qué me sirve esto?", "No entiendo el código"]
-    .forEach(s => {
-      const b = document.createElement("button");
-      b.textContent = s;
-      b.onclick = () => enviarPreguntaGuia(indice, seccion, s);
-      $("#chat-sugerencias").appendChild(b);
-    });
-  const input = $("#chat-guia-in");
-  input.focus();
-  input.addEventListener("keydown", e => { if(e.key === "Enter") enviarPreguntaGuia(indice, seccion); });
-  $("#chat-guia-btn").onclick = () => enviarPreguntaGuia(indice, seccion);
-}
-
-async function enviarPreguntaGuia(indice, seccion, textoDirecto){
-  const input = $("#chat-guia-in");
-  const mensaje = textoDirecto || input.value.trim();
-  if(!mensaje) return;
-  if(!textoDirecto) input.value = "";
-  const chat = $("#chat-guia");
-  const yo = document.createElement("div"); yo.className = "msg yo"; yo.textContent = mensaje;
-  chat.appendChild(yo);
-  const espera = document.createElement("div");
-  espera.className = "msg tutor dim escribiendo"; espera.textContent = "El tutor escribe";
-  chat.appendChild(espera);
-  try{
-    const r = await api(`/api/guia/${indice}/pregunta`, {seccion, mensaje});
-    espera.classList.remove("escribiendo", "dim");
-    espera.innerHTML = `<div class="prosa">${md(r.texto)}</div>`;
+    const r = await api(`/api/conversatorio/${convIndice}`, {mensaje});
+    reemplazarEspera(espera, r.texto);
   }catch(e){ espera.remove(); mostrarError(e.message); }
-  espera.scrollIntoView({behavior:"smooth", block:"end"});
-  input.focus();
 }
 
-/* ===== Pyodide + Python Tutor ===== */
+/* ===== demo interactiva (✨ mini-artefacto) ===== */
+$("#b-demo").onclick = async () => {
+  if(modo === "creacion"){ toast("Primero creemos tu curso 😊"); return; }
+  burbuja("yo", "✨ Muéstrame una demo interactiva de esto");
+  const espera = burbujaEspera();
+  espera.innerHTML = '<span class="spin"></span> Creando tu demo interactiva (vale la pena: ~1-2 min)…';
+  try{
+    const r = await api("/api/artefacto", {});
+    espera.remove();
+    const card = burbuja("tutor ancha", `<div class="quien">✨ Demo interactiva — juega con ella</div>`);
+    const f = document.createElement("iframe");
+    f.className = "artefacto";
+    f.setAttribute("sandbox", "allow-scripts");
+    f.srcdoc = r.html;
+    card.appendChild(f);
+    $("#chat").scrollTop = $("#chat").scrollHeight;
+  }catch(e){ espera.remove(); mostrarError(e.message); }
+};
 
+/* ===== Pyodide + Python Tutor en los mensajes ===== */
 let pyodideListo = null;
-
 function cargarPyodide(){
   if(!pyodideListo){
-    pyodideListo = new Promise((resolver, rechazar) => {
+    pyodideListo = new Promise((res, rej) => {
       const s = document.createElement("script");
       s.src = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js";
-      s.onload = () => loadPyodide().then(resolver, rechazar);
-      s.onerror = () => rechazar(new Error("No se pudo descargar Python (¿sin internet?)."));
+      s.onload = () => loadPyodide().then(res, rej);
+      s.onerror = () => rej(new Error("No se pudo descargar Python (¿sin internet?)."));
       document.head.appendChild(s);
     });
   }
   return pyodideListo;
 }
-
 async function ejecutarPython(codigo, salida, boton){
   salida.className = "salida";
   boton.disabled = true; boton.textContent = "Ejecutando…";
-  salida.textContent = pyodideListo ? "▶ Ejecutando…" : "⏳ Preparando Python en tu navegador (solo la primera vez, ~10 s)…";
+  salida.textContent = pyodideListo ? "▶ Ejecutando…" : "⏳ Preparando Python (solo la primera vez, ~10 s)…";
   let py;
   try{ py = await cargarPyodide(); }
   catch(e){ salida.className = "salida err"; salida.textContent = e.message;
@@ -670,199 +573,74 @@ async function ejecutarPython(codigo, salida, boton){
   let error = null;
   try{ py.runPython(codigo); }
   catch(e){ error = String(e.message || e).split("\n").filter(l => !l.includes("pyodide")).slice(-8).join("\n"); }
-  const impreso = py.runPython("sys.stdout.getvalue()");
-  if(error){
-    salida.className = "salida err";
-    salida.textContent = (impreso ? impreso + "\n" : "") + error;
-  }else{
-    salida.textContent = impreso || "(corrió sin imprimir nada — agrega un print())";
-  }
+  const out = py.runPython("sys.stdout.getvalue()");
+  if(error){ salida.className = "salida err"; salida.textContent = (out ? out + "\n" : "") + error; }
+  else{ salida.textContent = out || "(corrió sin imprimir nada — agrega un print())"; }
   boton.disabled = false; boton.textContent = "▶ Ejecutar";
 }
-
-function urlPythonTutor(codigo){
-  return "https://pythontutor.com/render.html#code=" + encodeURIComponent(codigo) +
-         "&cumulative=false&py=311&curInstr=0";
-}
-
 function activarBloquesDeCodigo(raiz){
   if(lenguajeCurso !== "python") return;
-  raiz.querySelectorAll(".prosa pre").forEach(pre => {
-    if(pre.closest(".msg")) return;
+  raiz.querySelectorAll("pre").forEach(pre => {
+    if(pre.dataset.activado) return;
+    pre.dataset.activado = "1";
     const codigo = pre.textContent;
     if(!codigo.trim() || codigo.split("\n").length < 2) return;
     const barra = document.createElement("div");
     barra.className = "code-acciones";
-    barra.innerHTML = `<button>▶ Pruébalo aquí</button><button>🔍 Paso a paso</button>`;
+    barra.innerHTML = `<button>▶ Pruébalo</button><button>🔍 Paso a paso</button>`;
     const [bRun, bViz] = barra.querySelectorAll("button");
-    bViz.title = "Visualiza el estado de las variables línea a línea (Python Tutor)";
-    bViz.onclick = () => window.open(urlPythonTutor(codigo), "_blank");
+    bViz.onclick = () => window.open("https://pythontutor.com/render.html#code=" +
+      encodeURIComponent(codigo) + "&cumulative=false&py=311&curInstr=0", "_blank");
     bRun.onclick = () => {
       bRun.disabled = true;
       const runner = document.createElement("div");
       runner.className = "runner";
-      runner.innerHTML = `<textarea spellcheck="false" aria-label="Editor de código"></textarea>
+      runner.innerHTML = `<textarea spellcheck="false"></textarea>
         <div><button class="primario">▶ Ejecutar</button></div>
-        <div class="salida dim">Corre en TU navegador: edítalo y rómpelo sin miedo.</div>`;
+        <div class="salida dim">Corre en TU navegador: edítalo sin miedo.</div>`;
       runner.querySelector("textarea").value = codigo.trimEnd();
-      const salida = runner.querySelector(".salida");
-      const bEjecutar = runner.querySelector("button");
-      bEjecutar.onclick = () => ejecutarPython(runner.querySelector("textarea").value, salida, bEjecutar);
+      const bE = runner.querySelector("button");
+      bE.onclick = () => ejecutarPython(runner.querySelector("textarea").value,
+        runner.querySelector(".salida"), bE);
       barra.after(runner);
     };
     pre.after(barra);
   });
 }
 
-/* ===== evaluación ===== */
-
-function prefetchQuiz(indice){
-  if(quizPrefetch && quizPrefetch.indice === indice) return;
-  quizPrefetch = {indice, promesa: api(`/api/quiz/${indice}`, undefined, "POST").catch(() => null)};
+/* ===== composer ===== */
+function enviar(textoDirecto){
+  const area = $("#entrada");
+  const texto = (textoDirecto ?? area.value).trim();
+  if(!texto) return;
+  if(!textoDirecto) area.value = "";
+  area.style.height = "auto";
+  burbuja("yo", md(texto));
+  if(modo === "creacion") turnoCreacion(texto);
+  else if(modo === "conversatorio") turnoConversatorio(texto);
+  else turnoEstudio(texto);
 }
+$("#b-enviar").onclick = () => enviar();
+const area = $("#entrada");
+area.addEventListener("keydown", e => {
+  if(e.key === "Enter" && !e.shiftKey){ e.preventDefault(); enviar(); }
+});
+area.addEventListener("input", () => {
+  area.style.height = "auto";
+  area.style.height = Math.min(120, area.scrollHeight) + "px";
+});
 
-async function iniciarQuiz(indice){
-  guiaActual = null;
-  $("#contenido").innerHTML = `<div class="tarjeta lectura"><h2>Evaluación · unidad ${indice + 1}</h2>
-    <div id="q-progreso" style="margin-top:8px"></div></div>` +
-    Array.from({length: 2}, () => `<div class="tarjeta lectura">
-      <div class="sk" style="height:15px;width:70%;margin-bottom:12px"></div>
-      <div class="sk" style="height:40px;margin-bottom:8px"></div>
-      <div class="sk" style="height:40px"></div></div>`).join("");
-  const usarPrefetch = quizPrefetch && quizPrefetch.indice === indice;
-  const parar = usarPrefetch ? () => {} : loaderFases($("#q-progreso"), [
-    "Repasando lo que estudiaste…", "Escribiendo preguntas de comprensión…", "Verificando cada respuesta…",
-  ], 45000);
-  let quiz = null;
-  try{
-    quiz = usarPrefetch ? await quizPrefetch.promesa : null;
-    if(!quiz) quiz = await api(`/api/quiz/${indice}`, undefined, "POST");
-  }catch(e){ parar(); mostrarError(e.message); cargarEstado(true); return; }
-  parar();
-  quizPrefetch = null;
-  $("#contenido").innerHTML = `<div class="tarjeta lectura"><h2>Evaluación · unidad ${indice + 1}</h2>
-    <p class="dim" style="margin-bottom:14px">Apruebas con 70+. Con calma: puedes reintentar las veces que necesites, con preguntas nuevas.</p>
-    <div id="q-resumen-error"></div>
-    <form id="preguntas"></form><button class="primario" id="calificar">Calificar</button></div>`;
-  quiz.preguntas.forEach((p, i) => {
-    const div = document.createElement("fieldset");
-    div.className = "checkpoint";
-    div.style.cssText = "margin-bottom:12px;border:none";
-    div.innerHTML = `<legend class="titulo-cp">Pregunta ${i + 1} de ${quiz.preguntas.length}</legend>
-      <div class="prosa">${md(p.enunciado)}</div>` +
-      p.opciones.map((op, j) =>
-        `<label class="opcion"><input type="radio" name="p${i}" value="${j}" style="margin-top:3px">
-         <span>${md(op)}</span></label>`).join("");
-    $("#preguntas").appendChild(div);
-  });
-  $("#calificar").onclick = async () => {
-    const respuestas = quiz.preguntas.map((_, i) => {
-      const marcada = document.querySelector(`input[name="p${i}"]:checked`);
-      return marcada ? Number(marcada.value) : -1;
-    });
-    const faltantes = respuestas.map((r, i) => r === -1 ? i + 1 : null).filter(Boolean);
-    if(faltantes.length){
-      $("#q-resumen-error").innerHTML = `<div class="feedback pista" role="alert">
-        Te falta responder: pregunta${faltantes.length > 1 ? "s" : ""} ${faltantes.join(", ")}.</div>`;
-      return;
-    }
-    const boton = $("#calificar");
-    boton.disabled = true; boton.textContent = "Calificando…";
-    try{
-      const r = await api(`/api/quiz/${indice}/calificar`, {respuestas});
-      verResultado(indice, r);
-    }catch(e){ mostrarError(e.message); boton.disabled = false; boton.textContent = "Calificar"; }
-  };
-}
-
-function verResultado(indice, r){
-  actualizarPuntos(r.puntos_totales);
-  let html = `<div class="tarjeta lectura ${r.aprobado ? "celebra" : ""}">`;
-  if(r.aprobado){
-    html += `<h2 class="ok">🎉 Unidad aprobada · ${r.nota}/100</h2>
-      <p class="dim" style="margin:8px 0 16px">Sumaste ⭐ y desbloqueaste la siguiente unidad. Esto ya es tuyo.</p>`;
-  }else{
-    const buenas = r.detalle.filter(d => d.acierto).length;
-    html += `<h2>${buenas} de ${r.detalle.length} — cerremos esas brechas</h2>
-      <p class="dim" style="margin:8px 0 16px">Aún no llegas a ${r.nota_aprobatoria}, y está bien:
-      conversa tus dudas con el tutor y reintenta con preguntas nuevas.</p>`;
-  }
-  r.detalle.forEach((d, i) => {
-    html += `<div class="checkpoint" style="margin-bottom:10px">${d.acierto ? "✅" : "❌"}
-      <b>P${i + 1}</b> — elegiste: <span class="prosa">${md(d.elegida)}</span>`;
-    if(!d.acierto) html += `<div>Correcta: <span class="ok prosa">${md(d.correcta)}</span></div>`;
-    html += `<div class="dim prosa" style="margin-top:6px;font-size:13.5px">${md(d.explicacion)}</div></div>`;
-  });
-  html += `<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">`;
-  if(r.aprobado){
-    html += `<button class="primario" id="b-volver">Siguiente unidad →</button>`;
-  }else{
-    html += `<button class="primario" id="b-conversatorio">💬 Conversar mis dudas</button>
-             <button id="b-reintentar">Reintentar (preguntas nuevas)</button>
-             <button class="sutil" id="b-volver">Volver al curso</button>`;
-  }
-  html += `</div></div>`;
-  $("#contenido").innerHTML = html;
-  $("#b-volver").onclick = () => cargarEstado(true);
-  const bc = $("#b-conversatorio");
-  if(bc) bc.onclick = () => iniciarConversatorio(indice, r);
-  const br = $("#b-reintentar");
-  if(br) br.onclick = () => iniciarQuiz(indice);
-  if(r.aprobado) toast(`+30 ⭐ · Unidad ${indice + 1} aprobada`);
-  cargarEstado(false);
-}
-
-/* ===== conversatorio ===== */
-
-async function iniciarConversatorio(indice, resultado){
-  $("#contenido").innerHTML = `<div class="tarjeta lectura"><h2>💬 Cerremos tus dudas</h2>
-    <p class="dim" style="margin-bottom:12px">Tu tutor (una IA que puede equivocarse) te guía con preguntas,
-    no con respuestas hechas. Cuando te sientas al día, reintenta: las preguntas serán nuevas.</p>
-    <div id="chat"></div>
-    <div class="chips" id="conv-sugerencias"></div>
-    <div class="chat-barra">
-      <input id="chat-entrada" placeholder="Tu respuesta o tu duda…" autocomplete="off">
-      <button class="primario" id="chat-enviar">Enviar</button>
-    </div>
-    <div style="margin-top:12px"><button id="chat-reintentar">Ya estoy listo: reintentar →</button></div>
-    </div>`;
-  const falladas = (resultado?.detalle || []).map((d, i) => !d.acierto ? i + 1 : null).filter(Boolean);
-  falladas.slice(0, 3).forEach(n => {
-    const b = document.createElement("button");
-    b.textContent = `Explícame la pregunta ${n}`;
-    b.onclick = () => turnoConversatorio(indice, false, `Explícame en qué me equivoqué en la pregunta ${n}`);
-    $("#conv-sugerencias").appendChild(b);
-  });
-  $("#chat-enviar").onclick = () => turnoConversatorio(indice);
-  const input = $("#chat-entrada");
-  input.addEventListener("keydown", e => { if(e.key === "Enter") turnoConversatorio(indice); });
-  $("#chat-reintentar").onclick = () => iniciarQuiz(indice);
-  await turnoConversatorio(indice, true);
-  input.focus();
-}
-
-async function turnoConversatorio(indice, apertura, textoDirecto){
-  const entrada = $("#chat-entrada");
-  const mensaje = apertura ? "" : (textoDirecto || entrada.value.trim());
-  if(!apertura && !mensaje) return;
-  if(!apertura && !textoDirecto) entrada.value = "";
-  if(!apertura){
-    const yo = document.createElement("div"); yo.className = "msg yo"; yo.textContent = mensaje;
-    $("#chat").appendChild(yo);
-  }
-  const espera = document.createElement("div");
-  espera.className = "msg tutor dim escribiendo";
-  espera.textContent = "El tutor escribe";
-  $("#chat").appendChild(espera);
-  try{
-    const r = await api(`/api/conversatorio/${indice}`, {mensaje});
-    espera.classList.remove("escribiendo", "dim");
-    espera.innerHTML = `<div class="prosa">${md(r.texto)}</div>`;
-  }catch(e){ espera.remove(); mostrarError(e.message); }
-  espera.scrollIntoView({behavior:"smooth", block:"end"});
-}
-
-cargarEstado(true);
+/* ===== arranque ===== */
+(async () => {
+  const e = await cargarEstado();
+  if(!e || !e.perfil){ arrancarCreacion(); return; }
+  modo = "estudio";
+  burbujaTutor(`**¡Volviste!** 🔥 Tu plan está a la derecha. Seguimos en la **unidad ${e.unidad_actual + 1}** —
+responde para continuar, pregunta lo que quieras, o toca ↩ Repasar en cualquier unidad del plan.`);
+  ponerContexto(`<span class="avance">Unidad ${e.unidad_actual + 1}</span><span>Escribe para continuar</span>`,
+    [["Continuar donde iba →", () => { burbuja("yo", "Continuemos"); turnoEstudio(null, e.unidad_actual, true); }]]);
+  $("#entrada").focus();
+})();
 </script>
 </body>
 </html>
