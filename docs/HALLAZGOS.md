@@ -170,6 +170,26 @@ El estado de la conversación es efímero (sesión); lo durable es el guion.
 
 ---
 
+## 2026-07-20 — Hotfix web: 405 en iniciar lección/quiz
+
+**Contexto:** al probar la web en el navegador, "Estudiar" y "Evaluarme"
+fallaban con 405 Method Not Allowed.
+
+**Hallazgo:** bug del front: el helper `api()` solo usaba POST cuando había
+body, y los endpoints de iniciar lección y pedir quiz no llevan body → el
+navegador enviaba GET. Las pruebas del API (TestClient) no lo detectaron
+porque prueban el back, no el JS del front. Lección: el front necesita su
+propia pasada E2E; se agregó un script que replica las peticiones exactas
+del front contra un servidor real (15 chequeos, flujo completo de un
+estudiante: perfil → temario → lección conversada → quiz → progreso →
+errores 404/409).
+
+**Decisión/acción:** `api(ruta, cuerpo, metodo)` con POST explícito;
+`white-space: pre-wrap` en preguntas del quiz para no colapsar el código
+multilínea de los enunciados.
+
+---
+
 <!-- Plantilla:
 
 ## AAAA-MM-DD — Título corto

@@ -46,7 +46,7 @@
   .campo label{display:block;color:var(--dim);font-size:13px;margin-bottom:4px}
   .campo select,.campo input{width:100%;background:var(--panel2);border:1px solid #34405a;
       border-radius:8px;color:var(--tx);padding:9px 11px;font-size:14px}
-  .quiz-p{background:var(--panel);border:1px solid #2a3448;border-radius:12px;padding:14px;margin-bottom:12px}
+  .quiz-p{background:var(--panel);border:1px solid #2a3448;border-radius:12px;padding:14px;margin-bottom:12px;white-space:pre-wrap}
   .quiz-p pre{background:#0b0f18;border-radius:8px;padding:10px;overflow-x:auto;margin:8px 0;font-size:13px}
   .opcion{display:block;margin:6px 0;padding:8px 10px;border:1px solid #2a3448;border-radius:8px;cursor:pointer}
   .opcion:hover{border-color:var(--acc2)}
@@ -79,9 +79,14 @@ function mostrarError(texto){
   setTimeout(() => caja.style.display = "none", 6000);
 }
 
-async function api(ruta, cuerpo){
-  const opciones = cuerpo === undefined ? {} :
-    {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(cuerpo)};
+async function api(ruta, cuerpo, metodo){
+  // Los POST sin body (iniciar lección, pedir quiz) deben declararse con
+  // metodo="POST": un fetch sin opciones sería GET y el API responde 405.
+  const usarPost = metodo === "POST" || cuerpo !== undefined;
+  const opciones = usarPost
+    ? {method:"POST", headers:{"Content-Type":"application/json"},
+       body:JSON.stringify(cuerpo ?? {})}
+    : {};
   const r = await fetch(ruta, opciones);
   if(!r.ok){
     const datos = await r.json().catch(() => ({}));
@@ -206,7 +211,7 @@ async function iniciarLeccion(indice, titulo){
   verChat(`Unidad ${indice + 1}: ${titulo}`);
   const espera = burbuja("sistema", "El tutor está preparando tu lección…");
   try{
-    const r = await api(`/api/leccion/${indice}/iniciar`);
+    const r = await api(`/api/leccion/${indice}/iniciar`, undefined, "POST");
     espera.remove();
     burbuja("tutor", "🎯 Al terminar sabrás:\n" + r.objetivos.map(o => "• " + o).join("\n") +
       "\n\nRuta: " + r.ruta.join(" → "), false);
@@ -249,7 +254,7 @@ async function iniciarQuiz(indice, titulo){
   $("#contenido").innerHTML = `<div class="tarjeta"><h2>Quiz — unidad ${indice + 1}</h2>
     <p class="dim"><span class="spin"></span> El tutor está escribiendo tus preguntas…</p></div>`;
   let quiz;
-  try{ quiz = await api(`/api/quiz/${indice}`); }
+  try{ quiz = await api(`/api/quiz/${indice}`, undefined, "POST"); }
   catch(e){ mostrarError(e.message); verBienvenida(); return; }
   const cont = $("#contenido");
   cont.innerHTML = `<div style="overflow-y:auto;padding:20px"><h2 style="margin-bottom:14px">Quiz — unidad ${indice + 1}</h2>
