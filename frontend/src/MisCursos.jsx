@@ -3,6 +3,10 @@ import {
   ActionIcon, Badge, Box, Button, Card, Collapse, Container, Group, Menu,
   Modal, Progress, SimpleGrid, Text, TextInput, ThemeIcon, Title,
 } from '@mantine/core'
+import {
+  IconArchive, IconArchiveOff, IconChevronDown, IconChevronUp, IconDots,
+  IconDownload, IconPencil, IconPlus, IconTrash,
+} from '@tabler/icons-react'
 import { api } from './api.js'
 import { avisar, avisarError } from './App.jsx'
 
@@ -25,7 +29,7 @@ export default function MisCursos({ onEntrar, onNuevo }) {
   const archivar = async (c, valor) => {
     try {
       await api(`/api/cursos/${c.id}`, { archivado: valor }, 'PATCH')
-      avisar(valor ? 'Curso archivado 📦' : 'Curso restaurado')
+      avisar(valor ? 'Curso archivado' : 'Curso restaurado')
       cargar()
     } catch (e) { avisarError(e) }
   }
@@ -41,7 +45,7 @@ export default function MisCursos({ onEntrar, onNuevo }) {
           style={{ borderStyle: 'dashed', cursor: 'pointer', textAlign: 'left', width: '100%' }}
           onClick={onNuevo} aria-label="Crear un curso nuevo">
           <Group>
-            <ThemeIcon size={38} radius="xl" variant="light" color="indigo">＋</ThemeIcon>
+            <ThemeIcon size={38} radius="xl" variant="light" color="indigo"><IconPlus size={20} stroke={1.8} /></ThemeIcon>
             <Box>
               <Text fw={700}>Nuevo curso</Text>
               <Text size="sm" c="dimmed">Dale un prompt al tutor y diseñen el curso juntos</Text>
@@ -58,9 +62,10 @@ export default function MisCursos({ onEntrar, onNuevo }) {
 
       {archivados.length > 0 && (
         <Box mt="xl">
-          <Button variant="subtle" size="compact-sm"
+          <Button variant="subtle" size="compact-sm" color="gray"
+            rightSection={verArchivados ? <IconChevronUp size={14} /> : <IconChevronDown size={14} />}
             onClick={() => setVerArchivados(!verArchivados)}>
-            📦 Archivados ({archivados.length}) {verArchivados ? '▴' : '▾'}
+            Archivados ({archivados.length})
           </Button>
           <Collapse in={verArchivados}>
             <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md" mt="sm">
@@ -94,20 +99,20 @@ function TarjetaCurso({ c, onEntrar, onRenombrar, onArchivar, onBorrar }) {
           {c.total > 0 && <Text size="xs" c="dimmed">{c.aprobadas}/{c.total} aprobadas</Text>}
           <Menu position="bottom-end" withinPortal>
             <Menu.Target>
-              <ActionIcon variant="subtle" color="gray" aria-label="Opciones del curso">⋯</ActionIcon>
+              <ActionIcon variant="subtle" color="gray" aria-label="Opciones del curso"><IconDots size={16} /></ActionIcon>
             </Menu.Target>
             <Menu.Dropdown>
-              <Menu.Item onClick={onRenombrar}>✏️ Renombrar</Menu.Item>
-              <Menu.Item onClick={onArchivar}>
-                {c.archivado ? '📤 Restaurar' : '📦 Archivar'}
+              <Menu.Item leftSection={<IconPencil size={14} />} onClick={onRenombrar}>Renombrar</Menu.Item>
+              <Menu.Item leftSection={c.archivado ? <IconArchiveOff size={14} /> : <IconArchive size={14} />} onClick={onArchivar}>
+                {c.archivado ? 'Restaurar' : 'Archivar'}
               </Menu.Item>
               {c.total > 0 && (
-                <Menu.Item component="a" href={`/api/cursos/${c.id}/exportar`}>
-                  ⬇️ Exportar (.zip)
+                <Menu.Item component="a" leftSection={<IconDownload size={14} />} href={`/api/cursos/${c.id}/exportar`}>
+                  Exportar (.zip)
                 </Menu.Item>
               )}
               <Menu.Divider />
-              <Menu.Item color="red" onClick={onBorrar}>🗑 Borrar curso…</Menu.Item>
+              <Menu.Item color="red" leftSection={<IconTrash size={14} />} onClick={onBorrar}>Borrar curso…</Menu.Item>
             </Menu.Dropdown>
           </Menu>
         </Group>
@@ -129,7 +134,7 @@ function ModalRenombrar({ datos, onCerrar, onListo }) {
     if (!nombre.trim()) return
     try {
       await api(`/api/cursos/${datos.id}`, { nombre: nombre.trim() }, 'PATCH')
-      avisar('Nombre guardado ✏️')
+      avisar('Nombre guardado')
       onListo()
     } catch (e) { avisarError(e) }
   }
@@ -153,7 +158,7 @@ function ModalBorrar({ datos, onCerrar, onListo }) {
   const borrar = async () => {
     try {
       await api(`/api/cursos/${datos.id}`, undefined, 'DELETE')
-      avisar('Curso movido a la papelera 🗑')
+      avisar('Curso movido a la papelera')
       onListo()
     } catch (e) { avisarError(e) }
   }

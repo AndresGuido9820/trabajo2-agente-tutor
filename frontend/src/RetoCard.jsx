@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Badge, Box, Button, Group, Stack, Text, Textarea } from '@mantine/core'
+import { IconBulb, IconCheck, IconCode } from '@tabler/icons-react'
 import { api } from './api.js'
 import { avisar, avisarError } from './App.jsx'
 import { Mensaje } from './Chat.jsx'
@@ -78,7 +79,7 @@ export default function RetoCard({ reto, unidad, onSuperado, onMensaje }) {
         try {
           const respuesta = await api('/api/estudio/reto-superado',
             { unidad, objetivo: reto.objetivo })
-          avisar('+10 ⭐ ¡Reto superado!')
+          avisar('+10 puntos: ¡reto superado!')
           onSuperado?.(respuesta.texto)
         } catch { /* 409: ya estaba superado, sin doble celebración */ }
       }
@@ -101,7 +102,8 @@ export default function RetoCard({ reto, unidad, onSuperado, onMensaje }) {
   return (
     <Mensaje rol="tutor" ancho>
       <Group gap={6} mb={4}>
-        <Text size="xs" c="dimmed" fw={700}>⌨️ RETO DE CÓDIGO</Text>
+        <IconCode size={15} stroke={1.8} color="var(--mantine-color-dimmed)" />
+        <Text size="xs" c="dimmed" fw={700} lts="0.04em">RETO DE CÓDIGO</Text>
         {superado && <Badge size="xs" color="teal">✓ superado</Badge>}
       </Group>
       <Text size="sm" mb="sm">{reto.enunciado}</Text>
@@ -118,9 +120,9 @@ export default function RetoCard({ reto, unidad, onSuperado, onMensaje }) {
         </Stack>
       )}
       <Group gap="xs" mt="sm">
-        <Button size="xs" onClick={verificar} loading={corriendo}>✓ Verificar</Button>
-        <Button size="xs" variant="default" onClick={pista} loading={pidiendo}>
-          💡 Pista
+        <Button size="xs" leftSection={<IconCheck size={14} />} onClick={verificar} loading={corriendo}>Verificar</Button>
+        <Button size="xs" variant="default" leftSection={<IconBulb size={14} />} onClick={pista} loading={pidiendo}>
+          Pista
         </Button>
       </Group>
       <Box mt={6}>
