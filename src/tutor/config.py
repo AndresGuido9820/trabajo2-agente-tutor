@@ -59,6 +59,8 @@ PUNTOS_ACIERTO_INTERMEDIO = 5
 # Evaluaciones robustas (plan/v2/HU-26): niveles Bloom con peso en la nota,
 # tamaño mínimo del intento y ventana de no-repetición del banco.
 PESOS_NIVEL = {"recordar": 0.5, "comprender": 1.0, "aplicar": 1.5}
+# Verificación de artefactos (plan/v2/HU-27): tamaño máximo del HTML.
+ARTEFACTO_MAX_KB = 40
 MIN_PREGUNTAS_EVALUACION = 6
 INTENTOS_SIN_REPETIR = 2
 MIN_SECCIONES_GUIA = 3
