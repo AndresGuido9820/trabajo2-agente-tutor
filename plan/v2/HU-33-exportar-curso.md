@@ -31,12 +31,12 @@ GET /api/cursos/{id}/exportar → application/zip
 
 ## Tareas
 
-- [ ] `exportar.py` (módulo nuevo): `paquete_zip(dir_curso) -> bytes` —
+- [x] `exportar.py` (módulo nuevo): `paquete_zip(dir_curso) -> bytes` —
       lee BD (plan, chats por canal, progreso) y arma los .md.
-- [ ] `web.py`: endpoint con `Response(content=..., media_type=zip,
+- [x] `web.py`: endpoint con `Response(content=..., media_type=zip,
       headers Content-Disposition)`.
-- [ ] Front: opción en el menú ⋯ (usa `window.location` al endpoint).
-- [ ] Pruebas: estructura del zip, transcripción con roles e hitos,
+- [x] Front: opción en el menú ⋯ (usa `window.location` al endpoint).
+- [x] Pruebas: estructura del zip, transcripción con roles e hitos,
       resultados correctos, 404/409.
 
 ## Casos borde

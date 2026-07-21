@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any
 
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -37,6 +37,7 @@ from tutor.curso import (
 )
 from tutor.errores import ErrorBloqueada, ErrorConfiguracion, ErrorLLM
 from tutor.evaluacion import Quiz
+from tutor.exportar import paquete_zip
 from tutor.llm import ClienteLLM, ClienteOpenAI, pedir_json
 from tutor.models import Nivel, Objetivo, PerfilEstudiante
 from tutor.perfil import guardar_perfil, validar_perfil_extraido
@@ -369,6 +370,23 @@ def crear_app(
     def api_crear_curso_nuevo() -> dict[str, Any]:
         """Crea un curso vacío (se diseña conversando) y lo activa."""
         return {"id": estado.crear_curso()}
+
+    @app.get("/api/cursos/{curso_id}/exportar")
+    def api_exportar_curso(curso_id: int) -> Response:
+        """Paquete de estudio del curso (.zip de Markdown, HU-33)."""
+        if curso_id not in estado.sesiones:
+            raise HTTPException(404, f"No existe el curso {curso_id}.")
+        try:
+            datos = paquete_zip(estado.sesiones[curso_id].dir)
+        except ValueError as error:
+            raise HTTPException(409, str(error)) from error
+        return Response(
+            content=datos,
+            media_type="application/zip",
+            headers={
+                "Content-Disposition": f'attachment; filename="curso-{curso_id}.zip"'
+            },
+        )
 
     @app.post("/api/cursos/{curso_id}/activar")
     def api_activar_curso(curso_id: int) -> dict[str, Any]:
