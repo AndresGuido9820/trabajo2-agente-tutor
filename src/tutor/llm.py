@@ -18,6 +18,7 @@ from typing import Any, Protocol
 
 from openai import APIConnectionError, APIStatusError, OpenAI
 
+from tutor import db
 from tutor.config import (
     BASE_BACKOFF_SEGUNDOS,
     MAX_REINTENTOS_API,
@@ -36,8 +37,12 @@ _CODIGOS_REINTENTABLES = frozenset({429})
 class ClienteLLM(Protocol):
     """Contrato mínimo que el resto del código conoce del LLM."""
 
-    def generar(self, system: str, prompt: str) -> str:
-        """Envía un prompt y devuelve el texto de la respuesta."""
+    def generar(self, system: str, prompt: str, carril: str = "potente") -> str:
+        """Envía un prompt y devuelve el texto de la respuesta.
+
+        ``carril`` elige el modelo (HU-39): "potente" para generaciones
+        estructuradas, "chat" para turnos conversacionales.
+        """
         ...
 
 
@@ -89,26 +94,44 @@ class ClienteOpenAI:
         configuracion: Configuracion,
         cliente: OpenAI | None = None,
         dormir: Callable[[float], None] = time.sleep,
+        registrar: Callable[..., None] | None = None,
     ) -> None:
-        """Inicializa el cliente; si no se inyecta SDK, lo crea con timeout."""
-        self._modelo = configuracion.modelo
+        """Inicializa el cliente; si no se inyecta SDK, lo crea con timeout.
+
+        Args:
+            configuracion: Configuración efectiva (api key, modelos).
+            cliente: Cliente del SDK ya construido (inyectable para pruebas).
+            dormir: Función de espera (inyectable para pruebas sin demoras).
+            registrar: Hook de registro de uso; por defecto anota en la BD
+                global ``dir_datos/uso.db`` (HU-39). Nunca rompe la llamada.
+        """
+        self._modelos = {
+            "potente": configuracion.modelo,
+            "chat": configuracion.modelo_chat or configuracion.modelo,
+        }
         self._cliente = cliente or OpenAI(
             api_key=configuracion.api_key, timeout=TIMEOUT_API_SEGUNDOS
         )
         self._dormir = dormir
+        ruta_uso = configuracion.dir_datos / "uso.db"
+        self._registrar = registrar or (
+            lambda **campos: db.anotar_uso(ruta_uso, **campos)
+        )
 
-    def generar(self, system: str, prompt: str) -> str:
+    def generar(self, system: str, prompt: str, carril: str = "potente") -> str:
         """Envía un prompt con reintentos y devuelve el texto de la respuesta.
 
         Raises:
             ErrorLLM: Ante error no reintentable, respuesta vacía o al agotar
                 ``MAX_REINTENTOS_API`` intentos.
         """
+        modelo = self._modelos.get(carril, self._modelos["potente"])
         ultimo_error: Exception | None = None
         for intento in range(MAX_REINTENTOS_API):
+            inicio = time.monotonic()
             try:
                 respuesta = self._cliente.chat.completions.create(
-                    model=self._modelo,
+                    model=modelo,
                     max_completion_tokens=MAX_TOKENS_RESPUESTA,
                     messages=[
                         {"role": "system", "content": system},
@@ -120,6 +143,19 @@ class ClienteOpenAI:
                     # Ocurre cuando el modelo agota el presupuesto en tokens
                     # de razonamiento (gpt-5): transitorio, se reintenta.
                     raise _RespuestaVacia("La API devolvió una respuesta vacía.")
+                duracion_ms = int((time.monotonic() - inicio) * 1000)
+                logger.info("LLM %s/%s respondió en %d ms", carril, modelo, duracion_ms)
+                uso = getattr(respuesta, "usage", None)
+                try:
+                    self._registrar(
+                        carril=carril,
+                        modelo=modelo,
+                        tokens_prompt=getattr(uso, "prompt_tokens", None),
+                        tokens_salida=getattr(uso, "completion_tokens", None),
+                        duracion_ms=duracion_ms,
+                    )
+                except Exception:  # el registro jamás rompe la generación
+                    logger.warning("No se pudo registrar el uso del LLM")
                 return contenido
             except (APIConnectionError, APIStatusError, _RespuestaVacia) as error:
                 if not _es_reintentable(error):
@@ -163,6 +199,7 @@ def pedir_json[T](
     system: str,
     prompt: str,
     validar: Callable[[Any], T],
+    carril: str = "potente",
 ) -> T:
     """Pide una respuesta JSON al LLM y la valida, reintentando el parseo.
 
@@ -175,6 +212,7 @@ def pedir_json[T](
         prompt: Prompt del usuario; debe describir el esquema esperado.
         validar: Función que convierte el JSON crudo al tipo de dominio y
             lanza ``ValueError``/``KeyError``/``TypeError`` si no cumple.
+        carril: Carril de modelo a usar (HU-39): "potente" o "chat".
 
     Returns:
         El objeto validado.
@@ -185,7 +223,7 @@ def pedir_json[T](
     prompt_actual = prompt
     ultimo_error: Exception | None = None
     for _ in range(MAX_REINTENTOS_PARSEO + 1):
-        respuesta = cliente.generar(system, prompt_actual)
+        respuesta = cliente.generar(system, prompt_actual, carril)
         try:
             return validar(extraer_json(respuesta))
         except (json.JSONDecodeError, ValueError, KeyError, TypeError) as error:

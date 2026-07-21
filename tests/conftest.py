@@ -19,9 +19,11 @@ class ClienteLLMFalso:
     def __init__(self, respuestas):
         self.respuestas = list(respuestas)
         self.llamadas = []
+        self.carriles = []  # carril de cada llamada, en orden (HU-39)
 
-    def generar(self, system: str, prompt: str) -> str:
+    def generar(self, system: str, prompt: str, carril: str = "potente") -> str:
         self.llamadas.append((system, prompt))
+        self.carriles.append(carril)
         if not self.respuestas:
             raise AssertionError("ClienteLLMFalso se quedó sin respuestas.")
         siguiente = self.respuestas.pop(0)
@@ -40,6 +42,11 @@ class SDKFalso:
         self._resultados = list(resultados)
         self.llamadas = []
         self.chat = SimpleNamespace(completions=SimpleNamespace(create=self._create))
+
+    @property
+    def modelos(self):
+        """Modelo pedido en cada llamada, en orden (HU-39)."""
+        return [k["model"] for k in self.llamadas]
 
     def _create(self, **kwargs):
         self.llamadas.append(kwargs)

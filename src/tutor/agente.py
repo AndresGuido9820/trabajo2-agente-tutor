@@ -499,6 +499,7 @@ class Agente:
         return self._cliente.generar(
             system=system_tutor(self.perfil),
             prompt=prompt_reencuentro(ultimos, "; ".join(partes)),
+            carril="chat",
         )
 
     def preguntar_guia(self, indice: int, seccion: int, mensaje: str) -> str:
@@ -527,6 +528,7 @@ class Agente:
         respuesta = self._cliente.generar(
             system=system_charla(self.perfil),
             prompt=prompt_charla(contexto, historial, mensaje),
+            carril="chat",
         )
         historial.append((mensaje, respuesta))
         del historial[:-MAX_TURNOS_CHARLA]
@@ -555,6 +557,7 @@ class Agente:
                 desempeno=self._resumen_desempeno(indice),
             ),
             prompt=prompt_charla(contexto, historial, mensaje or "(inicia tú)"),
+            carril="chat",
         )
         historial.append((mensaje, respuesta))
         del historial[:-MAX_TURNOS_CHARLA]
@@ -615,6 +618,7 @@ class Agente:
                     mensaje=None,
                     apertura=apertura,
                 ),
+                carril="chat",
             )
             sesion.historial.append((apertura or "", texto))
             del sesion.historial[:-MAX_TURNOS_CHARLA]
@@ -638,6 +642,7 @@ class Agente:
                 mensaje=mensaje,
             ),
             validar=_validar_avance,
+            carril="chat",
         )
         if turno["avanza"] and hay_siguiente:
             sesion.paso += 1
@@ -706,6 +711,7 @@ class Agente:
         respuesta = self._cliente.generar(
             system=system_charla(self.perfil),
             prompt=prompt_charla(leccion, historial, pregunta),
+            carril="chat",
         )
         historial.append((pregunta, respuesta))
         del historial[:-MAX_TURNOS_CHARLA]
