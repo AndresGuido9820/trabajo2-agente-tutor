@@ -541,6 +541,11 @@ def crear_app(
         estado.anotar(f"u{indice}", "tutor", texto)
         return {"texto": texto}
 
+    @app.get("/api/estadisticas")
+    def api_estadisticas() -> dict[str, Any]:
+        """Métricas de aprendizaje del curso activo (vista Mi progreso)."""
+        return _agente().estadisticas()
+
     @app.get("/api/conversaciones")
     def api_conversaciones() -> dict[str, Any]:
         """Cuántos mensajes tiene cada conversación (para la barra lateral)."""

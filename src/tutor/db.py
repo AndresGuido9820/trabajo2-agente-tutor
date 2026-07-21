@@ -189,6 +189,19 @@ def ultimo_mensaje_en(ruta: Path, canal: str) -> str | None:
     return str(fila[0]) if fila else None
 
 
+def actividad_chat(ruta: Path, dias: int = 14) -> dict[str, int]:
+    """Mensajes por día (fecha ISO → conteo), últimos ``dias`` con actividad."""
+    if not ruta.exists():
+        return {}
+    with abrir(ruta) as conexion:
+        filas = conexion.execute(
+            "SELECT substr(creado_en, 1, 10) AS fecha, COUNT(*) FROM chat "
+            "GROUP BY fecha ORDER BY fecha DESC LIMIT ?",
+            (dias,),
+        ).fetchall()
+    return dict(sorted(filas))
+
+
 def resumen_chats(ruta: Path) -> dict[str, int]:
     """Cuántos mensajes tiene cada conversación (barra lateral)."""
     if not ruta.exists():

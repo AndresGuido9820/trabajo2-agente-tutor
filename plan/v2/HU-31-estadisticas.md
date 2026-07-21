@@ -40,12 +40,12 @@ GET /api/estadisticas → {
 
 ## Tareas
 
-- [ ] `progreso.py`: `mejor_racha` persistente.
-- [ ] `agente.py`/`web.py`: `estadisticas()` agregando resultados + chat
+- [x] `progreso.py`: `mejor_racha` persistente.
+- [x] `agente.py`/`web.py`: `estadisticas()` agregando resultados + chat
       (GROUP BY fecha) + conceptos (conteo por concepto de Resultados).
-- [ ] Front: vista `Estadisticas.jsx` (Mantine: Cards, Progress, barras
+- [x] Front: vista `Estadisticas.jsx` (Mantine: Cards, Progress, barras
       simples con divs — sin librería de charts).
-- [ ] Pruebas: agregación por día, clasificación dominado/repasar, mejor
+- [x] Pruebas: agregación por día, clasificación dominado/repasar, mejor
       racha persiste, totales coherentes.
 
 ## Casos borde
