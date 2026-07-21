@@ -1,25 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
+# Secretos y datos locales
+.env
+data/
+data-respaldo*/
+
+# Frontend
+frontend/node_modules/
+dist/
+# El build de la UI SÍ se versiona (FastAPI lo sirve):
 !src/tutor/static/dist/
 !src/tutor/static/dist/**
-# Frontend
-# Herramientas
-# Python
-# SO / editores
-# Secretos y datos locales
-*.egg-info/
-*.py[cod]
-.DS_Store
-.env
-.idea/
-.mypy_cache/
-.pytest_cache/
-.ruff_cache/
-.venv/
-.vscode/
-__pycache__/
-data-respaldo*/
-data/
-dist/
-entregables/video/*.mp4
+
+# Video demo (pesado: queda local)
 entregables/video/*.webm
-frontend/node_modules/
+entregables/video/*.mp4
+
+# SO / editores
+.DS_Store
+.idea/
+.vscode/
