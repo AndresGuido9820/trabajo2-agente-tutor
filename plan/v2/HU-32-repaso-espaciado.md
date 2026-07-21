@@ -33,12 +33,12 @@ nivel_intervalo: 0|1|2}]`.
 
 ## Tareas
 
-- [ ] `progreso.py`: cola con (re)programación 1-3-7.
-- [ ] `agente.py`: alimentar la cola desde fallos (quiz/checkpoint/
+- [x] `progreso.py`: cola con (re)programación 1-3-7.
+- [x] `agente.py`: alimentar la cola desde fallos (quiz/checkpoint/
       intermedios); armar el repaso desde el banco; calificar y reprogramar.
-- [ ] `web.py` + front: entrada lateral con contador, vista de repaso
+- [x] `web.py` + front: entrada lateral con contador, vista de repaso
       (reusa QuizCard), resumen final.
-- [ ] Pruebas: programación de intervalos, fallo→reinicio a 1 día,
+- [x] Pruebas: programación de intervalos, fallo→reinicio a 1 día,
       selección desde banco, sin vencidos.
 
 ## Casos borde

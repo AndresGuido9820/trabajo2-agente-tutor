@@ -12,6 +12,7 @@ import Clase from './Clase.jsx'
 import Diseno from './Diseno.jsx'
 import CreacionChat from './CreacionChat.jsx'
 import Estadisticas from './Estadisticas.jsx'
+import Repaso from './Repaso.jsx'
 
 export function avisar(mensaje, color = 'teal') {
   notifications.show({ message: mensaje, color, withBorder: true })
@@ -27,6 +28,7 @@ export default function App({ escala, cambiarEscala }) {
   const [convos, setConvos] = useState({})
   const [claseActiva, setClaseActiva] = useState(0)
   const [destacar, setDestacar] = useState(null)  // id de mensaje a resaltar (HU-37)
+  const [repaso, setRepaso] = useState(null)      // {pendientes, proximo} (HU-32)
 
   const refrescar = useCallback(async () => {
     try {
@@ -34,6 +36,7 @@ export default function App({ escala, cambiarEscala }) {
       const c = await api('/api/conversaciones')
       setEstado(e)
       setConvos(c.canales || {})
+      if (e?.perfil) api('/api/repaso').then(setRepaso).catch(() => {})
       return e
     } catch (e) {
       avisarError(e)
@@ -116,6 +119,9 @@ export default function App({ escala, cambiarEscala }) {
                   activa={vista === 'diseno'} onClick={() => setVista('diseno')} />
                 <NavItem icono="📈" etiqueta="Mi progreso" sub="Actividad, notas y conceptos"
                   activa={vista === 'stats'} onClick={() => setVista('stats')} />
+                <NavItem icono="🔁" etiqueta="Repaso del día"
+                  sub={repaso?.pendientes ? `${repaso.pendientes} para repasar` : 'Al día ✅'}
+                  activa={vista === 'repaso'} onClick={() => setVista('repaso')} />
                 <Text size="xs" c="dimmed" fw={700} tt="uppercase" px="xs" mt="xs">Clases</Text>
                 {estado.unidades.map((u) => (
                   <NavClase key={u.indice} u={u} convos={convos}
@@ -151,6 +157,7 @@ export default function App({ escala, cambiarEscala }) {
         )}
         {vista === 'diseno' && estado?.perfil && <Diseno onGuardado={refrescar} />}
         {vista === 'stats' && estado?.perfil && <Estadisticas irAClase={abrirClase} />}
+        {vista === 'repaso' && estado?.perfil && <Repaso refrescar={refrescar} />}
         {vista === 'clase' && estado?.perfil && (
           <Clase key={`${estado.curso_id}-${claseActiva}`} indice={claseActiva}
             unidad={estado.unidades[claseActiva]} lenguaje={estado.lenguaje}

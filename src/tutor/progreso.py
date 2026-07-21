@@ -21,6 +21,11 @@ logger = logging.getLogger(__name__)
 
 VERSION_ESQUEMA = 1
 
+# Repetición espaciada (HU-32): intervalos fijos en días. Un concepto
+# fallado vence mañana; cada acierto avanza al siguiente; tras el último
+# sale de la cola. Fallar en el repaso reinicia al primero.
+INTERVALOS_REPASO = [1, 3, 7]
+
 
 @dataclass(frozen=True)
 class Resultado:
@@ -63,6 +68,8 @@ class Progreso:
     mejor_racha: int = 0
     ultima_sesion: str = ""  # fecha ISO AAAA-MM-DD de la última sesión
     completadas: list[int] = field(default_factory=list)  # lecciones terminadas
+    # Cola de repaso espaciado (HU-32): ítems {concepto, clase, vence, nivel}.
+    cola_repaso: list[dict[str, Any]] = field(default_factory=list)
 
     def completar(self, unidad: int) -> None:
         """Marca la lección de la unidad como completada en el chat (HU-16)."""
@@ -105,6 +112,55 @@ class Progreso:
         """Cantidad de veces que se evaluó la unidad."""
         return sum(1 for r in self.resultados if r.unidad == unidad)
 
+    def _item_repaso(self, concepto: str, clase: int) -> dict[str, Any] | None:
+        """El ítem de la cola para (concepto, clase), si existe."""
+        for item in self.cola_repaso:
+            if item["concepto"] == concepto.lower() and item["clase"] == clase:
+                return item
+        return None
+
+    def programar_repaso(self, concepto: str, clase: int, hoy: str) -> None:
+        """Un fallo entra (o reinicia) en la cola: vence mañana, nivel 0."""
+        manana = (date.fromisoformat(hoy) + timedelta(days=1)).isoformat()
+        item = self._item_repaso(concepto, clase)
+        if item is None:
+            item = {"concepto": concepto.lower(), "clase": clase}
+            self.cola_repaso.append(item)
+        item["vence"] = manana
+        item["nivel"] = 0
+
+    def repasos_vencidos(self, hoy: str) -> list[dict[str, Any]]:
+        """Ítems vencidos hoy o antes, los más antiguos primero."""
+        vencidos = [i for i in self.cola_repaso if i["vence"] <= hoy]
+        return sorted(vencidos, key=lambda i: str(i["vence"]))
+
+    def resolver_repaso(
+        self, concepto: str, clase: int, acierto: bool, hoy: str
+    ) -> None:
+        """Reprograma un ítem tras repasarlo: avanza 1-3-7 o reinicia."""
+        item = self._item_repaso(concepto, clase)
+        if item is None:
+            return
+        if not acierto:
+            self.programar_repaso(concepto, clase, hoy)
+            return
+        nivel = int(item["nivel"]) + 1
+        if nivel >= len(INTERVALOS_REPASO):
+            self.cola_repaso.remove(item)  # dominado: sale de la cola
+            return
+        item["nivel"] = nivel
+        item["vence"] = (
+            date.fromisoformat(hoy) + timedelta(days=INTERVALOS_REPASO[nivel])
+        ).isoformat()
+
+    def purgar_repasos(self, total_clases: int) -> None:
+        """Quita ítems de clases que ya no existen (rediseño del curso)."""
+        self.cola_repaso = [i for i in self.cola_repaso if i["clase"] < total_clases]
+
+    def proximo_repaso(self) -> str | None:
+        """Fecha del próximo vencimiento, o ``None`` con la cola vacía."""
+        return min((str(i["vence"]) for i in self.cola_repaso), default=None)
+
     def conceptos_fallados_recientes(self, maximo: int = 6) -> list[str]:
         """Últimos conceptos fallados (sin duplicados, más reciente primero).
 
@@ -129,6 +185,7 @@ def guardar_progreso(progreso: Progreso, ruta: Path) -> None:
         "mejor_racha": progreso.mejor_racha,
         "ultima_sesion": progreso.ultima_sesion,
         "completadas": progreso.completadas,
+        "cola_repaso": progreso.cola_repaso,
         "vistas": {str(unidad): fecha for unidad, fecha in progreso.vistas.items()},
         "resultados": [
             {
@@ -165,6 +222,15 @@ def _parsear(datos: Any) -> Progreso:
         mejor_racha=int(datos.get("mejor_racha", datos.get("racha", 0))),
         ultima_sesion=str(datos.get("ultima_sesion", "")),
         completadas=[int(u) for u in datos.get("completadas", [])],
+        cola_repaso=[
+            {
+                "concepto": str(i["concepto"]),
+                "clase": int(i["clase"]),
+                "vence": str(i["vence"]),
+                "nivel": int(i["nivel"]),
+            }
+            for i in datos.get("cola_repaso", [])
+        ],
     )
 
 
