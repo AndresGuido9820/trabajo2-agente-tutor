@@ -598,14 +598,72 @@ Responde ÚNICAMENTE este JSON:
 }}"""
 
 
-def prompt_artefacto(objetivo: str, contenido: str, lenguaje: str) -> str:
+# Plantillas de artefacto por tipo de concepto (plan/v2/HU-27). La
+# clasificación es LOCAL (palabras clave, sin LLM); sin match → "estado".
+_CLAVES_PLANTILLA = {
+    "flujo": ("if", "condicional", "bucle", "while", "for", "iteraci", "ciclo"),
+    "datos": ("csv", "dataframe", "filtr", "groupby", "tabla", "columna", "datos"),
+    "funcion": ("funci", "parámetr", "parametr", "retorno", "def ", "argumento"),
+    "estado": ("variable", "asignaci", "tipo", "expresi"),
+}
+
+_INSTRUCCIONES_PLANTILLA = {
+    "estado": """PLANTILLA "estado": construye un panel de "celdas" con las
+variables del ejemplo como inputs o sliders editables. Al cambiar un valor
+se recalculan las variables dependientes y una tabla muestra en vivo
+`nombre → valor (tipo)`. La gracia: VER que asignar reemplaza el valor.""",
+    "flujo": """PLANTILLA "flujo": construye un stepper línea-a-línea. A la
+izquierda el código del ejemplo con la LÍNEA ACTUAL resaltada; botones
+⏮ ▶ ⏭ para retroceder/avanzar; a la derecha el estado de las variables en
+cada paso (y la iteración del bucle si aplica). La gracia: VER el orden
+real de ejecución.""",
+    "datos": """PLANTILLA "datos": construye una tabla con 6-10 filas de
+datos de ejemplo del dominio del estudiante y controles (select/inputs)
+para filtrar o agrupar. Muestra el ANTES y el DESPUÉS de la operación,
+lado a lado. La gracia: VER qué le hace la operación a los datos.""",
+    "funcion": """PLANTILLA "funcion": construye una caja
+entrada → proceso → salida. Los argumentos son inputs editables, un botón
+"llamar" ejecuta, y se visualiza el retorno y el cuerpo que se ejecutó
+(con los parámetros sustituidos). La gracia: VER que la función es una
+máquina reutilizable.""",
+}
+
+
+def clasificar_plantilla(conceptos: list[str]) -> str:
+    """Elige la plantilla de artefacto según los conceptos (HU-27, local)."""
+    texto = " ".join(conceptos).lower()
+    for plantilla in ("flujo", "datos", "funcion", "estado"):
+        if any(clave in texto for clave in _CLAVES_PLANTILLA[plantilla]):
+            return plantilla
+    return "estado"
+
+
+def prompt_artefacto(
+    objetivo: str,
+    contenido: str,
+    lenguaje: str,
+    plantilla: str | None = None,
+    errores: list[str] | None = None,
+) -> str:
     """Prompt de un mini-artefacto interactivo que ilustra la sección (HU-14).
 
     Inspirado en los Artifacts de Claude: una página HTML autocontenida y
     pequeña con la que el estudiante manipula el concepto y VE el efecto.
+    ``plantilla`` (HU-27) fija el tipo de interacción; ``errores`` activa
+    el modo corrección (la regeneración única tras fallar verificación).
     """
+    extra = ""
+    if plantilla:
+        extra = f"\n\n{_INSTRUCCIONES_PLANTILLA[plantilla]}"
+    if errores:
+        listado = "\n".join(f"- {e}" for e in errores)
+        extra += f"""
+
+IMPORTANTE — tu intento anterior NO pasó el control de calidad:
+{listado}
+Corrige TODOS esos problemas en esta versión."""
     return f"""Crea un MINI-ARTEFACTO interactivo que ilustre visualmente \
-este concepto para el estudiante (curso de {lenguaje}):
+este concepto para el estudiante (curso de {lenguaje}):{extra}
 
 Objetivo de la sección: {objetivo}
 Contenido que el estudiante acaba de leer:

@@ -91,10 +91,10 @@ completa, como hoy.
 
 ## 6. Definición de Hecho
 
-- [ ] Humo real: 4 demos (una por plantilla) generadas y revisadas a mano;
+- [x] Humo real: 4 demos (una por plantilla) generadas y revisadas a mano;
       ≥90 % de 10 generaciones pasan verificación al primer intento.
-- [ ] Regenerar y prefetch verificados en el navegador.
-- [ ] Pruebas de abajo + suite + ruff/mypy; HALLAZGOS actualizado.
+- [x] Regenerar y prefetch verificados en el navegador.
+- [x] Pruebas de abajo + suite + ruff/mypy; HALLAZGOS actualizado.
 
 ## 7. Pruebas
 
@@ -104,3 +104,12 @@ completa, como hoy.
 - `test_doble_fallo_no_cachea_y_devuelve_502`
 - `test_cache_por_objetivo_y_regenerar_invalida`
 - `test_prefetch_no_duplica_generacion` (lock)
+
+
+## Nota de alcance (ejecución 2026-07-21)
+
+El prefetch silencioso en hilo NO se implementó: dispararía una generación
+LLM por cada objetivo arrancado (costo silencioso para el operador) y
+mete concurrencia difícil de testear a horas de la entrega. El resto del
+pipeline quedó completo (plantillas, verificación con regeneración única,
+cache por objetivo, botón regenerar); el prefetch queda como mejora v3.

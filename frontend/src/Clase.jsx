@@ -221,12 +221,24 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
     } catch (e) { avisarError(e); return false }
   }
 
-  const demo = async () => {
-    agregar({ rol: 'yo', texto: '✨ Muéstrame una demo interactiva de esto' })
+  const demo = async (regenerar = false) => {
+    if (!regenerar) agregar({ rol: 'yo', texto: '✨ Muéstrame una demo interactiva de esto' })
     setEspera('Creando tu demo interactiva (vale la pena: ~1-2 min)…')
     try {
-      const r = await api('/api/artefacto', { unidad: indice })
-      agregar({ rol: 'demo', html: r.html })
+      // La demo ilustra el objetivo que la conversación está trabajando (HU-27).
+      const objetivo = avance?.objetivos_total ? avance.objetivo - 1 : null
+      const r = await api('/api/artefacto', { unidad: indice, objetivo, regenerar })
+      if (regenerar) {
+        setMensajes((prev) => {
+          const copia = prev.slice()
+          for (let i = copia.length - 1; i >= 0; i--) {
+            if (copia[i].rol === 'demo') { copia[i] = { ...copia[i], html: r.html }; break }
+          }
+          return copia
+        })
+      } else {
+        agregar({ rol: 'demo', html: r.html, plantilla: r.plantilla })
+      }
     } catch (e) { avisarError(e) }
     setEspera(null)
   }
@@ -266,7 +278,14 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
           if (m.rol === 'resultado') return <ResultadoCard key={i} r={m.r} onSiguiente={haySiguiente ? () => irAClase(indice + 1) : null} onReintentar={evaluar} />
           if (m.rol === 'demo') return (
             <Mensaje key={i} rol="tutor" ancho>
-              <Text size="xs" c="dimmed" fw={700} mb="xs">✨ DEMO INTERACTIVA — JUEGA CON ELLA</Text>
+              <Group justify="space-between" mb="xs">
+                <Group gap={6}>
+                  <Text size="xs" c="dimmed" fw={700}>✨ DEMO INTERACTIVA — JUEGA CON ELLA</Text>
+                  {m.plantilla && <Badge size="xs" variant="light">{m.plantilla}</Badge>}
+                </Group>
+                <Button size="compact-xs" variant="subtle" disabled={espera !== null}
+                  onClick={() => demo(true)}>🔄 Regenerar</Button>
+              </Group>
               <iframe sandbox="allow-scripts" srcDoc={m.html}
                 title="Demo interactiva generada por el tutor"
                 style={{ width: '100%', height: 460, border: '1px solid var(--mantine-color-default-border)', borderRadius: 12, background: '#0a0d13' }} />
@@ -325,7 +344,7 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar() } }}
               autoFocus
             />
-            <Button variant="default" radius="lg" onClick={demo}
+            <Button variant="default" radius="lg" onClick={() => demo()}
               title="Pídele una demo interactiva"
               aria-label="Pedir una demo interactiva de esta clase">✨</Button>
             <Button radius="lg" onClick={() => enviar()} loading={ocupado}>Enviar</Button>
@@ -334,7 +353,7 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
       </Box>
     </Box>
     {hayPanel && panelAbierto && (
-      <PanelClase panel={panel} onEvaluar={evaluar} onDemo={demo}
+      <PanelClase panel={panel} onEvaluar={evaluar} onDemo={() => demo()}
         onRepasar={(texto) => enviar(`Quiero repasar este objetivo: ${texto}`)} />
     )}
     </Box>

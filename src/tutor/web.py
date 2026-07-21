@@ -122,6 +122,14 @@ class CuerpoEstudio(BaseModel):
     unidad: int | None = None
 
 
+class CuerpoDemo(BaseModel):
+    """Body de la demo interactiva del chat (plan/v2/HU-27)."""
+
+    unidad: int | None = None
+    objetivo: int | None = None
+    regenerar: bool = False
+
+
 class CuerpoQuizIntermedio(BaseModel):
     """Body del mini-quiz que cierra un objetivo (plan/v2/HU-24)."""
 
@@ -719,18 +727,22 @@ def crear_app(
         return {"canales": db.resumen_chats(estado.ruta_db)}
 
     @app.post("/api/artefacto")
-    def api_artefacto_unidad(cuerpo: CuerpoEstudio) -> dict[str, Any]:
-        """Mini-artefacto interactivo de la unidad actual del chat."""
+    def api_artefacto_unidad(cuerpo: CuerpoDemo) -> dict[str, Any]:
+        """Demo interactiva de la clase o de un objetivo (HU-27).
+
+        Con ``objetivo`` la demo ilustra ESE objetivo del guion v2;
+        ``regenerar`` invalida el cache de esa demo.
+        """
         agente = _agente()
         unidad = cuerpo.unidad if cuerpo.unidad is not None else agente.unidad_actual
 
-        def operacion() -> str:
+        def operacion() -> dict[str, Any]:
             try:
-                return agente.artefacto_de_unidad(unidad)
+                return agente.artefacto(unidad, cuerpo.objetivo, cuerpo.regenerar)
             except ValueError as error:
                 raise HTTPException(400, str(error)) from error
 
-        return {"html": _con_llm(operacion)}
+        return dict(_con_llm(operacion))
 
     @app.post("/api/curso")
     def api_crear_curso(cuerpo: CuerpoPromptCurso) -> dict[str, Any]:

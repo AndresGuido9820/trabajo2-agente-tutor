@@ -17,6 +17,7 @@ from typing import Any
 
 from tutor import db
 from tutor.config import (
+    ARTEFACTO_MAX_KB,
     INTENTOS_SIN_REPETIR,
     MAX_TURNOS_CHARLA,
     MIN_PREGUNTAS_EVALUACION,
@@ -50,6 +51,7 @@ from tutor.models import PerfilEstudiante
 from tutor.perfil import cargar_perfil, guardar_perfil
 from tutor.progreso import Progreso, Resultado, cargar_progreso, guardar_progreso
 from tutor.prompts import (
+    clasificar_plantilla,
     prompt_artefacto,
     prompt_avance_leccion,
     prompt_charla,
@@ -60,6 +62,41 @@ from tutor.prompts import (
     system_leccion,
     system_tutor,
 )
+
+_PATRONES_PROHIBIDOS_ARTEFACTO = (
+    ("https://", "recursos externos prohibidos (https://)"),
+    ("http://", "recursos externos prohibidos (http://)"),
+    ("fetch(", "fetch() prohibido: el artefacto debe ser autocontenido"),
+    ("XMLHttpRequest", "XMLHttpRequest prohibido"),
+    ("import(", "import() dinámico prohibido"),
+    ("alert(", "alert() prohibido"),
+    ("confirm(", "confirm() prohibido"),
+    ("prompt(", "prompt() prohibido"),
+)
+
+_CONTROLES_INTERACTIVOS = ("<button", "<input", "<select", "<textarea", "onclick")
+
+
+def verificar_artefacto(html: str) -> list[str]:
+    """Control de calidad local de un artefacto HTML (HU-27).
+
+    Returns:
+        Lista de problemas encontrados (vacía si el artefacto pasa).
+    """
+    errores = []
+    plano = html.strip().lower()
+    if not plano.startswith("<!doctype html"):
+        errores.append("debe empezar por <!doctype html>")
+    if len(html.encode()) > ARTEFACTO_MAX_KB * 1024:
+        errores.append(f"supera los {ARTEFACTO_MAX_KB} KB")
+    for patron, mensaje in _PATRONES_PROHIBIDOS_ARTEFACTO:
+        if patron in html:
+            errores.append(mensaje)
+    if "<script" not in plano:
+        errores.append("no tiene <script>: sin interactividad")
+    if not any(control in plano for control in _CONTROLES_INTERACTIVOS):
+        errores.append("no tiene ningún control interactivo (button/input/…)")
+    return errores
 
 
 def _validar_avance(datos: object) -> dict[str, object]:
@@ -474,34 +511,82 @@ class Agente:
         return html
 
     def artefacto_de_unidad(self, indice: int) -> str:
-        """Mini-artefacto interactivo de la unidad completa (chat, HU-16).
+        """Compatibilidad: artefacto de la clase completa (HU-16)."""
+        return str(self.artefacto(indice)["html"])
 
-        Igual que el de sección, pero con el objetivo y conceptos de la
-        unidad como material (no requiere guía generada).
+    def artefacto(
+        self, indice: int, objetivo: int | None = None, regenerar: bool = False
+    ) -> dict[str, Any]:
+        """Demo interactiva de la clase o de UN objetivo del guion v2 (HU-27).
+
+        Pipeline: plantilla por concepto (heurística local) → generación →
+        verificación de calidad local → una regeneración con los errores en
+        el prompt → cache por clave (``regenerar`` la invalida). El HTML que
+        no pasa verificación JAMÁS se cachea.
+
+        Raises:
+            ValueError: Si la unidad u objetivo no existen.
+            ErrorLLM: Si la demo no pasa el control de calidad dos veces.
         """
         if not 0 <= indice < len(self.curso.temario.unidades):
             raise ValueError(f"No existe la unidad {indice}.")
-        clave = f"u{indice}"
-        if clave in self.curso.artefactos:
-            return self.curso.artefactos[clave]
         unidad = self.curso.temario.unidades[indice]
-        html = self._cliente.generar(
-            system=system_tutor(self.perfil),
-            prompt=prompt_artefacto(
-                objetivo=unidad.objetivo,
-                contenido=(
-                    f"Unidad: {unidad.titulo}\n"
-                    f"Conceptos a ilustrar: {', '.join(unidad.conceptos)}"
+        guion = self.curso.guiones.get(indice)
+        if objetivo is not None and not (
+            guion and guion.intermedios and 0 <= objetivo < len(guion.objetivos)
+        ):
+            objetivo = None  # clases v1 o índice inválido: demo de la clase
+        clave = f"{indice}-obj{objetivo}" if objetivo is not None else f"u{indice}"
+        if not regenerar and clave in self.curso.artefactos:
+            return {
+                "html": self.curso.artefactos[clave],
+                "plantilla": clasificar_plantilla(unidad.conceptos),
+                "cacheado": True,
+            }
+
+        if objetivo is not None and guion is not None:
+            inicio = guion.intermedios[objetivo - 1].fin_paso + 1 if objetivo else 0
+            pasos = guion.pasos[inicio : guion.intermedios[objetivo].fin_paso + 1]
+            contenido = (
+                f"Clase: {unidad.titulo}\n"
+                f"Objetivo a ilustrar: {guion.objetivos[objetivo]}\n"
+                "Lo que la conversación cubrió en este objetivo:\n"
+                + "\n".join(f"- ({p.tipo}) {p.instruccion}" for p in pasos)
+            )
+            meta = guion.objetivos[objetivo]
+        else:
+            contenido = (
+                f"Unidad: {unidad.titulo}\n"
+                f"Conceptos a ilustrar: {', '.join(unidad.conceptos)}"
+            )
+            meta = unidad.objetivo
+        plantilla = clasificar_plantilla(unidad.conceptos)
+
+        errores: list[str] = []
+        for _intento in range(2):
+            html = self._cliente.generar(
+                system=system_tutor(self.perfil),
+                prompt=prompt_artefacto(
+                    objetivo=meta,
+                    contenido=contenido,
+                    lenguaje=self.curso.temario.lenguaje,
+                    plantilla=plantilla,
+                    errores=errores or None,
                 ),
-                lenguaje=self.curso.temario.lenguaje,
-            ),
+            )
+            html = html.strip()
+            if html.startswith("```"):
+                html = html.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+            errores = verificar_artefacto(html)
+            if not errores:
+                self.curso.artefactos[clave] = html
+                guardar_curso(self.curso, self._dir / ARCHIVO_CURSO)
+                return {"html": html, "plantilla": plantilla, "cacheado": False}
+            logger.warning("Artefacto %s no pasó verificación: %s", clave, errores)
+        raise ErrorLLM(
+            "La demo no pasó el control de calidad (dos intentos); "
+            "puedes regenerarla en un momento."
         )
-        html = html.strip()
-        if html.startswith("```"):
-            html = html.split("\n", 1)[1].rsplit("```", 1)[0].strip()
-        self.curso.artefactos[clave] = html
-        guardar_curso(self.curso, self._dir / ARCHIVO_CURSO)
-        return html
 
     def panel_de_clase(self, indice: int) -> dict[str, Any]:
         """Estado de la clase para el panel lateral (HU-25).
