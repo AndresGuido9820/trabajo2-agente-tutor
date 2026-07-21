@@ -121,6 +121,7 @@ export default function App({ escala, cambiarEscala }) {
       </AppShell.Navbar>
 
       <AppShell.Main>
+        <BarraConexion />
         {vista === 'cursos' && <MisCursos onEntrar={entrarCurso} onNuevo={nuevoCurso} />}
         {vista === 'creacion' && (
           <CreacionChat onCreado={async () => {
@@ -139,6 +140,37 @@ export default function App({ escala, cambiarEscala }) {
         )}
       </AppShell.Main>
     </AppShell>
+  )
+}
+
+/** Barra fija de desconexión (HU-34): aparece ante errores de red y se va sola. */
+function BarraConexion() {
+  const [caida, setCaida] = useState(false)
+  useEffect(() => {
+    const marcar = () => setCaida(true)
+    const listo = () => setCaida(false)
+    window.addEventListener('tutor:red', marcar)
+    window.addEventListener('offline', marcar)
+    window.addEventListener('online', listo)
+    return () => {
+      window.removeEventListener('tutor:red', marcar)
+      window.removeEventListener('offline', marcar)
+      window.removeEventListener('online', listo)
+    }
+  }, [])
+  useEffect(() => {
+    if (!caida) return undefined
+    // Ping ligero SOLO mientras está caída; al responder, la barra se va.
+    const timer = setInterval(() => {
+      fetch('/api/estado').then((r) => r.ok && setCaida(false)).catch(() => {})
+    }, 30000)
+    return () => clearInterval(timer)
+  }, [caida])
+  if (!caida) return null
+  return (
+    <Box py={6} ta="center" style={{ background: 'var(--mantine-color-yellow-light)' }}>
+      <Text size="sm" fw={600}>⚠️ Sin conexión con el tutor — reintentando…</Text>
+    </Box>
   )
 }
 
