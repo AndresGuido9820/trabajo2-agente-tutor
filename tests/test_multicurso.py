@@ -109,3 +109,47 @@ class TestDisenoEstructurado:
             json={"lenguaje": diseno["lenguaje"], "clases": diseno["clases"]},
         )
         assert r.status_code == 400
+
+
+class TestMigracionIdempotente:
+    """La migración legacy no puede repetirse (hallazgo 2026-07-21)."""
+
+    def test_json_legacy_no_aplasta_cursos_existentes(self, tmp_path):
+        import json as json_mod
+
+        from tutor import db as db_mod
+        from tutor.config import Configuracion
+        from tutor.web import crear_app
+
+        from .conftest import ClienteLLMFalso
+
+        # Un multicurso YA migrado con datos nuevos...
+        ruta = tmp_path / "cursos" / "1" / "tutor.db"
+        db_mod.anotar_chat(ruta, "u0", "yo", "mensaje NUEVO que no debe perderse")
+        # ...y unos JSON legacy que quedaron huérfanos en la base.
+        (tmp_path / "perfil.json").write_text(
+            json_mod.dumps({"nivel": "basico", "objetivo": "datos"}), "utf-8"
+        )
+        (tmp_path / "chat.json").write_text(
+            json_mod.dumps({"u0": [{"rol": "yo", "texto": "VIEJO"}]}), "utf-8"
+        )
+        configuracion = Configuracion(
+            api_key="sk-prueba", modelo="gpt-prueba", dir_datos=tmp_path
+        )
+        crear_app(configuracion, cliente=ClienteLLMFalso([]))
+        mensajes = db_mod.historial_chat(ruta, "u0")
+        assert [m["texto"] for m in mensajes] == ["mensaje NUEVO que no debe perderse"]
+        assert not (tmp_path / "tutor.db").exists()
+
+    def test_migracion_aparta_los_json_tras_migrar(self, tmp_path):
+        import json as json_mod
+
+        from tutor import db as db_mod
+
+        (tmp_path / "perfil.json").write_text(
+            json_mod.dumps({"nivel": "basico"}), "utf-8"
+        )
+        db_mod.migrar_json_legacy(tmp_path)
+        assert not (tmp_path / "perfil.json").exists()
+        assert (tmp_path / "perfil.migrado").exists()
+        assert (tmp_path / "tutor.db").exists()
