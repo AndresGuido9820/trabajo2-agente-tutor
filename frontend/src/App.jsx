@@ -4,6 +4,8 @@ import {
   Stack, Text, ThemeIcon, Title, Tooltip, useMantineColorScheme,
 } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
+import { Spotlight, spotlight } from '@mantine/spotlight'
+import '@mantine/spotlight/styles.css'
 import { api } from './api.js'
 import MisCursos from './MisCursos.jsx'
 import Clase from './Clase.jsx'
@@ -24,6 +26,7 @@ export default function App({ escala, cambiarEscala }) {
   const [estado, setEstado] = useState(null)
   const [convos, setConvos] = useState({})
   const [claseActiva, setClaseActiva] = useState(0)
+  const [destacar, setDestacar] = useState(null)  // id de mensaje a resaltar (HU-37)
 
   const refrescar = useCallback(async () => {
     try {
@@ -56,7 +59,19 @@ export default function App({ escala, cambiarEscala }) {
     } catch (e) { avisarError(e) }
   }
 
-  const abrirClase = (i) => { setClaseActiva(i); setVista('clase') }
+  const abrirClase = (i) => { setDestacar(null); setClaseActiva(i); setVista('clase') }
+
+  // Navegación desde el buscador: activa el curso y abre la conversación.
+  const irADesdeBusqueda = async (curso, canal, msgId) => {
+    try {
+      await api(`/api/cursos/${curso}/activar`, {}, 'POST')
+      const e = await refrescar()
+      if (!e?.perfil || canal === 'creacion') { setVista('creacion'); return }
+      setDestacar(msgId ?? null)
+      setClaseActiva(Number(canal.slice(1)) || 0)
+      setVista('clase')
+    } catch (e) { avisarError(e) }
+  }
 
   const conCurso = vista !== 'cursos' && estado?.perfil
   const aprobadas = estado?.unidades?.filter((u) => u.estado === 'aprobada').length ?? 0
@@ -73,7 +88,11 @@ export default function App({ escala, cambiarEscala }) {
           <ThemeIcon size={30} radius="md" variant="gradient" gradient={{ from: 'teal', to: 'indigo' }}>
             <Text fw={900} size="sm">Pb</Text>
           </ThemeIcon>
-          <Text fw={700}>Profe Bit</Text>
+          <Text fw={700} style={{ flex: 1 }}>Profe Bit</Text>
+          <Tooltip label="Buscar en todo (⌘K)">
+            <ActionIcon variant="subtle" color="gray" aria-label="Buscar"
+              onClick={() => spotlight.open()}>🔎</ActionIcon>
+          </Tooltip>
         </Group>
 
         {conCurso && (
@@ -136,10 +155,71 @@ export default function App({ escala, cambiarEscala }) {
           <Clase key={`${estado.curso_id}-${claseActiva}`} indice={claseActiva}
             unidad={estado.unidades[claseActiva]} lenguaje={estado.lenguaje}
             refrescar={refrescar} irAClase={abrirClase}
-            haySiguiente={claseActiva + 1 < total} />
+            haySiguiente={claseActiva + 1 < total} destacar={destacar} />
         )}
       </AppShell.Main>
+      <Buscador irA={irADesdeBusqueda} nuevoCurso={nuevoCurso}
+        verProgreso={estado?.perfil ? () => setVista('stats') : null}
+        verCursos={async () => { await refrescar(); setVista('cursos') }} />
     </AppShell>
+  )
+}
+
+/** Spotlight global ⌘K (HU-37): clases, mensajes y acciones. */
+function Buscador({ irA, nuevoCurso, verProgreso, verCursos }) {
+  const [q, setQ] = useState('')
+  const [res, setRes] = useState({ clases: [], mensajes: [] })
+
+  useEffect(() => {
+    if (q.trim().length < 2) { setRes({ clases: [], mensajes: [] }); return undefined }
+    const t = setTimeout(() => {
+      api(`/api/buscar?q=${encodeURIComponent(q.trim())}`).then(setRes).catch(() => {})
+    }, 250)
+    return () => clearTimeout(t)
+  }, [q])
+
+  const acciones = [
+    {
+      group: 'Clases',
+      actions: res.clases.map((c) => ({
+        id: `c-${c.curso}-${c.indice}`,
+        label: `Clase ${c.indice + 1}: ${c.titulo}`,
+        description: `${c.curso_nombre} · ${c.fragmento}`,
+        onClick: () => irA(c.curso, `u${c.indice}`, null),
+      })),
+    },
+    {
+      group: 'Conversaciones',
+      actions: res.mensajes.map((m) => ({
+        id: `m-${m.curso}-${m.id}`,
+        label: m.fragmento,
+        description: `${m.curso_nombre} · ${m.canal === 'creacion' ? 'diseño del curso' : `clase ${Number(m.canal.slice(1)) + 1}`} · ${m.rol === 'yo' ? 'tú' : 'el tutor'}`,
+        onClick: () => irA(m.curso, m.canal, m.id),
+      })),
+    },
+    {
+      group: 'Acciones',
+      actions: [
+        { id: 'a-cursos', label: '← Mis cursos', onClick: verCursos },
+        { id: 'a-nuevo', label: '✨ Nuevo curso', onClick: nuevoCurso },
+        ...(verProgreso
+          ? [{ id: 'a-stats', label: '📈 Mi progreso', onClick: verProgreso }]
+          : []),
+      ],
+    },
+  ]
+
+  return (
+    <Spotlight
+      actions={acciones.filter((g) => g.actions.length > 0)}
+      query={q}
+      onQueryChange={setQ}
+      shortcut={['mod + K']}
+      filter={(_query, todas) => todas}  // el backend ya filtró
+      nothingFound="Nada por aquí — prueba con otras palabras"
+      highlightQuery
+      searchProps={{ placeholder: 'Buscar clases, mensajes, acciones…' }}
+    />
   )
 }
 

@@ -15,7 +15,7 @@ function pausaLarga(ultimoEn, horas) {
 }
 
 /** El chat de UNA clase: estudio, evaluación y conversatorio inline. */
-export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, haySiguiente }) {
+export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, haySiguiente, destacar }) {
   const [mensajes, setMensajes] = useState([])       // {rol, texto} o {rol:'quiz'|'resultado'|'demo', ...}
   const [texto, setTexto] = useState(() => leerBorrador(`u${indice}`))
   const [ocupado, setOcupado] = useState(false)
@@ -49,6 +49,18 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
           agregar({ rol: 'tutor', texto: r.texto })
         }
       } catch (e) { setEspera(null); avisarError(e) }
+      if (destacar) {
+        // Llegamos desde el buscador (HU-37): scroll y resaltado 2 s.
+        setTimeout(() => {
+          const el = document.getElementById(`msg-${destacar}`)
+          if (!el) return
+          el.scrollIntoView({ block: 'center' })
+          el.style.transition = 'background 0.4s'
+          el.style.background = 'var(--mantine-color-yellow-light)'
+          el.style.borderRadius = '12px'
+          setTimeout(() => { el.style.background = 'transparent' }, 2000)
+        }, 350)
+      }
     })()
   }, [indice])
 
@@ -170,7 +182,11 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
               </Group>
             </Mensaje>
           )
-          return <Mensaje key={i} rol={m.rol} lenguaje={lenguaje}>{m.texto}</Mensaje>
+          return (
+            <Box key={i} id={m.id ? `msg-${m.id}` : undefined}>
+              <Mensaje rol={m.rol} lenguaje={lenguaje}>{m.texto}</Mensaje>
+            </Box>
+          )
         })}
         {espera !== null && <Escribiendo texto={espera || undefined} />}
         {fallo && (

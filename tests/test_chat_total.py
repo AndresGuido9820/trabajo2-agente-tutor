@@ -128,8 +128,9 @@ class TestEstudioEnChat:
         web.post("/api/creacion", json={"mensaje": "curso de datos"})
         web.post("/api/creacion", json={"mensaje": "ya dale"})
         h = web.get("/api/historial/creacion").json()["mensajes"]
-        assert h[0] == {"rol": "yo", "texto": "curso de datos"}
-        assert h[1] == {"rol": "tutor", "texto": "¿tu nivel?"}
+        assert h[0]["rol"] == "yo" and h[0]["texto"] == "curso de datos"
+        assert h[0]["id"] > 0  # id de BD: anchor del buscador (HU-37)
+        assert h[1]["rol"] == "tutor" and h[1]["texto"] == "¿tu nivel?"
         assert len(h) == 4
         assert (tmp_path / "cursos" / "1" / "tutor.db").exists()
         # Cada clase es una conversación aparte
