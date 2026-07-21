@@ -90,15 +90,20 @@ class TestPersistencia:
             cargar_perfil(ruta)
 
     def test_cargar_perfil_con_campos_faltantes_lanza_error(self, tmp_path):
+        from tutor import db
+
         ruta = tmp_path / "perfil.json"
-        ruta.write_text('{"version": 1, "nivel": "basico"}', "utf-8")
+        db.guardar_documento(ruta, "perfil", {"version": 1, "nivel": "basico"})
         with pytest.raises(ErrorDatos, match="faltan campos"):
             cargar_perfil(ruta)
 
     def test_cargar_perfil_con_enum_invalido_lanza_error(self, tmp_path):
+        from tutor import db
+
         ruta = tmp_path / "perfil.json"
         guardar_perfil(perfil_ejemplo(), ruta)
-        contenido = ruta.read_text("utf-8").replace('"basico"', '"experto"')
-        ruta.write_text(contenido, "utf-8")
+        datos = db.cargar_documento(ruta, "perfil")
+        datos["nivel"] = "experto"
+        db.guardar_documento(ruta, "perfil", datos)
         with pytest.raises(ErrorDatos):
             cargar_perfil(ruta)

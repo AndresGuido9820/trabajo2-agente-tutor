@@ -309,6 +309,32 @@ repaso, quiz y conversatorio inline; nunca se sale del chat).
 
 ---
 
+## 2026-07-20 — HU-19: el diseño del curso pasa a SQLite
+
+**Contexto:** retroalimentación de revisión: el diseño del curso debe estar
+en una BD, con el prompt de cada clase y su metadata.
+
+**Hallazgos:**
+
+1. El esquema natural salió del dominio: `curso` (diseño + plan_md +
+   versión de prompts), `clases` (título/objetivo/subtemas + **guion** — el
+   prompt paso a paso con el que el tutor da esa clase — + contenido
+   generado + `actualizado_en`), `perfil`, `progreso`, `chat` por canal.
+2. Mantener las MISMAS firmas de cargar/guardar hizo la migración de código
+   casi indolora: solo 5 pruebas referenciaban nombres de archivo.
+3. Ganancias colaterales: escrituras transaccionales (adiós tmp+rename),
+   "rehacer perfil" ya no puede borrar de más (DELETE selectivo), y el chat
+   por canal es un simple WHERE.
+4. La migración legacy es best-effort e idempotente (si la BD existe, no
+   corre): los datos de los usuarios que probaron versiones previas
+   sobreviven sin pasos manuales.
+
+**Decisión/acción:** documentos JSON dentro de columnas para perfil/progreso
+(estructuras pequeñas y versionadas) y columnas de primera clase para lo que
+se consulta (clases, chat). SQLite de la stdlib: cero dependencias nuevas.
+
+---
+
 <!-- Plantilla:
 
 ## AAAA-MM-DD — Título corto

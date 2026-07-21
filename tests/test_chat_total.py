@@ -131,7 +131,7 @@ class TestEstudioEnChat:
         assert h[0] == {"rol": "yo", "texto": "curso de datos"}
         assert h[1] == {"rol": "tutor", "texto": "¿tu nivel?"}
         assert len(h) == 4
-        assert (tmp_path / "chat.json").exists()
+        assert (tmp_path / "tutor.db").exists()
         # Cada clase es una conversación aparte
         assert web.get("/api/historial/u0").json()["mensajes"] == []
 

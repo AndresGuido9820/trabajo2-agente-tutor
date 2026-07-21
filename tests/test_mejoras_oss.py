@@ -44,7 +44,7 @@ class TestRacha:
         assert agente.progreso.racha == 1
         assert agente.progreso.ultima_sesion == HOY
         # y quedó persistida
-        assert cargar_progreso(tmp_path / "progreso.json").racha == 1
+        assert cargar_progreso(tmp_path / "tutor.db").racha == 1
 
 
 class TestVariantesDeQuiz:

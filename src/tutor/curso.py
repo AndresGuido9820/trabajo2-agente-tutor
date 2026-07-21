@@ -9,11 +9,12 @@ from __future__ import annotations
 
 import json
 import logging
+import sqlite3
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from tutor import prompts
+from tutor import db, prompts
 from tutor.config import (
     MAX_SECCIONES_GUIA,
     MAX_UNIDADES,
@@ -357,79 +358,150 @@ def generar_guia(
     return guia
 
 
-def guardar_curso(curso: Curso, ruta: Path) -> None:
-    """Serializa el curso (temario + lecciones cacheadas) a ``ruta``."""
-    ruta.parent.mkdir(parents=True, exist_ok=True)
-    datos = {
-        "version": VERSION_ESQUEMA,
-        "lenguaje": curso.temario.lenguaje,
-        "unidades": [
-            {"titulo": u.titulo, "objetivo": u.objetivo, "conceptos": u.conceptos}
-            for u in curso.temario.unidades
-        ],
-        "lecciones": {str(i): md for i, md in curso.lecciones.items()},
-        "guiones": {
-            str(i): {
-                "objetivos": g.objetivos,
-                "pasos": [
-                    {"tipo": p.tipo, "instruccion": p.instruccion} for p in g.pasos
-                ],
-            }
-            for i, g in curso.guiones.items()
-        },
-        "guias": {
-            str(i): {
-                "secciones": [
-                    {
-                        "objetivo": s.objetivo,
-                        "contenido": s.contenido,
-                        "checkpoint": {
-                            "pregunta": s.checkpoint.pregunta,
-                            "opciones": s.checkpoint.opciones,
-                            "correcta": s.checkpoint.correcta,
-                            "pista": s.checkpoint.pista,
-                            "explicacion": s.checkpoint.explicacion,
-                            "concepto": s.checkpoint.concepto,
-                        },
-                    }
-                    for s in g.secciones
-                ]
-            }
-            for i, g in curso.guias.items()
-        },
-        "artefactos": curso.artefactos,
+def _guion_a_json(g: GuionLeccion) -> dict[str, Any]:
+    """Serializa el guion (el prompt paso a paso de la clase)."""
+    return {
+        "objetivos": g.objetivos,
+        "pasos": [{"tipo": p.tipo, "instruccion": p.instruccion} for p in g.pasos],
     }
-    ruta.write_text(json.dumps(datos, ensure_ascii=False, indent=2), "utf-8")
+
+
+def _guia_a_json(g: Guia) -> dict[str, Any]:
+    """Serializa la guía interactiva de una clase."""
+    return {
+        "secciones": [
+            {
+                "objetivo": s.objetivo,
+                "contenido": s.contenido,
+                "checkpoint": {
+                    "pregunta": s.checkpoint.pregunta,
+                    "opciones": s.checkpoint.opciones,
+                    "correcta": s.checkpoint.correcta,
+                    "pista": s.checkpoint.pista,
+                    "explicacion": s.checkpoint.explicacion,
+                    "concepto": s.checkpoint.concepto,
+                },
+            }
+            for s in g.secciones
+        ]
+    }
+
+
+def guardar_curso(curso: Curso, ruta: Path) -> None:
+    """Persiste el diseño del curso en la BD.
+
+    Fila ``curso`` (diseño y metadata) + una fila por clase con su
+    definición, su prompt/guion y su contenido generado.
+    """
+    with db.abrir(ruta) as conexion:
+        fila = conexion.execute("SELECT creado_en FROM curso WHERE id = 1").fetchone()
+        conexion.execute(
+            "INSERT OR REPLACE INTO curso"
+            "(id, lenguaje, plan_md, artefactos, prompts_version, creado_en) "
+            "VALUES(1, ?, COALESCE((SELECT plan_md FROM curso WHERE id=1), ''), "
+            "?, ?, ?)",
+            (
+                curso.temario.lenguaje,
+                json.dumps(curso.artefactos, ensure_ascii=False),
+                prompts.PROMPTS_VERSION,
+                fila[0] if fila else db.ahora(),
+            ),
+        )
+        for indice, unidad in enumerate(curso.temario.unidades):
+            guion = curso.guiones.get(indice)
+            guia = curso.guias.get(indice)
+            conexion.execute(
+                "INSERT OR REPLACE INTO clases"
+                "(indice, titulo, objetivo, conceptos, guion, leccion_md, guia, "
+                "actualizado_en) VALUES(?,?,?,?,?,?,?,?)",
+                (
+                    indice,
+                    unidad.titulo,
+                    unidad.objetivo,
+                    json.dumps(unidad.conceptos, ensure_ascii=False),
+                    json.dumps(_guion_a_json(guion), ensure_ascii=False)
+                    if guion
+                    else None,
+                    curso.lecciones.get(indice),
+                    json.dumps(_guia_a_json(guia), ensure_ascii=False)
+                    if guia
+                    else None,
+                    db.ahora(),
+                ),
+            )
+
+
+def guardar_plan_md(ruta: Path, plan_md: str) -> None:
+    """Guarda el plan Markdown del curso en la BD (metadata del diseño)."""
+    with db.abrir(ruta) as conexion:
+        conexion.execute("UPDATE curso SET plan_md = ? WHERE id = 1", (plan_md,))
+
+
+def cargar_plan_md(ruta: Path) -> str:
+    """El plan Markdown del curso, o '' si no existe."""
+    if not ruta.exists():
+        return ""
+    with db.abrir(ruta) as conexion:
+        fila = conexion.execute("SELECT plan_md FROM curso WHERE id = 1").fetchone()
+    return fila[0] if fila else ""
 
 
 def cargar_curso(ruta: Path) -> Curso | None:
-    """Carga el curso desde ``ruta``.
+    """Carga el diseño del curso desde la BD ``ruta``.
 
-    Un archivo corrupto no es fatal: se advierte y se devuelve ``None`` para
+    Una BD corrupta no es fatal: se advierte y se devuelve ``None`` para
     que el temario se regenere (cuesta una llamada; no bloquea al estudiante).
     """
     if not ruta.exists():
         return None
     try:
-        datos = json.loads(ruta.read_text("utf-8"))
-        temario = validar_temario(datos)
-        lecciones = {int(i): str(md) for i, md in datos["lecciones"].items()}
-        # "guiones" y "guias" son opcionales (retro-compatibilidad).
-        guiones = {
-            int(i): validar_guion(g) for i, g in datos.get("guiones", {}).items()
-        }
-        guias = {int(i): validar_guia(g) for i, g in datos.get("guias", {}).items()}
+        with db.abrir(ruta) as conexion:
+            fila = conexion.execute(
+                "SELECT lenguaje, artefactos FROM curso WHERE id = 1"
+            ).fetchone()
+            if not fila:
+                return None
+            filas_clases = conexion.execute(
+                "SELECT indice, titulo, objetivo, conceptos, guion, leccion_md, "
+                "guia FROM clases ORDER BY indice"
+            ).fetchall()
+        unidades: list[Unidad] = []
+        lecciones: dict[int, str] = {}
+        guiones: dict[int, GuionLeccion] = {}
+        guias: dict[int, Guia] = {}
+        for indice, titulo, objetivo, conceptos, guion, leccion, guia in filas_clases:
+            unidades.append(
+                Unidad(
+                    titulo=str(titulo),
+                    objetivo=str(objetivo),
+                    conceptos=[str(c) for c in json.loads(conceptos)],
+                )
+            )
+            if leccion:
+                lecciones[int(indice)] = str(leccion)
+            if guion:
+                guiones[int(indice)] = validar_guion(json.loads(guion))
+            if guia:
+                guias[int(indice)] = validar_guia(json.loads(guia))
+        if not MIN_UNIDADES <= len(unidades) <= MAX_UNIDADES:
+            raise ValueError(f"número de clases inválido: {len(unidades)}")
         artefactos = {
-            str(clave): str(html) for clave, html in datos.get("artefactos", {}).items()
+            str(clave): str(html) for clave, html in json.loads(fila[1]).items()
         }
         return Curso(
-            temario=temario,
+            temario=Temario(lenguaje=str(fila[0]), unidades=unidades),
             lecciones=lecciones,
             guiones=guiones,
             guias=guias,
             artefactos=artefactos,
         )
-    except (json.JSONDecodeError, ValueError, KeyError, TypeError) as error:
+    except (
+        sqlite3.DatabaseError,
+        json.JSONDecodeError,
+        ValueError,
+        KeyError,
+        TypeError,
+    ) as error:
         logger.warning(
             "Curso corrupto en %s (%s); se regenerará el temario.", ruta, error
         )

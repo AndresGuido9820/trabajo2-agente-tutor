@@ -9,11 +9,13 @@ from __future__ import annotations
 
 import json
 import logging
-import os
+import sqlite3
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
+
+from tutor import db
 
 logger = logging.getLogger(__name__)
 
@@ -117,8 +119,7 @@ class Progreso:
 
 
 def guardar_progreso(progreso: Progreso, ruta: Path) -> None:
-    """Serializa el progreso a ``ruta`` con escritura atómica."""
-    ruta.parent.mkdir(parents=True, exist_ok=True)
+    """Guarda el progreso en la base de datos ``ruta`` (transaccional)."""
     datos = {
         "version": VERSION_ESQUEMA,
         "puntos": progreso.puntos,
@@ -136,9 +137,7 @@ def guardar_progreso(progreso: Progreso, ruta: Path) -> None:
             for r in progreso.resultados
         ],
     }
-    temporal = ruta.with_suffix(".tmp")
-    temporal.write_text(json.dumps(datos, ensure_ascii=False, indent=2), "utf-8")
-    os.replace(temporal, ruta)
+    db.guardar_documento(ruta, "progreso", datos)
     logger.debug("Progreso guardado en %s", ruta)
 
 
@@ -172,11 +171,16 @@ def cargar_progreso(ruta: Path) -> Progreso:
     se arranca con progreso vacío (perder el historial es tolerable; impedir
     estudiar no).
     """
-    if not ruta.exists():
-        return Progreso()
     try:
-        return _parsear(json.loads(ruta.read_text("utf-8")))
-    except (json.JSONDecodeError, ValueError, KeyError, TypeError) as error:
+        datos = db.cargar_documento(ruta, "progreso")
+        return _parsear(datos) if datos is not None else Progreso()
+    except (
+        sqlite3.DatabaseError,
+        json.JSONDecodeError,
+        ValueError,
+        KeyError,
+        TypeError,
+    ) as error:
         logger.warning(
             "Progreso corrupto en %s (%s); se arranca con progreso vacío.",
             ruta,

@@ -414,7 +414,13 @@ async function abrirCreacion(){
       un plan y cuando digas “ya, dale” creo tu curso.</p></div>`;
   }
   if(estadoCurso && estadoCurso.perfil){
-    ponerContexto("Tu curso ya está creado — entra a una clase en la barra de la izquierda 👈");
+    // Mostrar el diseño resultante del curso (viene de la BD)
+    try{
+      if(!planMd) planMd = (await api("/api/plan")).md;
+      if(planMd) burbujaTutor("**Este es el diseño de tu curso** (guardado en la base de datos y en `curso.md`):\n\n" + planMd);
+    }catch(e){ /* sin plan no bloqueamos */ }
+    ponerContexto("Tu curso ya está creado — entra a una clase en la barra de la izquierda 👈",
+      [["📄 Descargar el plan (.md)", () => $("#b-plan").click()]]);
   }else{
     ponerContexto("Diseñando tu curso", [
       ["Quiero analizar datos con Python; sé Excel", () => enviar("Hazme un curso de Python para análisis de datos; manejo bien Excel")],
