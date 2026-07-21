@@ -77,6 +77,16 @@ def recorrer(page: Page) -> None:
     esperar_tutor(page, 2)
     foto(page, "06-tutor-corrige-y-avanza")
 
+    # Duda libre a mitad de clase: el tutor responde SIN avanzar el paso
+    n = page.locator(".prosa").count()
+    enviar(page, "espera, una duda: ¿esto para qué me sirve en mi negocio de verdad?")
+    page.wait_for_function(
+        f"document.querySelectorAll('.prosa').length >= {n + 1}",
+        timeout=ESPERA_LLM,
+    )
+    time.sleep(0.6)
+    foto(page, "07-duda-al-tutor")
+
     # Completar la lección respondiendo como un estudiante real (el tutor
     # NO avanza ante respuestas vacías: hay que atender cada paso).
     respuestas = [
@@ -97,19 +107,26 @@ def recorrer(page: Page) -> None:
             timeout=ESPERA_LLM,
         )
         time.sleep(0.5)
-    foto(page, "07-clase-completada")
+    foto(page, "08-clase-completada")
 
     # Evaluación dentro del chat (tolerante: si algo falla, seguimos con el
     # resto de capturas)
     try:
         boton_evaluar.first.click(timeout=10_000)
-        page.wait_for_selector("text=EVALUACIÓN", timeout=ESPERA_LLM)
-        foto(page, "08-evaluacion")
+        # Selector inequívoco del quiz (no confundir con el mensaje del bot)
+        page.wait_for_selector("text=PREGUNTA 1 DE", timeout=ESPERA_LLM)
+        page.locator("text=PREGUNTA 1 DE").first.scroll_into_view_if_needed()
+        time.sleep(0.6)
+        foto(page, "09-evaluacion")
         for grupo in page.locator("[role=radiogroup]").all():
             grupo.locator("input[type=radio]").first.check(force=True)
         page.click("text=Calificar")
         page.wait_for_selector("text=/Aprobada|cerremos esas brechas/", timeout=90_000)
-        foto(page, "09-resultado")
+        page.locator(
+            "text=/Aprobada|cerremos esas brechas/"
+        ).first.scroll_into_view_if_needed()
+        time.sleep(0.6)
+        foto(page, "10-resultado")
     except Exception as error:
         print(f"⚠️ Se omitió la evaluación: {error}")
 
@@ -117,15 +134,15 @@ def recorrer(page: Page) -> None:
     page.click("text=Diseño del curso")
     page.wait_for_selector("text=Editar estructura", timeout=15_000)
     time.sleep(0.8)
-    foto(page, "10-diseno-documento")
+    foto(page, "11-diseno-documento")
     page.click("text=Editar estructura")
     page.wait_for_selector("text=CLASE 1", timeout=15_000)
-    foto(page, "11-diseno-editor-estructurado")
+    foto(page, "12-diseno-editor-estructurado")
 
     # Mis cursos con el curso creado y su progreso
     page.click("text=← Mis cursos")
     page.wait_for_selector("text=Entrar", timeout=15_000)
-    foto(page, "12-mis-cursos-con-progreso")
+    foto(page, "13-mis-cursos-con-progreso")
 
 
 def main() -> int:
@@ -151,7 +168,7 @@ def main() -> int:
     try:
         with sync_playwright() as pw:
             navegador = pw.chromium.launch()
-            page = navegador.new_page(viewport={"width": 1440, "height": 900})
+            page = navegador.new_page(viewport={"width": 1440, "height": 1700})
             recorrer(page)
             navegador.close()
         print("Capturas completas ✅")

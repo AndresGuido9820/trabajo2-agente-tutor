@@ -161,27 +161,40 @@ explica el porqué y avanza de paso.
 
 ![El tutor corrige](capturas/06-tutor-corrige-y-avanza.png)
 
-**7. Clase completada** — tras responder todos los pasos (paso 8/8 en la
-cabecera), la clase queda tachada en la barra lateral ("Completada — falta
-evaluación"), el tutor cierra con el recap y aparece el CTA "🎯 Presentar la
-evaluación"; las clases 2-7 siguen con candado.
+**7. Duda libre a mitad de clase** — el estudiante interrumpe con una
+pregunta ("¿esto para qué me sirve en mi negocio?"); el tutor la responde y
+retoma el paso **sin avanzar** la lección (decisión de avance con criterio).
 
-![Clase completada](capturas/08-evaluacion.png)
+![Duda al tutor](capturas/07-duda-al-tutor.png)
 
-**8. Diseño del curso** — el documento generado (persistido en la BD, con
+**8. Clase completada** — tras responder todos los pasos, la clase queda
+tachada en la barra lateral, el tutor cierra con el recap y aparece el CTA
+de evaluación; las clases 2-7 siguen con candado.
+
+![Clase completada](capturas/08-clase-completada.png)
+
+**9. Evaluación dentro del chat** — 4 preguntas de comprensión (predicción /
+encuentra-el-bug) con distractores basados en misconceptions documentadas.
+
+![Evaluación](capturas/09-evaluacion.png)
+
+**10. Resultado (ruta de reprobar)** — el bot respondió al azar y sacó 1 de
+4: desglose por pregunta con la correcta y la explicación del error de
+razonamiento, botón de reintento (con preguntas nuevas) y el conversatorio
+socrático abriéndose automáticamente al final.
+
+![Resultado](capturas/10-resultado.png)
+
+**11. Diseño del curso** — el documento generado (persistido en la BD, con
 copia `curso.md` descargable).
 
-![Diseño del curso](capturas/10-diseno-documento.png)
+![Diseño del curso](capturas/11-diseno-documento.png)
 
-**9. Edición estructurada** — título/objetivo/subtemas por clase, validados
+**12. Edición estructurada** — título/objetivo/subtemas por clase, validados
 con las mismas reglas que usa el LLM.
 
-![Editor estructurado](capturas/11-diseno-editor-estructurado.png)
+![Editor estructurado](capturas/12-diseno-editor-estructurado.png)
 
-**10. Mis cursos con progreso** — el curso creado con su barra de avance.
+**13. Mis cursos con progreso** — el curso creado con su barra de avance.
 
-![Mis cursos con progreso](capturas/12-mis-cursos-con-progreso.png)
-
-> La evaluación con sus 4 preguntas y el desglose del resultado se
-> demuestran en vivo en el video (el bot las ejercitó por API en las
-> pruebas E2E: `tests/test_web.py`, `tests/test_multicurso.py`).
+![Mis cursos con progreso](capturas/13-mis-cursos-con-progreso.png)
