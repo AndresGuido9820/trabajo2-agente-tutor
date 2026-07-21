@@ -177,6 +177,80 @@ def historial_chat(ruta: Path, canal: str, limite: int = 300) -> list[dict[str, 
     return [{"rol": rol, "texto": texto} for rol, texto in reversed(filas)]
 
 
+def historial_con_ids(
+    ruta: Path, canal: str, limite: int = 300
+) -> list[dict[str, Any]]:
+    """Como ``historial_chat`` pero con el id de BD (anchor del buscador)."""
+    if not ruta.exists():
+        return []
+    with abrir(ruta) as conexion:
+        filas = conexion.execute(
+            "SELECT id, rol, texto FROM chat WHERE canal = ? ORDER BY id DESC LIMIT ?",
+            (canal, limite),
+        ).fetchall()
+    return [
+        {"id": id_, "rol": rol, "texto": texto} for id_, rol, texto in reversed(filas)
+    ]
+
+
+def _escapar_like(q: str) -> str:
+    r"""Escapa los comodines de LIKE (``%``, ``_``) con ``\``."""
+    return q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
+def _fragmento(texto: str, q: str, contexto: int = 60) -> str:
+    """Snippet de ±``contexto`` caracteres alrededor de la coincidencia."""
+    pos = texto.lower().find(q.lower())
+    if pos < 0:
+        return texto[: 2 * contexto]
+    inicio = max(0, pos - contexto)
+    fin = min(len(texto), pos + len(q) + contexto)
+    pre = "…" if inicio > 0 else ""
+    post = "…" if fin < len(texto) else ""
+    return f"{pre}{texto[inicio:fin]}{post}"
+
+
+def buscar_mensajes(ruta: Path, q: str, limite: int = 8) -> list[dict[str, Any]]:
+    """Mensajes cuyo texto contiene ``q`` (LIKE, sin distinguir mayúsculas)."""
+    if not ruta.exists():
+        return []
+    patron = f"%{_escapar_like(q)}%"
+    with abrir(ruta) as conexion:
+        filas = conexion.execute(
+            r"SELECT id, canal, rol, texto FROM chat "
+            r"WHERE texto LIKE ? ESCAPE '\' ORDER BY id DESC LIMIT ?",
+            (patron, limite),
+        ).fetchall()
+    return [
+        {"id": id_, "canal": canal, "rol": rol, "fragmento": _fragmento(texto, q)}
+        for id_, canal, rol, texto in filas
+    ]
+
+
+def buscar_clases(ruta: Path, q: str, limite: int = 8) -> list[dict[str, Any]]:
+    """Clases cuyo título, objetivo o subtemas contienen ``q``."""
+    if not ruta.exists():
+        return []
+    patron = f"%{_escapar_like(q)}%"
+    with abrir(ruta) as conexion:
+        filas = conexion.execute(
+            r"SELECT indice, titulo, objetivo, conceptos FROM clases "
+            r"WHERE titulo LIKE ? ESCAPE '\' OR objetivo LIKE ? ESCAPE '\' "
+            r"OR conceptos LIKE ? ESCAPE '\' ORDER BY indice LIMIT ?",
+            (patron, patron, patron, limite),
+        ).fetchall()
+    return [
+        {
+            "indice": indice,
+            "titulo": titulo,
+            "fragmento": _fragmento(
+                titulo if q.lower() in titulo.lower() else f"{objetivo} {conceptos}", q
+            ),
+        }
+        for indice, titulo, objetivo, conceptos in filas
+    ]
+
+
 def ultimo_mensaje_en(ruta: Path, canal: str) -> str | None:
     """Timestamp ISO del último mensaje de una conversación, o ``None``."""
     if not ruta.exists():

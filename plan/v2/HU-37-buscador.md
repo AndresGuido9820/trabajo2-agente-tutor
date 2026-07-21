@@ -33,13 +33,13 @@ Escapando `%`/`_` del LIKE; mínimo 2 caracteres; límite 8+8.
 
 ## Tareas
 
-- [ ] `db.py`: `buscar_mensajes(ruta, q)` (LIKE + snippet ±60 chars).
-- [ ] `web.py`: endpoint que consulta todos los cursos (títulos desde
+- [x] `db.py`: `buscar_mensajes(ruta, q)` (LIKE + snippet ±60 chars).
+- [x] `web.py`: endpoint que consulta todos los cursos (títulos desde
       `clases`, mensajes desde `chat`).
-- [ ] Front: Spotlight (@mantine/spotlight), atajo, grupos, navegación con
+- [x] Front: Spotlight (@mantine/spotlight), atajo, grupos, navegación con
       scroll-al-mensaje (los mensajes del historial ya tienen id de BD:
       exponerlo en /api/historial y usarlo como anchor).
-- [ ] Pruebas: búsqueda en clases y mensajes, escape de LIKE, mínimo de
+- [x] Pruebas: búsqueda en clases y mensajes, escape de LIKE, mínimo de
       caracteres, límites, multi-curso.
 
 ## Casos borde

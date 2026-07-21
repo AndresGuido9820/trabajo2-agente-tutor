@@ -66,9 +66,8 @@ class TestMisCursos:
         assert (tmp_path / "cursos" / "1" / "tutor.db").exists()
         cursos = web.get("/api/cursos").json()["cursos"]
         assert len(cursos) == 1 and cursos[0]["id"] == 1
-        assert web.get("/api/historial/u0").json()["mensajes"] == [
-            {"rol": "yo", "texto": "hola"}
-        ]
+        [mensaje] = web.get("/api/historial/u0").json()["mensajes"]
+        assert mensaje["rol"] == "yo" and mensaje["texto"] == "hola"
 
 
 class TestDisenoEstructurado:

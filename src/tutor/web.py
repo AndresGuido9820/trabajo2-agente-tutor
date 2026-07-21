@@ -540,10 +540,32 @@ def crear_app(
     def api_historial(canal: str) -> dict[str, Any]:
         """Historial de una conversación ('creacion' o 'u<indice>')."""
         return {
-            "mensajes": db.historial_chat(estado.ruta_db, canal),
+            "mensajes": db.historial_con_ids(estado.ruta_db, canal),
             "ultimo_en": db.ultimo_mensaje_en(estado.ruta_db, canal),
             "horas_reencuentro": HORAS_PARA_REENCUENTRO,
         }
+
+    @app.get("/api/buscar")
+    def api_buscar(q: str = "") -> dict[str, Any]:
+        """Búsqueda global (HU-37): clases y mensajes de TODOS los cursos."""
+        consulta = q.strip()
+        if len(consulta) < 2:
+            return {"clases": [], "mensajes": []}
+        clases: list[dict[str, Any]] = []
+        mensajes: list[dict[str, Any]] = []
+        for curso_id, sesion in sorted(estado.sesiones.items()):
+            ruta = sesion.dir / ARCHIVO_DB
+            meta = db.leer_meta_curso(ruta)
+            etiqueta = str(meta["nombre"]) or f"Curso {curso_id}"
+            if meta["archivado"]:
+                etiqueta += " (archivado)"
+            for c in db.buscar_clases(ruta, consulta, 8 - len(clases)):
+                clases.append({"curso": curso_id, "curso_nombre": etiqueta, **c})
+            for m in db.buscar_mensajes(ruta, consulta, 8 - len(mensajes)):
+                mensajes.append({"curso": curso_id, "curso_nombre": etiqueta, **m})
+            if len(clases) >= 8 and len(mensajes) >= 8:
+                break
+        return {"clases": clases, "mensajes": mensajes}
 
     @app.post("/api/clase/{indice}/reencuentro")
     def api_reencuentro(indice: int) -> dict[str, Any]:
