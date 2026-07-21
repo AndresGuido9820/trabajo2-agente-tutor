@@ -1,8 +1,10 @@
 // Cliente del API del tutor con clasificación de errores y timeout (HU-34).
 
-// Una generación larga legítima puede tardar ~2 min; a los 3 se aborta y
-// se ofrece reintentar (el backend ya corta a los 180 s por su lado).
-export const TIMEOUT_FETCH_MS = 3 * 60 * 1000
+// El peor caso legítimo es la creación del curso con listo=true: hasta 3
+// llamadas LLM seguidas (perfil + temario + plan) ≈ 4-5 min. El timeout
+// local debe superar eso o aborta operaciones que iban bien (visto en la
+// grabación del demo: el server terminaba y el navegador ya había cortado).
+export const TIMEOUT_FETCH_MS = 6 * 60 * 1000
 
 export class ErrorRed extends Error {
   constructor() {
