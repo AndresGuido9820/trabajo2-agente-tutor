@@ -8,6 +8,7 @@ quizzes nunca viajan al navegador antes de calificar.
 
 from __future__ import annotations
 
+import json
 import logging
 import sys
 from pathlib import Path
@@ -110,6 +111,27 @@ class _Estado:
         self.quizzes: dict[int, Quiz] = {}
         # Conversación de creación del curso (HU-16), previa al agente.
         self.creacion: list[tuple[str, str]] = []
+        # Historial persistente del chat (HU-18).
+        self._ruta_chat = configuracion.dir_datos / "chat.json"
+        self.chat: list[dict[str, str]] = self._cargar_chat()
+
+    def _cargar_chat(self) -> list[dict[str, str]]:
+        """Carga el historial del chat; corrupto → advertir y arrancar vacío."""
+        if not self._ruta_chat.exists():
+            return []
+        try:
+            datos = json.loads(self._ruta_chat.read_text("utf-8"))
+            return [{"rol": str(m["rol"]), "texto": str(m["texto"])} for m in datos]
+        except (json.JSONDecodeError, KeyError, TypeError) as error:
+            logger.warning("Historial de chat corrupto (%s); arranca vacío.", error)
+            return []
+
+    def anotar(self, rol: str, texto: str) -> None:
+        """Agrega un mensaje al historial del chat y lo persiste."""
+        self.chat.append({"rol": rol, "texto": texto})
+        del self.chat[:-500]  # cota de tamaño
+        self._ruta_chat.parent.mkdir(parents=True, exist_ok=True)
+        self._ruta_chat.write_text(json.dumps(self.chat, ensure_ascii=False), "utf-8")
 
 
 def crear_app(
@@ -163,6 +185,7 @@ def crear_app(
                     "indice": fila.indice,
                     "titulo": fila.titulo,
                     "objetivo": curso.temario.unidades[fila.indice].objetivo,
+                    "conceptos": curso.temario.unidades[fila.indice].conceptos,
                     "estado": fila.estado.value,
                     "mejor_nota": fila.mejor_nota,
                     "completada": fila.indice in agente.progreso.completadas,
@@ -206,6 +229,8 @@ def crear_app(
             )
         )
         estado.creacion.append((mensaje, turno["mensaje"]))
+        estado.anotar("yo", mensaje)
+        estado.anotar("tutor", turno["mensaje"])
         if not turno["listo"]:
             return {"mensaje": turno["mensaje"], "listo": False}
 
@@ -234,9 +259,16 @@ def crear_app(
     def api_estudio(cuerpo: CuerpoEstudio) -> dict[str, Any]:
         """Turno del estudio en chat continuo; con `unidad` (re)inicia esa lección."""
         agente = _agente()
-        return dict(
-            _con_llm(lambda: agente.turno_estudio(cuerpo.mensaje, cuerpo.unidad))
-        )
+        r = dict(_con_llm(lambda: agente.turno_estudio(cuerpo.mensaje, cuerpo.unidad)))
+        if cuerpo.mensaje:
+            estado.anotar("yo", cuerpo.mensaje)
+        estado.anotar("tutor", str(r["texto"]))
+        return r
+
+    @app.get("/api/historial")
+    def api_historial() -> dict[str, Any]:
+        """Historial persistente del chat (se pinta al recargar)."""
+        return {"mensajes": estado.chat}
 
     @app.post("/api/artefacto")
     def api_artefacto_unidad(cuerpo: CuerpoEstudio) -> dict[str, Any]:
@@ -419,6 +451,9 @@ def crear_app(
         """Turno del conversatorio socrático de dudas tras reprobar."""
         agente = _agente()
         texto = _con_llm(lambda: agente.conversatorio(indice, cuerpo.mensaje))
+        if cuerpo.mensaje:
+            estado.anotar("yo", cuerpo.mensaje)
+        estado.anotar("tutor", texto)
         return {"texto": texto}
 
     @app.post("/api/quiz/{indice}")
@@ -452,6 +487,11 @@ def crear_app(
             resultado, detalle = agente.calificar_quiz(quiz, cuerpo.respuestas)
         except ValueError as error:
             raise HTTPException(400, str(error)) from error
+        estado.anotar(
+            "sistema",
+            f"🎯 Evaluación de la unidad {indice + 1}: {resultado.nota}/100 — "
+            + ("aprobada 🎉" if resultado.nota >= NOTA_APROBATORIA else "a reintentar"),
+        )
         return {
             "nota": resultado.nota,
             "aprobado": resultado.nota >= NOTA_APROBATORIA,
