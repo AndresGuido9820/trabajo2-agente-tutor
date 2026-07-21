@@ -1,10 +1,13 @@
 # Guion del video de demostración (5-7 minutos)
 
 **Formato:** el video base es una grabación real de la app hecha con
-Playwright (`entregables/video/demo-playwright.webm`, generada por
-`scripts/video_demo.py`); se narra encima y se recortan las esperas de
-generación. Los tiempos exactos de cada escena están en
-`entregables/video/marcas.txt` — usa esas marcas para cortar.
+Playwright (generada por `scripts/video_demo.py`), en dos archivos que se
+concatenan al editar: `entregables/video/demo-playwright.webm` (escenas
+E1-E8b, ~10:39) y `demo-playwright-parte2.webm` (E9-E10, ~1:29). Se narra
+encima y se recortan las esperas de generación. Los tiempos exactos de
+cada escena están en `entregables/video/marcas.txt` y
+`marcas-parte2.txt` — usa esas marcas para cortar. (Los .webm no van al
+repo: quedan locales en `entregables/video/`.)
 
 Requisitos de la rúbrica: todos los miembros hablan con **rótulo en
 pantalla de quién habla**; se muestran cursos para **perfiles distintos**
