@@ -31,11 +31,11 @@ GET  /api/historial/{canal} → cada mensaje incluye "creado_en"
 
 ## Tareas
 
-- [ ] `db.py`: exponer `creado_en` en `historial_chat`.
-- [ ] `prompts.py`: `prompt_reencuentro(ultimos_mensajes, progreso_resumen)`.
-- [ ] `agente.py`: `reencuentro(indice)` (usa historial de BD + progreso).
-- [ ] Front: detectar antigüedad al abrir la clase; tarjeta con los 3 chips.
-- [ ] Pruebas: umbral de horas, contenido del prompt (mensajes+progreso),
+- [x] `db.py`: exponer `creado_en` en `historial_chat`.
+- [x] `prompts.py`: `prompt_reencuentro(ultimos_mensajes, progreso_resumen)`.
+- [x] `agente.py`: `reencuentro(indice)` (usa historial de BD + progreso).
+- [x] Front: detectar antigüedad al abrir la clase; tarjeta con los 3 chips.
+- [x] Pruebas: umbral de horas, contenido del prompt (mensajes+progreso),
       no-avance de la lección, chips correctos según estado.
 
 ## Casos borde

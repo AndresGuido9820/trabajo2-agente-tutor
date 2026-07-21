@@ -37,6 +37,9 @@ PREGUNTAS_POR_QUIZ = 4
 # Charla con el tutor (ver plan/HU-09): turnos de historial que se conservan
 MAX_TURNOS_CHARLA = 8
 
+# Reencuentro (plan/v2/HU-30): horas sin actividad para ofrecer el resumen
+HORAS_PARA_REENCUENTRO = 8
+
 # Guía interactiva y progresión (ver plan/HU-12)
 NOTA_APROBATORIA = 70
 PUNTOS_PRIMER_INTENTO = 10

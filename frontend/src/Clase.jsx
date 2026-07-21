@@ -7,6 +7,13 @@ import { avisar, avisarError } from './App.jsx'
 import { Escribiendo, Mensaje, ZonaChat } from './Chat.jsx'
 import Prosa from './Prosa.jsx'
 
+/** ¿El último mensaje es de hace más de `horas`? (HU-30, reencuentro). */
+function pausaLarga(ultimoEn, horas) {
+  if (!ultimoEn || !horas) return false
+  const ms = Date.now() - new Date(ultimoEn).getTime()
+  return Number.isFinite(ms) && ms > horas * 3600 * 1000
+}
+
 /** El chat de UNA clase: estudio, evaluación y conversatorio inline. */
 export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, haySiguiente }) {
   const [mensajes, setMensajes] = useState([])       // {rol, texto} o {rol:'quiz'|'resultado'|'demo', ...}
@@ -32,6 +39,13 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
           setEspera(null)
           agregar({ rol: 'tutor', texto: r.texto })
           setAvance({ paso: r.paso, total: r.total })
+        } else if (pausaLarga(h.ultimo_en, h.horas_reencuentro)) {
+          // HU-30: si pasaron horas desde el último mensaje, el tutor
+          // resume dónde iban antes de retomar.
+          setEspera('Recordando dónde íbamos…')
+          const r = await api(`/api/clase/${indice}/reencuentro`, undefined, 'POST')
+          setEspera(null)
+          agregar({ rol: 'tutor', texto: r.texto })
         }
       } catch (e) { setEspera(null); avisarError(e) }
     })()

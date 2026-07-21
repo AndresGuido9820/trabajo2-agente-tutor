@@ -41,6 +41,7 @@ from tutor.prompts import (
     prompt_artefacto,
     prompt_avance_leccion,
     prompt_charla,
+    prompt_reencuentro,
     prompt_turno_leccion,
     system_charla,
     system_conversatorio,
@@ -396,6 +397,35 @@ class Agente:
         self.curso.artefactos[clave] = html
         guardar_curso(self.curso, self._dir / ARCHIVO_CURSO)
         return html
+
+    def reencuentro(self, indice: int) -> str:
+        """Resumen de bienvenida al volver a una clase (HU-30).
+
+        Usa los últimos mensajes del historial persistente y el estado del
+        progreso; NO avanza la lección.
+
+        Raises:
+            IndexError: Si la unidad no existe.
+            ErrorLLM: Si la API falla tras los reintentos.
+        """
+        if not 0 <= indice < len(self.curso.temario.unidades):
+            raise IndexError(f"No existe la unidad {indice}.")
+        ultimos = db.historial_chat(self._dir / ARCHIVO_DB, f"u{indice}")[-12:]
+        nota = self.progreso.mejor_nota(indice)
+        partes = [
+            "clase completada"
+            if indice in self.progreso.completadas
+            else "clase en curso",
+        ]
+        if nota is not None:
+            partes.append(f"mejor nota en la evaluación: {nota}/100")
+        fallados = self.progreso.conceptos_fallados_recientes()
+        if fallados:
+            partes.append(f"le costaron: {', '.join(fallados[:4])}")
+        return self._cliente.generar(
+            system=system_tutor(self.perfil),
+            prompt=prompt_reencuentro(ultimos, "; ".join(partes)),
+        )
 
     def preguntar_guia(self, indice: int, seccion: int, mensaje: str) -> str:
         """Pregunta libre al tutor mientras estudia una sección de la guía.
