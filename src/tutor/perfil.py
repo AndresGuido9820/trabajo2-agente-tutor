@@ -9,9 +9,11 @@ from __future__ import annotations
 
 import json
 import logging
+import sqlite3
 from collections.abc import Callable
 from pathlib import Path
 
+from tutor import db
 from tutor.errores import ErrorDatos
 from tutor.models import Nivel, Objetivo, PerfilEstudiante
 
@@ -164,8 +166,7 @@ def validar_perfil_extraido(datos: object, descripcion: str) -> PerfilEstudiante
 
 
 def guardar_perfil(perfil: PerfilEstudiante, ruta: Path) -> None:
-    """Serializa el perfil a JSON en ``ruta`` (crea el directorio si falta)."""
-    ruta.parent.mkdir(parents=True, exist_ok=True)
+    """Guarda el perfil en la base de datos ``ruta`` (tabla ``perfil``)."""
     datos = {
         "version": VERSION_ESQUEMA,
         "nivel": perfil.nivel.value,
@@ -175,7 +176,7 @@ def guardar_perfil(perfil: PerfilEstudiante, ruta: Path) -> None:
         "lenguaje": perfil.lenguaje,
         "descripcion": perfil.descripcion,
     }
-    ruta.write_text(json.dumps(datos, ensure_ascii=False, indent=2), "utf-8")
+    db.guardar_documento(ruta, "perfil", datos)
     logger.info("Perfil guardado en %s", ruta)
 
 
@@ -192,10 +193,10 @@ def cargar_perfil(ruta: Path) -> PerfilEstudiante | None:
         ErrorDatos: Si el archivo existe pero es inválido (JSON corrupto,
             campos faltantes o valores fuera de los enums).
     """
-    if not ruta.exists():
-        return None
     try:
-        datos = json.loads(ruta.read_text("utf-8"))
+        datos = db.cargar_documento(ruta, "perfil")
+        if datos is None:
+            return None
         faltantes = [c for c in _CAMPOS_REQUERIDOS if c not in datos]
         if faltantes:
             raise ValueError(f"faltan campos: {', '.join(faltantes)}")
@@ -207,8 +208,14 @@ def cargar_perfil(ruta: Path) -> PerfilEstudiante | None:
             lenguaje=str(datos["lenguaje"]),
             descripcion=str(datos.get("descripcion", "")),
         )
-    except (json.JSONDecodeError, ValueError, KeyError, TypeError) as error:
+    except (
+        sqlite3.DatabaseError,
+        json.JSONDecodeError,
+        ValueError,
+        KeyError,
+        TypeError,
+    ) as error:
         raise ErrorDatos(
-            f"El archivo de perfil {ruta} está corrupto ({error}). "
+            f"El perfil guardado en {ruta} está corrupto ({error}). "
             "Bórralo o rehaz el cuestionario."
         ) from error

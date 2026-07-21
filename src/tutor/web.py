@@ -8,7 +8,6 @@ quizzes nunca viajan al navegador antes de calificar.
 
 from __future__ import annotations
 
-import json
 import logging
 import sys
 from pathlib import Path
@@ -19,9 +18,10 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from tutor.agente import ARCHIVO_PERFIL, Agente, perfil_o_none
+from tutor import db
+from tutor.agente import ARCHIVO_DB, ARCHIVO_PERFIL, Agente, perfil_o_none
 from tutor.config import NOTA_APROBATORIA, Configuracion, cargar_configuracion
-from tutor.curso import plan_markdown
+from tutor.curso import cargar_plan_md, guardar_plan_md, plan_markdown
 from tutor.errores import ErrorBloqueada, ErrorConfiguracion, ErrorLLM
 from tutor.evaluacion import Quiz
 from tutor.llm import ClienteLLM, ClienteOpenAI, pedir_json
@@ -104,6 +104,9 @@ class _Estado:
     def __init__(self, configuracion: Configuracion, cliente: ClienteLLM) -> None:
         self.configuracion = configuracion
         self.cliente = cliente
+        # Migración única de los JSON del formato viejo a la BD (HU-19).
+        db.migrar_json_legacy(configuracion.dir_datos)
+        self.ruta_db = configuracion.dir_datos / ARCHIVO_DB
         perfil = perfil_o_none(configuracion.dir_datos)
         self.agente: Agente | None = (
             Agente(cliente, configuracion.dir_datos, perfil) if perfil else None
@@ -111,36 +114,10 @@ class _Estado:
         self.quizzes: dict[int, Quiz] = {}
         # Conversación de creación del curso (HU-16), previa al agente.
         self.creacion: list[tuple[str, str]] = []
-        # Historial persistente por conversación (HU-18): cada clase es un
-        # chat distinto; "creacion" es la conversación de diseño del curso.
-        self._ruta_chat = configuracion.dir_datos / "chat.json"
-        self.chats: dict[str, list[dict[str, str]]] = self._cargar_chats()
-
-    def _cargar_chats(self) -> dict[str, list[dict[str, str]]]:
-        """Carga los historiales; corrupto → advertir y arrancar vacío."""
-        if not self._ruta_chat.exists():
-            return {}
-        try:
-            datos = json.loads(self._ruta_chat.read_text("utf-8"))
-            if isinstance(datos, list):  # formato viejo: un solo hilo
-                datos = {"creacion": datos}
-            return {
-                str(canal): [
-                    {"rol": str(m["rol"]), "texto": str(m["texto"])} for m in lista
-                ]
-                for canal, lista in datos.items()
-            }
-        except (json.JSONDecodeError, KeyError, TypeError) as error:
-            logger.warning("Historial de chat corrupto (%s); arranca vacío.", error)
-            return {}
 
     def anotar(self, canal: str, rol: str, texto: str) -> None:
-        """Agrega un mensaje al historial de una conversación y persiste."""
-        hilo = self.chats.setdefault(canal, [])
-        hilo.append({"rol": rol, "texto": texto})
-        del hilo[:-300]  # cota por conversación
-        self._ruta_chat.parent.mkdir(parents=True, exist_ok=True)
-        self._ruta_chat.write_text(json.dumps(self.chats, ensure_ascii=False), "utf-8")
+        """Agrega un mensaje al historial de una conversación (tabla chat)."""
+        db.anotar_chat(self.ruta_db, canal, rol, texto)
 
 
 def crear_app(
@@ -252,17 +229,20 @@ def crear_app(
         estado.agente = Agente(estado.cliente, estado.configuracion.dir_datos, perfil)
         agente = estado.agente
         temario = _con_llm(lambda: agente.curso).temario
-        (estado.configuracion.dir_datos / "curso.md").write_text(
-            plan_markdown(temario, descripcion), "utf-8"
-        )
+        plan = plan_markdown(temario, descripcion)
+        guardar_plan_md(estado.ruta_db, plan)  # metadata del diseño en la BD
+        (estado.configuracion.dir_datos / "curso.md").write_text(plan, "utf-8")
         return {"mensaje": turno["mensaje"], "listo": True}
 
     @app.get("/api/plan")
     def api_plan() -> dict[str, Any]:
-        """El plan del curso (curso.md) para la mini-ventana del panel."""
-        _agente()
-        ruta = estado.configuracion.dir_datos / "curso.md"
-        return {"md": ruta.read_text("utf-8") if ruta.exists() else ""}
+        """El plan del curso (diseño en la BD; curso.md es la copia legible)."""
+        agente = _agente()
+        plan = cargar_plan_md(estado.ruta_db)
+        if not plan:  # cursos creados antes de guardar el plan: reconstruir
+            plan = plan_markdown(agente.curso.temario, agente.perfil.descripcion)
+            guardar_plan_md(estado.ruta_db, plan)
+        return {"md": plan}
 
     @app.post("/api/estudio")
     def api_estudio(cuerpo: CuerpoEstudio) -> dict[str, Any]:
@@ -278,12 +258,12 @@ def crear_app(
     @app.get("/api/historial/{canal}")
     def api_historial(canal: str) -> dict[str, Any]:
         """Historial de una conversación ('creacion' o 'u<indice>')."""
-        return {"mensajes": estado.chats.get(canal, [])}
+        return {"mensajes": db.historial_chat(estado.ruta_db, canal)}
 
     @app.get("/api/conversaciones")
     def api_conversaciones() -> dict[str, Any]:
         """Cuántos mensajes tiene cada conversación (para la barra lateral)."""
-        return {"canales": {c: len(m) for c, m in estado.chats.items() if m}}
+        return {"canales": db.resumen_chats(estado.ruta_db)}
 
     @app.post("/api/artefacto")
     def api_artefacto_unidad(cuerpo: CuerpoEstudio) -> dict[str, Any]:

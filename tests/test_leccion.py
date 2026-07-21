@@ -114,8 +114,8 @@ class TestLeccionConversada:
         assert agente.iniciar_leccion(0) == guion
         assert len(falso.llamadas) == llamadas
 
-        # Y sobrevive en curso.json para una nueva sesión
-        curso = cargar_curso(tmp_path / "curso.json")
+        # Y sobrevive en la BD para una nueva sesión
+        curso = cargar_curso(tmp_path / "tutor.db")
         assert curso is not None and curso.guiones[0] == guion
 
     def test_bucle_leccion_sale_con_salir(self, tmp_path, perfil, capsys):

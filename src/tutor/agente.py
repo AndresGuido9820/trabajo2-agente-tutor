@@ -12,6 +12,7 @@ from datetime import date
 from enum import Enum
 from pathlib import Path
 
+from tutor import db
 from tutor.config import (
     MAX_TURNOS_CHARLA,
     NOTA_APROBATORIA,
@@ -57,9 +58,11 @@ def _validar_avance(datos: object) -> dict[str, object]:
 
 logger = logging.getLogger(__name__)
 
-ARCHIVO_PERFIL = "perfil.json"
-ARCHIVO_CURSO = "curso.json"
-ARCHIVO_PROGRESO = "progreso.json"
+# Toda la persistencia vive en una sola base SQLite por estudiante (HU-19).
+ARCHIVO_DB = "tutor.db"
+ARCHIVO_PERFIL = ARCHIVO_DB
+ARCHIVO_CURSO = ARCHIVO_DB
+ARCHIVO_PROGRESO = ARCHIVO_DB
 
 
 class EstadoUnidad(Enum):
@@ -625,7 +628,7 @@ class Agente:
         self.perfil = nuevo_perfil
         guardar_perfil(nuevo_perfil, self._dir / ARCHIVO_PERFIL)
         self._curso = None
-        (self._dir / ARCHIVO_CURSO).unlink(missing_ok=True)
+        db.borrar_curso(self._dir / ARCHIVO_DB)
         logger.info("Perfil rehecho; el temario se regenerará.")
 
     def guardar(self) -> None:

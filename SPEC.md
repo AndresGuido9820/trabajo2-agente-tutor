@@ -73,10 +73,15 @@ Menú principal: `[n] entrar a unidad n · [e] evaluación de la unidad ·
 | `TUTOR_MODEL` | no (default `gpt-5-mini`) | modelo a usar |
 | `TUTOR_DATA_DIR` | no (default `./data`) | carpeta de perfiles/progreso |
 
-### 3.3 Persistencia (JSON en `TUTOR_DATA_DIR`)
-- `perfil.json` — perfil del estudiante (nivel, lenguaje, objetivo).
-- `curso.json` — temario y lecciones generadas (cache).
-- `progreso.json` — unidades vistas, resultados de evaluaciones.
+### 3.3 Persistencia (SQLite en `TUTOR_DATA_DIR/tutor.db`)
+- Tabla `curso` — el diseño (lenguaje, plan en Markdown, versión de prompts,
+  metadata de creación). `curso.md` es la copia legible/descargable.
+- Tabla `clases` — una fila por clase: definición (título, objetivo,
+  subtemas), el **prompt/guion** con el que el tutor la imparte, el
+  contenido generado y su metadata de actualización.
+- Tablas `perfil`, `progreso` (documentos versionados) y `chat`
+  (historial por conversación). Migración automática desde los JSON del
+  formato anterior.
 
 Los esquemas exactos se definen en cada HU y se validan al cargar
 (archivos corruptos → error claro, nunca crash silencioso).
