@@ -26,8 +26,18 @@ y evaluaciones con un LLM y llevando su progreso.
   formadas → reintentos con backoff y mensajes claros al usuario.
 
 ### RF-3. Interfaz de usuario
-- RF-3.1 Interfaz de línea de comandos (CLI) **y** interfaz web simple local
-  (`uv run tutor-web`, FastAPI single-user sobre el mismo `Agente`).
+- RF-3.1 Interfaz de línea de comandos (CLI) **y** interfaz web local
+  (`uv run tutor-web`, FastAPI single-user sobre el mismo `Agente`). La web
+  es **chat-total**: toda la experiencia ocurre en una sola conversación
+  (header + chat + panel del plan), sin cambios de pantalla.
+- RF-3.1b **Creación conversacional del curso**: el estudiante escribe qué
+  quiere aprender; el asesor resume lo entendido, pregunta lo que falta
+  (nivel, experiencia, lenguaje), propone un temario y solo crea el curso
+  cuando el estudiante confirma. Al confirmar se guarda el plan en
+  `curso.md`, visible y descargable desde una mini-ventana.
+- RF-3.1c **Panel de objetivos vivo**: cada unidad muestra su objetivo; al
+  completar la lección en el chat, el objetivo se tacha y aparece "Repasar
+  en el chat" (reinicia esa lección en la misma conversación).
 - RF-3.2 Mostrar resultados de evaluaciones y progreso.
 - RF-3.3 Navegar por las unidades del curso **aunque su contenido aún no se
   haya generado** (se genera bajo demanda al entrar).
@@ -155,6 +165,12 @@ además prueba en `tests/` (ver `docs/TESTING.md`).
   dudas y el reintento; aprobar desbloquea la siguiente y suma 30 pts. Las
   respuestas correctas de checkpoints y quiz nunca llegan al navegador antes
   de calificar (verificar en la pestaña Red).
+- [ ] **PA-19** La creación es una conversación: ante "hazme un curso de X"
+  el asesor pregunta (p. ej. nivel) y propone ANTES de crear; solo el "ya,
+  dale" crea el curso, guarda `curso.md` y muestra el plan en el panel.
+- [ ] **PA-20** Al terminar una lección en el chat, su objetivo queda tachado
+  en el panel; "↩ Repasar en el chat" la reinicia en la misma conversación;
+  el quiz y el conversatorio ocurren dentro del chat, sin cambiar de vista.
 - [ ] **PA-15** *(Bonus)* Las lecciones incluyen imágenes generadas por IA
   referenciadas en el contenido.
 
