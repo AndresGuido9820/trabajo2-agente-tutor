@@ -21,7 +21,13 @@ from pydantic import BaseModel
 from tutor import db
 from tutor.agente import ARCHIVO_DB, ARCHIVO_PERFIL, Agente, perfil_o_none
 from tutor.config import NOTA_APROBATORIA, Configuracion, cargar_configuracion
-from tutor.curso import cargar_plan_md, guardar_plan_md, plan_markdown
+from tutor.curso import (
+    cargar_plan_md,
+    guardar_curso,
+    guardar_plan_md,
+    plan_markdown,
+    validar_temario,
+)
 from tutor.errores import ErrorBloqueada, ErrorConfiguracion, ErrorLLM
 from tutor.evaluacion import Quiz
 from tutor.llm import ClienteLLM, ClienteOpenAI, pedir_json
@@ -104,22 +110,112 @@ class CuerpoEstudio(BaseModel):
     unidad: int | None = None
 
 
+class ClaseDiseno(BaseModel):
+    """Una clase dentro de la edición estructurada del diseño (HU-20)."""
+
+    titulo: str
+    objetivo: str
+    conceptos: list[str]
+
+
+class CuerpoDiseno(BaseModel):
+    """Body de la edición estructurada del diseño del curso."""
+
+    lenguaje: str
+    clases: list[ClaseDiseno]
+
+
+class _SesionCurso:
+    """Estado en memoria de un curso: su directorio, agente y sesión."""
+
+    def __init__(self, directorio: Path, cliente: ClienteLLM) -> None:
+        self.dir = directorio
+        perfil = perfil_o_none(directorio)
+        self.agente: Agente | None = (
+            Agente(cliente, directorio, perfil) if perfil else None
+        )
+        self.quizzes: dict[int, Quiz] = {}
+        self.creacion: list[tuple[str, str]] = []
+
+
 class _Estado:
-    """Estado del servidor: agente (si hay perfil) y quizzes en curso."""
+    """Estado del servidor: todos los cursos (HU-20) y el curso activo."""
 
     def __init__(self, configuracion: Configuracion, cliente: ClienteLLM) -> None:
         self.configuracion = configuracion
         self.cliente = cliente
-        # Migración única de los JSON del formato viejo a la BD (HU-19).
-        db.migrar_json_legacy(configuracion.dir_datos)
-        self.ruta_db = configuracion.dir_datos / ARCHIVO_DB
-        perfil = perfil_o_none(configuracion.dir_datos)
-        self.agente: Agente | None = (
-            Agente(cliente, configuracion.dir_datos, perfil) if perfil else None
-        )
-        self.quizzes: dict[int, Quiz] = {}
-        # Conversación de creación del curso (HU-16), previa al agente.
-        self.creacion: list[tuple[str, str]] = []
+        self._migrar_a_multicurso(configuracion.dir_datos)
+        self.base = configuracion.dir_datos / "cursos"
+        self.sesiones: dict[int, _SesionCurso] = {}
+        if self.base.exists():
+            for ruta in sorted(self.base.glob("*/tutor.db")):
+                try:
+                    curso_id = int(ruta.parent.name)
+                except ValueError:
+                    continue
+                self.sesiones[curso_id] = _SesionCurso(ruta.parent, cliente)
+        self.activo: int | None = min(self.sesiones) if self.sesiones else None
+
+    @staticmethod
+    def _migrar_a_multicurso(base: Path) -> None:
+        """Mueve el formato de un solo curso a ``cursos/1/`` (una vez)."""
+        db.migrar_json_legacy(base)  # JSON viejos → tutor.db si aplica
+        vieja = base / ARCHIVO_DB
+        if not vieja.exists():
+            return
+        destino = base / "cursos" / "1"
+        destino.mkdir(parents=True, exist_ok=True)
+        vieja.rename(destino / ARCHIVO_DB)
+        if (base / "curso.md").exists():
+            (base / "curso.md").rename(destino / "curso.md")
+        logger.info("Curso existente migrado a %s", destino)
+
+    def crear_curso(self) -> int:
+        """Crea un curso vacío (se diseña conversando) y lo activa."""
+        curso_id = max(self.sesiones, default=0) + 1
+        directorio = self.base / str(curso_id)
+        directorio.mkdir(parents=True, exist_ok=True)
+        db.abrir(directorio / ARCHIVO_DB).close()
+        self.sesiones[curso_id] = _SesionCurso(directorio, self.cliente)
+        self.activo = curso_id
+        return curso_id
+
+    def sesion(self) -> _SesionCurso:
+        """La sesión del curso activo.
+
+        Raises:
+            HTTPException: 409 si no hay ningún curso.
+        """
+        if self.activo is None or self.activo not in self.sesiones:
+            raise HTTPException(409, "Crea un curso primero.")
+        return self.sesiones[self.activo]
+
+    # Propiedades de compatibilidad: los endpoints operan sobre el activo.
+    @property
+    def agente(self) -> Agente | None:
+        if self.activo is None or self.activo not in self.sesiones:
+            return None
+        return self.sesiones[self.activo].agente
+
+    @agente.setter
+    def agente(self, valor: Agente | None) -> None:
+        self.sesion().agente = valor
+
+    @property
+    def creacion(self) -> list[tuple[str, str]]:
+        return self.sesion().creacion
+
+    @property
+    def quizzes(self) -> dict[int, Quiz]:
+        return self.sesion().quizzes
+
+    @property
+    def ruta_db(self) -> Path:
+        return self.sesion().dir / ARCHIVO_DB
+
+    @property
+    def dir_activo(self) -> Path:
+        return self.sesion().dir
 
     def anotar(self, canal: str, rol: str, texto: str) -> None:
         """Agrega un mensaje al historial de una conversación (tabla chat)."""
@@ -167,6 +263,7 @@ def crear_app(
         curso = _con_llm(lambda: agente.curso)
         return {
             "perfil": True,
+            "curso_id": estado.activo,
             "lenguaje": curso.temario.lenguaje,
             "puntos": agente.progreso.puntos,
             "racha": agente.progreso.racha,
@@ -185,6 +282,101 @@ def crear_app(
                 for fila in agente.filas_unidades()
             ],
         }
+
+    @app.get("/api/cursos")
+    def api_cursos() -> dict[str, Any]:
+        """Todos los cursos del estudiante (menú "Mis cursos")."""
+        cursos = []
+        for curso_id, sesion in sorted(estado.sesiones.items()):
+            nombre, lenguaje, aprobadas, total = "Curso sin diseñar", "", 0, 0
+            if sesion.agente is not None:
+                descripcion = sesion.agente.perfil.descripcion
+                if sesion.agente.curso_ya_generado():
+                    temario = sesion.agente.curso.temario
+                    lenguaje = temario.lenguaje
+                    total = len(temario.unidades)
+                    aprobadas = sum(
+                        1
+                        for i in range(total)
+                        if (sesion.agente.progreso.mejor_nota(i) or 0)
+                        >= NOTA_APROBATORIA
+                    )
+                nombre = descripcion[:70] or f"Curso de {lenguaje or '…'}"
+            cursos.append(
+                {
+                    "id": curso_id,
+                    "nombre": nombre,
+                    "lenguaje": lenguaje,
+                    "aprobadas": aprobadas,
+                    "total": total,
+                    "activo": curso_id == estado.activo,
+                }
+            )
+        return {"cursos": cursos}
+
+    @app.post("/api/cursos")
+    def api_crear_curso_nuevo() -> dict[str, Any]:
+        """Crea un curso vacío (se diseña conversando) y lo activa."""
+        return {"id": estado.crear_curso()}
+
+    @app.post("/api/cursos/{curso_id}/activar")
+    def api_activar_curso(curso_id: int) -> dict[str, Any]:
+        """Cambia el curso activo (al que apuntan todos los endpoints)."""
+        if curso_id not in estado.sesiones:
+            raise HTTPException(404, f"No existe el curso {curso_id}.")
+        estado.activo = curso_id
+        return {"ok": True}
+
+    @app.get("/api/diseno")
+    def api_diseno() -> dict[str, Any]:
+        """El diseño ESTRUCTURADO del curso (lo que el LLM recibe)."""
+        agente = _agente()
+        temario = _con_llm(lambda: agente.curso).temario
+        return {
+            "lenguaje": temario.lenguaje,
+            "descripcion": agente.perfil.descripcion,
+            "clases": [
+                {
+                    "indice": i,
+                    "titulo": u.titulo,
+                    "objetivo": u.objetivo,
+                    "conceptos": u.conceptos,
+                }
+                for i, u in enumerate(temario.unidades)
+            ],
+        }
+
+    @app.post("/api/diseno")
+    def api_editar_diseno(cuerpo: CuerpoDiseno) -> dict[str, Any]:
+        """Edición manual ESTRUCTURADA del diseño.
+
+        Valida con las mismas reglas del temario (así el LLM siempre recibe
+        datos limpios), persiste en la BD y regenera el plan Markdown.
+        """
+        agente = _agente()
+        try:
+            temario = validar_temario(
+                {
+                    "lenguaje": cuerpo.lenguaje,
+                    "unidades": [
+                        {
+                            "titulo": c.titulo,
+                            "objetivo": c.objetivo,
+                            "conceptos": c.conceptos,
+                        }
+                        for c in cuerpo.clases
+                    ],
+                }
+            )
+        except (ValueError, KeyError) as error:
+            raise HTTPException(400, f"Diseño inválido: {error}") from error
+        curso = agente.curso
+        curso.temario = temario
+        guardar_curso(curso, estado.ruta_db)
+        plan = plan_markdown(temario, agente.perfil.descripcion)
+        guardar_plan_md(estado.ruta_db, plan)
+        (estado.dir_activo / "curso.md").write_text(plan, "utf-8")
+        return {"ok": True}
 
     def _validar_creacion(datos: Any) -> dict[str, Any]:
         """Valida el JSON del asesor de creación (mensaje/listo/perfil)."""
@@ -206,6 +398,8 @@ def crear_app(
         Cuando el asesor marca listo (el estudiante confirmó), crea el
         perfil, genera el temario y guarda el plan en ``curso.md``.
         """
+        if estado.activo is None:
+            estado.crear_curso()
         if estado.agente is not None:
             raise HTTPException(409, "Ya tienes un curso creado.")
         mensaje = cuerpo.mensaje.strip()
@@ -231,13 +425,13 @@ def crear_app(
             perfil = validar_perfil_extraido(turno["perfil"], descripcion)
         except (ValueError, KeyError) as error:
             raise HTTPException(502, f"Perfil extraído inválido: {error}") from error
-        guardar_perfil(perfil, estado.configuracion.dir_datos / ARCHIVO_PERFIL)
-        estado.agente = Agente(estado.cliente, estado.configuracion.dir_datos, perfil)
+        guardar_perfil(perfil, estado.dir_activo / ARCHIVO_PERFIL)
+        estado.agente = Agente(estado.cliente, estado.dir_activo, perfil)
         agente = estado.agente
         temario = _con_llm(lambda: agente.curso).temario
         plan = plan_markdown(temario, descripcion)
         guardar_plan_md(estado.ruta_db, plan)  # metadata del diseño en la BD
-        (estado.configuracion.dir_datos / "curso.md").write_text(plan, "utf-8")
+        (estado.dir_activo / "curso.md").write_text(plan, "utf-8")
         return {"mensaje": turno["mensaje"], "listo": True}
 
     @app.post("/api/plan")
@@ -248,7 +442,7 @@ def crear_app(
         if not plan:
             raise HTTPException(400, "El plan no puede quedar vacío.")
         guardar_plan_md(estado.ruta_db, plan)
-        (estado.configuracion.dir_datos / "curso.md").write_text(plan, "utf-8")
+        (estado.dir_activo / "curso.md").write_text(plan, "utf-8")
         return {"ok": True}
 
     @app.get("/api/plan")
@@ -299,6 +493,8 @@ def crear_app(
     @app.post("/api/curso")
     def api_crear_curso(cuerpo: CuerpoPromptCurso) -> dict[str, Any]:
         """Crea el curso desde una petición libre: "hazme un curso de…"."""
+        if estado.activo is None:
+            estado.crear_curso()
         texto = cuerpo.prompt.strip()
         if len(texto) < 8:
             raise HTTPException(400, "Cuéntame un poco más: ¿qué quieres aprender?")
@@ -313,13 +509,15 @@ def crear_app(
             )
 
         perfil = _con_llm(operacion)
-        guardar_perfil(perfil, estado.configuracion.dir_datos / ARCHIVO_PERFIL)
-        estado.agente = Agente(cliente, estado.configuracion.dir_datos, perfil)
+        guardar_perfil(perfil, estado.dir_activo / ARCHIVO_PERFIL)
+        estado.agente = Agente(cliente, estado.dir_activo, perfil)
         return {"ok": True}
 
     @app.post("/api/perfil")
     def api_perfil(cuerpo: CuerpoPerfil) -> dict[str, Any]:
         """Crea el perfil del estudiante y arma la sesión del agente."""
+        if estado.activo is None:
+            estado.crear_curso()
         try:
             perfil = PerfilEstudiante(
                 nivel=Nivel(cuerpo.nivel),
@@ -330,8 +528,8 @@ def crear_app(
             )
         except ValueError as error:
             raise HTTPException(400, f"Perfil inválido: {error}") from error
-        guardar_perfil(perfil, estado.configuracion.dir_datos / ARCHIVO_PERFIL)
-        estado.agente = Agente(estado.cliente, estado.configuracion.dir_datos, perfil)
+        guardar_perfil(perfil, estado.dir_activo / ARCHIVO_PERFIL)
+        estado.agente = Agente(estado.cliente, estado.dir_activo, perfil)
         return {"ok": True}
 
     @app.post("/api/leccion/{indice}/iniciar")
