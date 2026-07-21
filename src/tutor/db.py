@@ -222,6 +222,67 @@ def borrar_curso(ruta: Path) -> None:
         conexion.execute("DELETE FROM clases")
 
 
+# Registro de uso del LLM (HU-39). Vive en una BD GLOBAL (data/uso.db):
+# el costo es del operador, no de un curso.
+_ESQUEMA_USO = """
+CREATE TABLE IF NOT EXISTS llm_uso(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  fecha TEXT NOT NULL,
+  carril TEXT NOT NULL,
+  modelo TEXT NOT NULL,
+  tokens_prompt INTEGER,
+  tokens_salida INTEGER,
+  duracion_ms INTEGER NOT NULL
+);
+"""
+
+
+def anotar_uso(
+    ruta: Path,
+    carril: str,
+    modelo: str,
+    tokens_prompt: int | None,
+    tokens_salida: int | None,
+    duracion_ms: int,
+) -> None:
+    """Registra una llamada al LLM (tokens ``None`` si el SDK no los dio)."""
+    ruta.parent.mkdir(parents=True, exist_ok=True)
+    with sqlite3.connect(ruta) as conexion:
+        conexion.executescript(_ESQUEMA_USO)
+        conexion.execute(
+            "INSERT INTO llm_uso"
+            "(fecha, carril, modelo, tokens_prompt, tokens_salida, duracion_ms) "
+            "VALUES(?,?,?,?,?,?)",
+            (ahora(), carril, modelo, tokens_prompt, tokens_salida, duracion_ms),
+        )
+
+
+def resumen_uso(ruta: Path) -> list[dict[str, Any]]:
+    """Uso agregado por día/carril/modelo (llamadas, tokens, duración)."""
+    if not ruta.exists():
+        return []
+    with sqlite3.connect(ruta) as conexion:
+        conexion.executescript(_ESQUEMA_USO)
+        filas = conexion.execute(
+            "SELECT substr(fecha, 1, 10) AS dia, carril, modelo, COUNT(*), "
+            "SUM(COALESCE(tokens_prompt, 0)), SUM(COALESCE(tokens_salida, 0)), "
+            "SUM(duracion_ms) FROM llm_uso GROUP BY dia, carril, modelo "
+            "ORDER BY dia"
+        ).fetchall()
+    return [
+        {
+            "dia": dia,
+            "carril": carril,
+            "modelo": modelo,
+            "llamadas": llamadas,
+            "tokens_prompt": tp,
+            "tokens_salida": ts,
+            "duracion_ms": ms,
+        }
+        for dia, carril, modelo, llamadas, tp, ts, ms in filas
+    ]
+
+
 def migrar_json_legacy(dir_datos: Path) -> None:
     """Importa una sola vez los JSON del formato viejo a la BD.
 

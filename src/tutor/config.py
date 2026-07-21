@@ -17,6 +17,14 @@ from tutor.errores import ErrorConfiguracion
 MODELO_POR_DEFECTO = "gpt-5-mini"
 DIR_DATOS_POR_DEFECTO = "./data"
 
+# Precios por 1M de tokens (USD, entrada/salida) para la estimación de
+# costo local (HU-39). Editables; un modelo ausente no estima costo.
+PRECIOS_MODELO: dict[str, tuple[float, float]] = {
+    "gpt-5": (1.25, 10.0),
+    "gpt-5-mini": (0.25, 2.0),
+    "gpt-5-nano": (0.05, 0.40),
+}
+
 # Límites de interacción con el LLM (ver plan/HU-02-cliente-llm.md).
 # Los modelos razonadores pueden tardar 1-3 min en generaciones largas
 # (artefactos, guías): un timeout corto convierte llamadas exitosas en
@@ -56,6 +64,8 @@ class Configuracion:
     api_key: str
     modelo: str
     dir_datos: Path
+    # Carril conversacional (HU-39): vacío = usar ``modelo`` para todo.
+    modelo_chat: str = ""
 
 
 def cargar_configuracion(entorno: dict[str, str] | None = None) -> Configuracion:
@@ -88,4 +98,5 @@ def cargar_configuracion(entorno: dict[str, str] | None = None) -> Configuracion
         dir_datos=Path(
             entorno.get("TUTOR_DATA_DIR", "").strip() or DIR_DATOS_POR_DEFECTO
         ),
+        modelo_chat=entorno.get("TUTOR_MODEL_CHAT", "").strip(),
     )

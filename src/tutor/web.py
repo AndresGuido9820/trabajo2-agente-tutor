@@ -25,6 +25,7 @@ from tutor.agente import ARCHIVO_DB, ARCHIVO_PERFIL, Agente, perfil_o_none
 from tutor.config import (
     HORAS_PARA_REENCUENTRO,
     NOTA_APROBATORIA,
+    PRECIOS_MODELO,
     Configuracion,
     cargar_configuracion,
 )
@@ -563,6 +564,23 @@ def crear_app(
     def api_estadisticas() -> dict[str, Any]:
         """Métricas de aprendizaje del curso activo (vista Mi progreso)."""
         return _agente().estadisticas()
+
+    @app.get("/api/uso")
+    def api_uso() -> dict[str, Any]:
+        """Uso del LLM por día/carril con costo estimado (HU-39, global)."""
+        filas = db.resumen_uso(configuracion.dir_datos / "uso.db")
+        for fila in filas:
+            precios = PRECIOS_MODELO.get(fila["modelo"])
+            fila["costo_usd"] = (
+                round(
+                    fila["tokens_prompt"] / 1e6 * precios[0]
+                    + fila["tokens_salida"] / 1e6 * precios[1],
+                    4,
+                )
+                if precios
+                else None
+            )
+        return {"uso": filas}
 
     @app.get("/api/conversaciones")
     def api_conversaciones() -> dict[str, Any]:

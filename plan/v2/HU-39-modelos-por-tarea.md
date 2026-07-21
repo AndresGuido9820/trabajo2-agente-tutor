@@ -32,14 +32,14 @@ los turnos conversacionales y uno potente en las generaciones estructuradas
 
 ## Tareas
 
-- [ ] `config.py`: `modelo_chat`, `PRECIOS_MODELO` (dict editable).
-- [ ] `llm.py`: parámetro `modelo` por llamada + medición de duración +
+- [x] `config.py`: `modelo_chat`, `PRECIOS_MODELO` (dict editable).
+- [x] `llm.py`: parámetro `modelo` por llamada + medición de duración +
       tokens de la respuesta del SDK; hook `registrar_uso`.
-- [ ] `db.py`: tabla `llm_uso` (en la BD del curso activo o una global
+- [x] `db.py`: tabla `llm_uso` (en la BD del curso activo o una global
       `data/uso.db` — decisión: GLOBAL, el costo es del operador).
-- [ ] `agente.py`/`web.py`: pasar el carril en cada sitio (tabla arriba).
-- [ ] `web.py`: `GET /api/uso` (agregado por día/carril) para HU-31.
-- [ ] Pruebas: carril correcto por operación (espiando el fake), registro
+- [x] `agente.py`/`web.py`: pasar el carril en cada sitio (tabla arriba).
+- [x] `web.py`: `GET /api/uso` (agregado por día/carril) para HU-31.
+- [x] Pruebas: carril correcto por operación (espiando el fake), registro
       de uso, estimación de costo con precios de prueba, default sin
       `TUTOR_MODEL_CHAT` = mismo modelo.
 

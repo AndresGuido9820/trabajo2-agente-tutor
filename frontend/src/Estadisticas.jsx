@@ -9,9 +9,11 @@ import { avisarError } from './App.jsx'
 /** Vista "Mi progreso" (HU-31): métricas calculadas en el backend. */
 export default function Estadisticas({ irAClase }) {
   const [datos, setDatos] = useState(null)
+  const [uso, setUso] = useState([])
 
   useEffect(() => {
     api('/api/estadisticas').then(setDatos).catch(avisarError)
+    api('/api/uso').then((r) => setUso(r.uso)).catch(() => {})
   }, [])
 
   if (!datos) {
@@ -117,6 +119,20 @@ export default function Estadisticas({ irAClase }) {
             )}
           </Card>
         </SimpleGrid>
+
+        {uso.length > 0 && (
+          <Card withBorder radius="md" p="md" mt="md">
+            <Text fw={700} mb="xs">🤖 Uso del modelo (local)</Text>
+            <Stack gap={4}>
+              {uso.slice(-6).map((f, i) => (
+                <Text size="sm" c="dimmed" key={i}>
+                  {f.dia} · {f.carril}/{f.modelo}: {f.llamadas} llamadas
+                  {f.costo_usd !== null && ` · ~$${f.costo_usd} USD`}
+                </Text>
+              ))}
+            </Stack>
+          </Card>
+        )}
       </Box>
     </Box>
   )
