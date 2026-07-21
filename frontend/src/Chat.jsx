@@ -34,8 +34,10 @@ export function Mensaje({ rol, children, lenguaje, ancho }) {
 }
 
 export function Escribiendo({ texto = 'El tutor escribe…' }) {
+  // aria-hidden: el indicador es ruido para lectores; se anuncia el
+  // mensaje completo al llegar (aria-live de ZonaChat), no el "escribiendo".
   return (
-    <Group gap="xs" mb="sm">
+    <Group gap="xs" mb="sm" aria-hidden>
       <Loader size="xs" type="dots" />
       <Text size="sm" c="dimmed">{texto}</Text>
     </Group>
@@ -49,7 +51,8 @@ export function ZonaChat({ children, dep }) {
     ref.current?.scrollTo({ top: ref.current.scrollHeight, behavior: 'smooth' })
   }, [dep])
   return (
-    <Box ref={ref} style={{ flex: 1, overflowY: 'auto' }} p="lg">
+    <Box ref={ref} style={{ flex: 1, overflowY: 'auto' }} p="lg"
+      aria-live="polite" role="log" aria-label="Conversación con el tutor">
       <Box maw={760} mx="auto">{children}</Box>
     </Box>
   )

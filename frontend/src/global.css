@@ -1,0 +1,17 @@
+/* Ajustes globales de accesibilidad (HU-38).
+   El "dimmed" por defecto de Mantine no alcanza AA (4.5:1) sobre los fondos
+   de tarjeta/hover que usamos; se sube un paso en ambos temas. */
+:root[data-mantine-color-scheme='light'] {
+  --mantine-color-dimmed: var(--mantine-color-gray-7);
+  /* El texto de la variante "light" (badges 🔥/⭐, botones suaves) usa el
+     tono 6, que no alcanza 4.5:1 sobre su fondo tintado; ni siquiera el
+     tono 9 llega en naranja/amarillo. Tonos a medida verificados con axe. */
+  --mantine-color-yellow-light-color: #6b4400;
+  --mantine-color-orange-light-color: #7d2906;
+  --mantine-color-teal-light-color: #054d3d;
+  --mantine-color-indigo-light-color: #2b3a91;
+  --mantine-color-red-light-color: #7d1a15;
+}
+:root[data-mantine-color-scheme='dark'] {
+  --mantine-color-dimmed: var(--mantine-color-dark-1);
+}
