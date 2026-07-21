@@ -1,64 +1,109 @@
 # Guion del video de demostración (5-7 minutos)
 
-Requisitos: todos los miembros hablan, con rótulo en pantalla de quién habla;
-se demuestran cursos para perfiles distintos.
+**Formato:** el video base es una grabación real de la app hecha con
+Playwright (`entregables/video/demo-playwright.webm`, generada por
+`scripts/video_demo.py`); se narra encima y se recortan las esperas de
+generación. Los tiempos exactos de cada escena están en
+`entregables/video/marcas.txt` — usa esas marcas para cortar.
 
-> Antes de grabar: borrar `./data` para arrancar de cero, `.env` configurado,
-> fuente grande. Tener un SEGUNDO curso pre-generado en otra carpeta
-> (`TUTOR_DATA_DIR=...` con perfil front/JavaScript) para comparar sin
-> esperas. Internet activo (Pyodide y Python Tutor).
+Requisitos de la rúbrica: todos los miembros hablan con **rótulo en
+pantalla de quién habla**; se muestran cursos para **perfiles distintos**
+(aquí: "ventas con Excel → Python" y "nunca programé → web/JS").
 
-## Escena 1 — Qué es (0:00-0:40) · habla: _(nombre 1)_
+> Edición sugerida: recorta las esperas de generación (los tramos donde
+> solo se ve el indicador "escribiendo…") a 1-2 s con un corte o un
+> acelerado x8; el resto va a velocidad real. Apunta a 5:30-6:30 finales.
 
-- Un tutor de programación con LLM donde TODO pasa en una conversación:
-  pides tu curso hablando, estudias charlando y el plan vive al lado.
-- Stack en una frase: Python + FastAPI + API de OpenAI, sin frameworks de
-  agentes, 158 pruebas automatizadas.
+---
 
-## Escena 2 — Creación conversacional en vivo (0:40-2:00) · habla: _(nombre 2)_
+## Escena 0 — Intro (sin video de la app, ~25 s) · habla: _(nombre 1)_
 
-- `uv run tutor-web` → escribir: *"Hazme un curso de Python para analizar
-  las ventas de mi negocio; manejo bien Excel"*.
-- Mostrar que el asesor **NO crea de una**: resume lo que entendió, pregunta
-  el nivel, propone un temario → responder, ajustar si se quiere, y
-  confirmar con **"ya, dale"**.
-- Se crea el curso: el **plan aparece en el panel derecho** y quedó guardado
-  como `curso.md` → abrir la mini-ventana 📄 y el botón de descarga.
-- Señalar los títulos personalizados (analogías de Excel en todo el temario).
+> "Este es Profe Bit, un tutor de programación construido sobre la API de
+> OpenAI. La idea central: **todo pasa conversando** — pides tu curso
+> hablando, estudias charlando, y el sistema decide con criterio cuándo
+> avanzas. Python y FastAPI, sin frameworks de agentes, 296 pruebas
+> automatizadas y calificación siempre local: el LLM genera contenido,
+> nunca pone la nota."
 
-## Escena 3 — Estudiar charlando (2:00-3:40) · habla: _(nombre 3)_
+## Escena 1 — Mis cursos, tema y gestión (marca E1-E2) · habla: _(nombre 1)_
 
-- El tutor arranca la lección en el mismo chat (método PRIMM): responde MAL
-  la predicción a propósito → corrige con amabilidad y avanza de paso.
-- Botón **▶ Pruébalo** en un bloque de código: se ejecuta EN el navegador
-  (Pyodide); mencionar 🔍 Paso a paso (Python Tutor).
-- Botón **✨ demo interactiva**: el tutor genera una mini-página interactiva
-  del concepto (tenerla ya cacheada de un ensayo previo para no esperar).
-- Al terminar la lección: **el objetivo se tacha en el panel** 🎉 y aparece
-  "Repasar en el chat".
+- Se ve: la biblioteca de cursos, el toggle claro/oscuro, la sección de
+  archivados, y el renombrado de un curso desde el menú ⋯.
+> "Esta es la biblioteca: cada curso con su progreso. Hay tema claro y
+> oscuro con contraste AA verificado con axe-core, cursos archivables, y
+> gestión completa: renombrar, exportar, borrar con papelera."
 
-## Escena 4 — Evaluación, candado y conversatorio (3:40-5:10) · habla: _(nombre 1)_
+## Escena 2 — Crear un curso conversando (marca E3) · habla: _(nombre 2)_
 
-- Presentar la evaluación **dentro del chat**; reprobar a propósito.
-- Mostrar: la unidad 2 sigue 🔒, y el tutor abre el **conversatorio
-  socrático** en el mismo hilo (pistas, no respuestas; chips "Explícame la
-  pregunta N").
-- Reintentar: señalar que las preguntas son **variantes nuevas** (no se
-  memoriza la letra). Aprobar → +30 ⭐, objetivo aprobado, unidad 2
-  desbloqueada, racha 🔥 y puntos en el header.
+- Se ve: "Quiero aprender a hacer páginas web desde cero, nunca he
+  programado" → el asesor **pregunta** antes de crear → "ya, dale" → el
+  curso se crea y arranca la clase 1.
+> "Fíjense que el asesor NO crea el curso de una: resume lo que entendió,
+> pregunta el nivel y el tiempo disponible, propone un temario y solo lo
+> crea cuando confirmo. Este perfil es 'nunca he programado, quiero web' —
+> compárenlo con el curso de ventas de la otra escena: temario, lenguaje y
+> analogías completamente distintos."
 
-## Escena 5 — Otro perfil + bajo el capó (5:10-6:30) · hablan: todos (frases cortas)
+## Escena 3 — La clase por objetivos (marcas E3b-E4) · habla: _(nombre 2)_
 
-- _(nombre 2)_: cambiar a la carpeta del curso front/JavaScript pre-generado:
-  mismo producto, curso totalmente distinto (DOM temprano, proyectos web).
-- _(nombre 3)_: ingeniería: prompts con PRIMM y banco de misconceptions,
-  guardrails socráticos tipo Khanmigo, verificación independiente de
-  quizzes, calificación local determinista, JSON validado con reintentos.
-- _(nombre 1)_: cierre: qué aprendimos de los LLMs (la calidad pedagógica se
-  especifica, no emerge; el sistema alrededor es el producto). Despedida.
+- Se ve: la clase nueva con su **panel de objetivos** a la derecha; luego
+  el curso de ventas con su **historial persistente** y el repaso.
+> "Cada clase es una conversación con historial persistente. El panel
+> derecho muestra los 3-4 objetivos de la clase y se van marcando en vivo;
+> la evaluación final está bloqueada hasta cumplirlos todos. El tutor
+> escribe en tiempo real, por streaming."
+
+## Escena 4 — Mini-quiz y reto de código (marcas E5-E5c) · habla: _(nombre 3)_
+
+- Se ve: el tutor avanza paso a paso (PRIMM); al cerrar un objetivo salta
+  el **mini-quiz** (se responde y suma ⭐); luego el **reto de código**:
+  Verificar corre los tests EN el navegador y la **pista** es socrática.
+> "El método es PRIMM: predigo antes de que me expliquen. El tutor decide
+> si mi respuesta atiende el paso o si es una duda — un 'hola' no avanza
+> la lección. Al cerrar cada objetivo hay un mini-quiz pre-generado, y un
+> reto de código real: los tests corren en MI navegador con Pyodide, y si
+> me trabo, la pista me guía pero jamás me da la solución."
+
+## Escena 5 — Demo interactiva ✨ (marca E6) · habla: _(nombre 3)_
+
+- Se ve: la demo HTML generada por el LLM dentro del chat (iframe aislado).
+> "El botón ✨ genera una demo interactiva del objetivo — el LLM escribe
+> una mini-página que pasa un control de calidad automático antes de
+> mostrarse, y corre en un sandbox sin red. Si no me gusta, la regenero."
+
+## Escena 6 — Buscador, progreso y repaso (marcas E7-E8b) · habla: _(nombre 1)_
+
+- Se ve: ⌘K con resultados de clases y mensajes; la vista Mi progreso
+  (actividad, notas, conceptos); el Repaso del día.
+> "Todo lo que vi es buscable con comando-K. Mi progreso muestra la
+> actividad, las notas y qué conceptos domino o debo repasar — y lo que
+> fallo entra a un repaso espaciado a 1, 3 y 7 días, que es lo que la
+> evidencia dice que funciona para no olvidar."
+
+## Escena 7 — Evaluación final (marca E9) · habla: _(nombre 2)_
+
+- Se ve: evaluación de 6+ preguntas con badges de nivel
+  (recordar/comprender/aplicar), calificación, nota y resumen por concepto.
+> "La evaluación pondera por nivel de Bloom: las preguntas de 'aplicar'
+> pesan el triple que las de memoria — saber definiciones no aprueba. Las
+> preguntas salen de un banco por clase que garantiza que dos intentos
+> nunca repiten enunciado, y si repruebo, se abre un conversatorio
+> socrático sobre MIS errores. La nota la calcula el servidor comparando
+> índices: el LLM nunca califica."
+
+## Escena 8 — Exportar y cierre (marca E10) · habla: _(nombre 3)_
+
+- Se ve: exportar el curso a .zip desde el menú ⋯; vuelta a Mis cursos.
+> "El curso completo — diseño, conversaciones y resultados — se exporta a
+> un zip de Markdown para estudiar offline. Todo el proyecto está en
+> GitHub con CI, 296 pruebas, y el reporte publicado en GitHub Pages.
+> Gracias."
+
+---
 
 ## Checklist de edición
 
 - [ ] Rótulo con el nombre de quien habla en cada escena.
-- [ ] Duración 5:00-7:00; audio parejo; terminal/navegador legibles.
-- [ ] Sin API keys en pantalla (¡ojo con `.env` y el historial del shell!).
+- [ ] Recortar las esperas de generación (ver marcas.txt).
+- [ ] Duración final entre 5 y 7 minutos.
+- [ ] Exportar y subir; enlazar en el README si el curso lo pide.

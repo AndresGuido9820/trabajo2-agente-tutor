@@ -1,0 +1,3 @@
+00:01  E1 · Mis cursos + tema claro/oscuro + archivados
+00:12  E2 · Renombrar curso (menú ⋯)
+00:18  E3 · Nuevo curso: diseño conversacional (perfil web/JS)

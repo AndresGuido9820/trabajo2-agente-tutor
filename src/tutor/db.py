@@ -416,6 +416,11 @@ def migrar_json_legacy(dir_datos: Path) -> None:
         return
 
     logger.info("Migrando datos JSON heredados a %s", ruta_db)
+    # Los JSON se apartan tras migrar para que la migración no se repita.
+    for nombre in ("perfil.json", "progreso.json", "curso.json", "chat.json"):
+        archivo = dir_datos / nombre
+        if archivo.exists():
+            archivo.rename(archivo.with_suffix(".migrado"))
     with abrir(ruta_db) as conexion:
         if perfil:
             conexion.execute(

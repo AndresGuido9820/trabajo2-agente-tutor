@@ -208,7 +208,15 @@ class _Estado:
 
     @staticmethod
     def _migrar_a_multicurso(base: Path) -> None:
-        """Mueve el formato de un solo curso a ``cursos/1/`` (una vez)."""
+        """Mueve el formato de un solo curso a ``cursos/1/`` (una vez).
+
+        IDEMPOTENTE: si ``cursos/`` ya existe, no hay nada que migrar —
+        sin este candado, unos JSON legacy que quedaran en ``base`` se
+        re-migraban en CADA arranque y aplastaban la BD real del curso 1
+        (hallazgo 2026-07-21).
+        """
+        if (base / "cursos").exists():
+            return
         db.migrar_json_legacy(base)  # JSON viejos → tutor.db si aplica
         vieja = base / ARCHIVO_DB
         if not vieja.exists():

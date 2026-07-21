@@ -170,7 +170,8 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
     try {
       const r = await api('/api/estudio', { unidad: indice })
       agregar({ rol: 'tutor', texto: r.texto })
-      setAvance({ paso: r.paso, total: r.total })
+      setAvance({ paso: r.paso, total: r.total, objetivo: r.objetivo, objetivos_total: r.objetivos_total })
+      cargarPanel()  // el repaso puede regenerar el guion (v2 → panel)
     } catch (e) { avisarError(e) }
     setEspera(null)
   }
