@@ -56,3 +56,24 @@ class TestGestionCursos:
         web.request("DELETE", "/api/cursos/1")
         assert web.get("/api/cursos").json() == {"cursos": []}
         assert web.get("/api/estado").json() == {"perfil": False}
+
+
+def test_guardar_curso_preserva_nombre_y_archivado(tmp_path):
+    """Generar contenido no puede borrar la metadata (hallazgo 2026-07-21)."""
+    from tutor import db
+    from tutor.curso import Curso, Temario, Unidad, guardar_curso
+
+    ruta = tmp_path / "tutor.db"
+    curso = Curso(
+        temario=Temario(
+            lenguaje="python",
+            unidades=[
+                Unidad(titulo=f"U{i}", objetivo="o", conceptos=["c"]) for i in range(5)
+            ],
+        )
+    )
+    guardar_curso(curso, ruta)
+    db.escribir_meta_curso(ruta, nombre="Mi curso 📊", archivado=True)
+    guardar_curso(curso, ruta)  # re-guardar (como al generar una lección)
+    meta = db.leer_meta_curso(ruta)
+    assert meta == {"nombre": "Mi curso 📊", "archivado": True}
