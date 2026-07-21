@@ -28,11 +28,11 @@ GET    /api/cursos             → cada curso incluye {nombre, archivado}
 
 ## Tareas
 
-- [ ] `db.py`: columnas `nombre`, `archivado` (ALTER TABLE tolerante).
-- [ ] `web.py`: PATCH/DELETE + papelera (shutil.move) + reasignar activo.
-- [ ] Front `MisCursos.jsx`: menú ⋯ (Mantine Menu), modal de confirmación
+- [x] `db.py`: columnas `nombre`, `archivado` (ALTER TABLE tolerante).
+- [x] `web.py`: PATCH/DELETE + papelera (shutil.move) + reasignar activo.
+- [x] Front `MisCursos.jsx`: menú ⋯ (Mantine Menu), modal de confirmación
       de borrado con input del nombre, sección "Archivados" colapsada.
-- [ ] Pruebas: renombrar persiste; borrar mueve a papelera y reasigna
+- [x] Pruebas: renombrar persiste; borrar mueve a papelera y reasigna
       activo; archivado sale del listado principal; 404 en id inexistente.
 
 ## Casos borde

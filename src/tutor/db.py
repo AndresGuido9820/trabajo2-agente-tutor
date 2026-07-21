@@ -68,6 +68,13 @@ def ahora() -> str:
     return datetime.now(UTC).isoformat(timespec="seconds")
 
 
+# Columnas añadidas después de la v1 del esquema (migración tolerante).
+_COLUMNAS_NUEVAS = [
+    ("curso", "nombre", "TEXT NOT NULL DEFAULT ''"),
+    ("curso", "archivado", "INTEGER NOT NULL DEFAULT 0"),
+]
+
+
 def abrir(ruta: Path) -> sqlite3.Connection:
     """Abre (creando el esquema si falta) la base de datos.
 
@@ -77,7 +84,50 @@ def abrir(ruta: Path) -> sqlite3.Connection:
     ruta.parent.mkdir(parents=True, exist_ok=True)
     conexion = sqlite3.connect(ruta)
     conexion.executescript(_ESQUEMA)
+    for tabla, columna, ddl in _COLUMNAS_NUEVAS:
+        existentes = {
+            fila[1] for fila in conexion.execute(f"PRAGMA table_info({tabla})")
+        }
+        if columna not in existentes:
+            conexion.execute(f"ALTER TABLE {tabla} ADD COLUMN {columna} {ddl}")
     return conexion
+
+
+def leer_meta_curso(ruta: Path) -> dict[str, object]:
+    """Nombre personalizado y bandera de archivado del curso."""
+    if not ruta.exists():
+        return {"nombre": "", "archivado": False}
+    with abrir(ruta) as conexion:
+        fila = conexion.execute(
+            "SELECT nombre, archivado FROM curso WHERE id = 1"
+        ).fetchone()
+    if not fila:
+        return {"nombre": "", "archivado": False}
+    return {"nombre": str(fila[0]), "archivado": bool(fila[1])}
+
+
+def escribir_meta_curso(
+    ruta: Path, nombre: str | None = None, archivado: bool | None = None
+) -> None:
+    """Actualiza nombre y/o archivado (el curso debe existir en la BD).
+
+    Si aún no hay fila de curso (curso sin diseñar), se crea una mínima
+    para poder guardar la metadata.
+    """
+    with abrir(ruta) as conexion:
+        existe = conexion.execute("SELECT 1 FROM curso WHERE id = 1").fetchone()
+        if not existe:
+            conexion.execute(
+                "INSERT INTO curso(id, lenguaje, prompts_version, creado_en) "
+                "VALUES(1, '', 0, ?)",
+                (ahora(),),
+            )
+        if nombre is not None:
+            conexion.execute("UPDATE curso SET nombre = ? WHERE id = 1", (nombre,))
+        if archivado is not None:
+            conexion.execute(
+                "UPDATE curso SET archivado = ? WHERE id = 1", (int(archivado),)
+            )
 
 
 def cargar_documento(ruta: Path, tabla: str) -> Any | None:
