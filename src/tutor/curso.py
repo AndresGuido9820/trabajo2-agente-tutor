@@ -56,11 +56,41 @@ class PasoLeccion:
 
 
 @dataclass(frozen=True)
+class PreguntaIntermedia:
+    """Pregunta del mini-quiz que cierra un objetivo (plan/v2/HU-24)."""
+
+    enunciado: str
+    opciones: list[str]
+    correcta: int
+    explicacion: str
+    concepto: str
+
+
+@dataclass(frozen=True)
+class QuizIntermedio:
+    """Mini-quiz de 2 preguntas al cerrar un objetivo del guion v2.
+
+    ``fin_paso`` es el índice (en la lista APLANADA de pasos) del último
+    paso del objetivo: al completarlo, el quiz se dispara.
+    """
+
+    fin_paso: int
+    preguntas: list[PreguntaIntermedia]
+
+
+@dataclass(frozen=True)
 class GuionLeccion:
-    """Objetivos + paso a paso que la conversación de la lección sigue."""
+    """Objetivos + paso a paso que la conversación de la lección sigue.
+
+    Un guion v2 (HU-24) agrupa los pasos por objetivo; aquí se representa
+    APLANADO (``pasos``) más las fronteras de cada objetivo
+    (``intermedios``): así la maquinaria de avance/streaming de la
+    conversación no cambia. ``intermedios`` vacío = guion v1.
+    """
 
     objetivos: list[str]
     pasos: list[PasoLeccion]
+    intermedios: list[QuizIntermedio] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -202,24 +232,18 @@ def generar_leccion(
 MIN_PASOS_GUION = 5
 MAX_PASOS_GUION = 8
 
+# Guion v2 (HU-24): objetivos con su propia secuencia PRIMM y mini-quiz.
+MIN_OBJETIVOS_GUION = 3
+MAX_OBJETIVOS_GUION = 4
+MIN_PASOS_OBJETIVO = 4
+MAX_PASOS_OBJETIVO = 7
+PREGUNTAS_INTERMEDIAS = 2
 
-def validar_guion(datos: Any) -> GuionLeccion:
-    """Convierte y valida el JSON crudo del guion de lección.
 
-    Raises:
-        ValueError: Si faltan objetivos, el número de pasos está fuera de
-            rango o algún paso tiene tipo desconocido o instrucción vacía.
-    """
-    objetivos = [str(o).strip() for o in datos["objetivos"]]
-    if not objetivos or not all(objetivos):
-        raise ValueError("los objetivos no pueden estar vacíos")
-    crudos = datos["pasos"]
-    if not isinstance(crudos, list) or not (
-        MIN_PASOS_GUION <= len(crudos) <= MAX_PASOS_GUION
-    ):
-        raise ValueError(
-            f"se esperaban entre {MIN_PASOS_GUION} y {MAX_PASOS_GUION} pasos"
-        )
+def _validar_pasos(crudos: Any, minimo: int, maximo: int) -> list[PasoLeccion]:
+    """Valida una lista de pasos PRIMM (tipo del catálogo + instrucción)."""
+    if not isinstance(crudos, list) or not minimo <= len(crudos) <= maximo:
+        raise ValueError(f"se esperaban entre {minimo} y {maximo} pasos")
     pasos = []
     for numero, crudo in enumerate(crudos):
         tipo = str(crudo["tipo"]).strip()
@@ -229,6 +253,78 @@ def validar_guion(datos: Any) -> GuionLeccion:
         if not instruccion:
             raise ValueError(f"el paso {numero} no tiene instrucción")
         pasos.append(PasoLeccion(tipo=tipo, instruccion=instruccion))
+    return pasos
+
+
+def _validar_pregunta_intermedia(crudo: Any) -> PreguntaIntermedia:
+    """Valida una pregunta del mini-quiz (mismas reglas que el quiz)."""
+    opciones = [str(o) for o in crudo["opciones"]]
+    correcta = int(crudo["correcta"])
+    if len(opciones) != 4:
+        raise ValueError("la pregunta intermedia debe tener 4 opciones")
+    if not 0 <= correcta < 4:
+        raise ValueError("índice 'correcta' fuera de rango en pregunta intermedia")
+    campos = {
+        campo: str(crudo[campo]).strip()
+        for campo in ("enunciado", "explicacion", "concepto")
+    }
+    if not all(campos.values()):
+        raise ValueError("la pregunta intermedia tiene campos vacíos")
+    return PreguntaIntermedia(
+        enunciado=campos["enunciado"],
+        opciones=opciones,
+        correcta=correcta,
+        explicacion=campos["explicacion"],
+        concepto=campos["concepto"],
+    )
+
+
+def validar_guion(datos: Any) -> GuionLeccion:
+    """Convierte y valida el JSON crudo del guion (v1 plano o v2 por objetivos).
+
+    v2 (HU-24): ``{"version": 2, "objetivos": [{objetivo, pasos, quiz}]}``
+    se APLANA a una sola lista de pasos con las fronteras en
+    ``intermedios`` (la conversación no distingue versiones).
+
+    Raises:
+        ValueError: Si faltan objetivos, los pasos están fuera de rango o
+            algún paso/pregunta es inválido.
+    """
+    if int(datos.get("version", 1)) >= 2:
+        crudos = datos["objetivos"]
+        if not isinstance(crudos, list) or not (
+            MIN_OBJETIVOS_GUION <= len(crudos) <= MAX_OBJETIVOS_GUION
+        ):
+            raise ValueError(
+                f"se esperaban entre {MIN_OBJETIVOS_GUION} y "
+                f"{MAX_OBJETIVOS_GUION} objetivos"
+            )
+        objetivos: list[str] = []
+        pasos: list[PasoLeccion] = []
+        intermedios: list[QuizIntermedio] = []
+        for crudo in crudos:
+            objetivo = str(crudo["objetivo"]).strip()
+            if not objetivo:
+                raise ValueError("un objetivo del guion está vacío")
+            objetivos.append(objetivo)
+            pasos.extend(
+                _validar_pasos(crudo["pasos"], MIN_PASOS_OBJETIVO, MAX_PASOS_OBJETIVO)
+            )
+            preguntas = [_validar_pregunta_intermedia(p) for p in crudo["quiz"]]
+            if len(preguntas) != PREGUNTAS_INTERMEDIAS:
+                raise ValueError(
+                    f"cada objetivo lleva exactamente {PREGUNTAS_INTERMEDIAS} "
+                    "preguntas intermedias"
+                )
+            intermedios.append(
+                QuizIntermedio(fin_paso=len(pasos) - 1, preguntas=preguntas)
+            )
+        return GuionLeccion(objetivos=objetivos, pasos=pasos, intermedios=intermedios)
+
+    objetivos = [str(o).strip() for o in datos["objetivos"]]
+    if not objetivos or not all(objetivos):
+        raise ValueError("los objetivos no pueden estar vacíos")
+    pasos = _validar_pasos(datos["pasos"], MIN_PASOS_GUION, MAX_PASOS_GUION)
     return GuionLeccion(objetivos=objetivos, pasos=pasos)
 
 
@@ -257,7 +353,7 @@ def generar_guion(
     guion = pedir_json(
         cliente,
         system=prompts.system_tutor(perfil),
-        prompt=prompts.prompt_guion(
+        prompt=prompts.prompt_guion_v2(
             temario=curso.temario,
             indice=indice,
             conceptos_fallados=progreso.conceptos_fallados_recientes(),
@@ -359,11 +455,36 @@ def generar_guia(
 
 
 def _guion_a_json(g: GuionLeccion) -> dict[str, Any]:
-    """Serializa el guion (el prompt paso a paso de la clase)."""
-    return {
-        "objetivos": g.objetivos,
-        "pasos": [{"tipo": p.tipo, "instruccion": p.instruccion} for p in g.pasos],
-    }
+    """Serializa el guion; v2 conserva la agrupación por objetivos."""
+    if not g.intermedios:
+        return {
+            "objetivos": g.objetivos,
+            "pasos": [{"tipo": p.tipo, "instruccion": p.instruccion} for p in g.pasos],
+        }
+    grupos = []
+    inicio = 0
+    for objetivo, intermedio in zip(g.objetivos, g.intermedios, strict=True):
+        grupos.append(
+            {
+                "objetivo": objetivo,
+                "pasos": [
+                    {"tipo": p.tipo, "instruccion": p.instruccion}
+                    for p in g.pasos[inicio : intermedio.fin_paso + 1]
+                ],
+                "quiz": [
+                    {
+                        "enunciado": p.enunciado,
+                        "opciones": p.opciones,
+                        "correcta": p.correcta,
+                        "explicacion": p.explicacion,
+                        "concepto": p.concepto,
+                    }
+                    for p in intermedio.preguntas
+                ],
+            }
+        )
+        inicio = intermedio.fin_paso + 1
+    return {"version": 2, "objetivos": grupos}
 
 
 def _guia_a_json(g: Guia) -> dict[str, Any]:

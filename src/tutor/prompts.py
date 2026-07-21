@@ -337,6 +337,74 @@ Responde ÚNICAMENTE este JSON:
 }}"""
 
 
+def prompt_guion_v2(
+    temario: Temario, indice: int, conceptos_fallados: list[str]
+) -> str:
+    """Prompt del guion v2 (HU-24): objetivos con PRIMM y mini-quiz propios.
+
+    La clase se estructura en 3-4 objetivos de aprendizaje; cada uno trae
+    su secuencia PRIMM de 4-7 pasos y un mini-quiz de 2 preguntas que se
+    dispara al cerrarlo (pre-generado: cero espera en la conversación).
+    """
+    unidad = temario.unidades[indice]
+    vistas = ", ".join(u.titulo for u in temario.unidades[:indice]) or "ninguna"
+    refuerzo = ""
+    if conceptos_fallados:
+        refuerzo = (
+            "\n- Dedica pasos a repasar estos conceptos que el estudiante "
+            f"falló antes: {', '.join(conceptos_fallados)}."
+        )
+
+    return f"""Diseña el GUION COMPLETO de la clase {indice + 1} del curso \
+de {temario.lenguaje}: "{unidad.titulo}".
+
+Contexto:
+- Objetivo de la clase: {unidad.objetivo}
+- Conceptos a cubrir: {", ".join(unidad.conceptos)}
+- Clases ya estudiadas: {vistas}. Los ejemplos solo pueden usar lo visto \
+ahí más lo de esta clase.{refuerzo}
+
+Estructura la clase en 3 o 4 OBJETIVOS de aprendizaje concretos ("qué
+sabrá hacer el estudiante"), en orden de dependencia. Cada objetivo lleva:
+
+1. Su propia secuencia PRIMM de 4 a 7 pasos. Tipos permitidos e intención:
+   - "gancho": conectar con la meta del estudiante.
+   - "prediccion": código corto y pedir predecir qué hace (sin explicar).
+   - "explicacion": analogía + worked example con subgoal labels.
+   - "error_tipico": desmontar una misconception documentada del tema.
+   - "modificacion": pedir modificar 1-2 líneas para cambiar algo.
+   - "reto": mini-ejercicio de creación ligado a la meta (con pista).
+   - "recap": cerrar con lo esencial en 3 puntos.
+   Cada "instruccion" dice QUÉ hace el tutor en ese paso (tema, ejemplo
+   concreto, qué preguntar), en 1-3 frases; no es texto literal.
+
+2. Un mini-quiz de EXACTAMENTE 2 preguntas de opción múltiple que
+   verifican ESE objetivo. Reglas (las mismas del quiz del curso):
+   - 4 opciones, UNA correcta; posición variada; sin "todas las
+     anteriores" ni negaciones.
+   - Preguntas de predicción de código o find-the-bug, no definiciones.
+   - Cada distractor encarna un error real de principiante; banco:
+{MISCONCEPTIONS}
+   - "explicacion" justifica la correcta y nombra el error del distractor
+     más tentador. "concepto" es uno de: {", ".join(unidad.conceptos)}.
+   - VERIFICA cada pregunta resolviéndola tú antes de escribir opciones.
+
+Responde ÚNICAMENTE este JSON:
+{{
+  "version": 2,
+  "objetivos": [
+    {{
+      "objetivo": "<qué sabrá hacer>",
+      "pasos": [{{"tipo": "gancho", "instruccion": "<qué hacer>"}}],
+      "quiz": [
+        {{"enunciado": "...", "opciones": ["a","b","c","d"], "correcta": 1,
+          "explicacion": "...", "concepto": "..."}}
+      ]
+    }}
+  ]
+}}"""
+
+
 def system_leccion(perfil: PerfilEstudiante) -> str:
     """System prompt del modo lección conversada (HU-10)."""
     return f"""{system_tutor(perfil)}
@@ -680,6 +748,7 @@ def prompt_quiz(
     leccion_md: str,
     num_preguntas: int,
     preguntas_previas: list[str] | None = None,
+    priorizar: list[str] | None = None,
 ) -> str:
     """Prompt del quiz: comprensión sobre memoria + verificación independiente.
 
@@ -697,9 +766,17 @@ IMPORTANTE — este es un REINTENTO. El estudiante ya vio estas preguntas:
 Genera VARIANTES equivalentes: mismos conceptos y mismo nivel, pero con
 código, valores y enunciados DIFERENTES (prohibido repetir una pregunta o
 cambiar solo un número)."""
+    refuerzo = ""
+    if priorizar:
+        refuerzo = (
+            "\n\nPRIORIZA estos conceptos que el estudiante falló en los "
+            f"mini-quices de la clase: {', '.join(priorizar)}. Dedícales "
+            "al menos una pregunta cada uno antes de cubrir el resto."
+        )
 
     return f"""A partir de la lección de abajo, crea un quiz de \
-{num_preguntas} preguntas de opción múltiple sobre "{titulo_unidad}".{variantes}
+{num_preguntas} preguntas de opción múltiple sobre "{titulo_unidad}".\
+{variantes}{refuerzo}
 
 Composición del quiz (mide comprensión, no memoria):
 - Al menos la mitad de las preguntas son "¿qué imprime/hace este código?" \

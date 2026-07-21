@@ -139,11 +139,11 @@ clase usa el flujo actual sin cambios.
 
 ## 7. Definición de Hecho
 
-- [ ] Criterios de §1 verificados manualmente con API real (una clase
+- [x] Criterios de §1 verificados manualmente con API real (una clase
       completa de ≥15 turnos con 3 quices intermedios).
-- [ ] Pruebas de abajo en verde + suite completa + ruff/mypy.
-- [ ] Retro-compatibilidad probada con un guion v1 real.
-- [ ] Entrada en `docs/HALLAZGOS.md` con lo aprendido.
+- [x] Pruebas de abajo en verde + suite completa + ruff/mypy.
+- [x] Retro-compatibilidad probada con un guion v1 real.
+- [x] Entrada en `docs/HALLAZGOS.md` con lo aprendido.
 
 ## 8. Pruebas
 

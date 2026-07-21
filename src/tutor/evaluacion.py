@@ -95,6 +95,7 @@ def generar_quiz(
     unidad: int,
     system: str,
     preguntas_previas: list[str] | None = None,
+    priorizar: list[str] | None = None,
 ) -> Quiz:
     """Genera el quiz de una unidad a partir de su lección.
 
@@ -106,6 +107,8 @@ def generar_quiz(
         unidad: Índice de la unidad (base 0).
         system: System prompt del tutor.
         preguntas_previas: Enunciados ya vistos; exige variantes (HU-13).
+        priorizar: Conceptos fallados en mini-quices intermedios; el quiz
+            los cubre primero (HU-24).
 
     Raises:
         ErrorLLM: Si el modelo no produce un quiz válido tras reintentos.
@@ -120,6 +123,7 @@ def generar_quiz(
             leccion_md=leccion_md,
             num_preguntas=PREGUNTAS_POR_QUIZ,
             preguntas_previas=preguntas_previas,
+            priorizar=priorizar,
         ),
         validar=lambda datos: validar_quiz(datos, unidad, PREGUNTAS_POR_QUIZ),
     )
