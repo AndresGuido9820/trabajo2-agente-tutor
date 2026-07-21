@@ -280,6 +280,11 @@ def crear_app(
         """Historial de una conversación ('creacion' o 'u<indice>')."""
         return {"mensajes": estado.chats.get(canal, [])}
 
+    @app.get("/api/conversaciones")
+    def api_conversaciones() -> dict[str, Any]:
+        """Cuántos mensajes tiene cada conversación (para la barra lateral)."""
+        return {"canales": {c: len(m) for c, m in estado.chats.items() if m}}
+
     @app.post("/api/artefacto")
     def api_artefacto_unidad(cuerpo: CuerpoEstudio) -> dict[str, Any]:
         """Mini-artefacto interactivo de la unidad actual del chat."""
