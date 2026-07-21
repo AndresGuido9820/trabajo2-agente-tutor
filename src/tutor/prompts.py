@@ -604,6 +604,30 @@ reintentar la evaluación.
 13. Mensajes cortos (2-6 frases); es una conversación."""
 
 
+def prompt_reencuentro(
+    ultimos_mensajes: list[dict[str, str]], resumen_progreso: str
+) -> str:
+    """Prompt del reencuentro: resumen de dónde iba al volver (HU-30)."""
+    transcripcion = "\n".join(
+        f"{'Estudiante' if m['rol'] == 'yo' else 'Tú'}: {m['texto'][:400]}"
+        for m in ultimos_mensajes
+        if m["rol"] in ("yo", "tutor")
+    )
+    return f"""El estudiante vuelve a esta clase después de un tiempo.
+Últimos mensajes de la conversación:
+---
+{transcripcion}
+---
+Estado de su progreso: {resumen_progreso}
+
+Dale la bienvenida de vuelta en 3-6 frases:
+1. Resume en una frase QUÉ estaban viendo y dónde quedaron.
+2. Si algo le costó (según el progreso), menciónalo con tacto.
+3. Cierra preguntando cómo quiere seguir (continuar / repaso corto).
+NO desarrolles contenido nuevo ni avances la lección: es solo el
+reencuentro. Solo tu mensaje, en Markdown."""
+
+
 def system_charla(perfil: PerfilEstudiante) -> str:
     """System prompt del modo charla: persona + reglas socráticas (HU-09).
 

@@ -177,6 +177,18 @@ def historial_chat(ruta: Path, canal: str, limite: int = 300) -> list[dict[str, 
     return [{"rol": rol, "texto": texto} for rol, texto in reversed(filas)]
 
 
+def ultimo_mensaje_en(ruta: Path, canal: str) -> str | None:
+    """Timestamp ISO del último mensaje de una conversación, o ``None``."""
+    if not ruta.exists():
+        return None
+    with abrir(ruta) as conexion:
+        fila = conexion.execute(
+            "SELECT creado_en FROM chat WHERE canal = ? ORDER BY id DESC LIMIT 1",
+            (canal,),
+        ).fetchone()
+    return str(fila[0]) if fila else None
+
+
 def resumen_chats(ruta: Path) -> dict[str, int]:
     """Cuántos mensajes tiene cada conversación (barra lateral)."""
     if not ruta.exists():

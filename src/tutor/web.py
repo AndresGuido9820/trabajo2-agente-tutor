@@ -22,7 +22,12 @@ from pydantic import BaseModel
 
 from tutor import db
 from tutor.agente import ARCHIVO_DB, ARCHIVO_PERFIL, Agente, perfil_o_none
-from tutor.config import NOTA_APROBATORIA, Configuracion, cargar_configuracion
+from tutor.config import (
+    HORAS_PARA_REENCUENTRO,
+    NOTA_APROBATORIA,
+    Configuracion,
+    cargar_configuracion,
+)
 from tutor.curso import (
     cargar_plan_md,
     guardar_curso,
@@ -515,7 +520,26 @@ def crear_app(
     @app.get("/api/historial/{canal}")
     def api_historial(canal: str) -> dict[str, Any]:
         """Historial de una conversación ('creacion' o 'u<indice>')."""
-        return {"mensajes": db.historial_chat(estado.ruta_db, canal)}
+        return {
+            "mensajes": db.historial_chat(estado.ruta_db, canal),
+            "ultimo_en": db.ultimo_mensaje_en(estado.ruta_db, canal),
+            "horas_reencuentro": HORAS_PARA_REENCUENTRO,
+        }
+
+    @app.post("/api/clase/{indice}/reencuentro")
+    def api_reencuentro(indice: int) -> dict[str, Any]:
+        """Resumen de bienvenida al volver a una clase tras horas de pausa."""
+        agente = _agente()
+
+        def operacion() -> str:
+            try:
+                return agente.reencuentro(indice)
+            except IndexError as error:
+                raise HTTPException(404, str(error)) from error
+
+        texto = _con_llm(operacion)
+        estado.anotar(f"u{indice}", "tutor", texto)
+        return {"texto": texto}
 
     @app.get("/api/conversaciones")
     def api_conversaciones() -> dict[str, Any]:
