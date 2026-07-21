@@ -439,6 +439,62 @@ class Agente:
         guardar_curso(self.curso, self._dir / ARCHIVO_CURSO)
         return html
 
+    def panel_de_clase(self, indice: int) -> dict[str, Any]:
+        """Estado de la clase para el panel lateral (HU-25).
+
+        Fuente de verdad: el guion persistido + ``progreso`` (sobrevive
+        recargas y reinicios). Sin guion todavía → panel vacío.
+
+        Raises:
+            IndexError: Si la unidad no existe.
+        """
+        if not 0 <= indice < len(self.curso.temario.unidades):
+            raise IndexError(f"No existe la unidad {indice}.")
+        guion = self.curso.guiones.get(indice)
+        if guion is None or not guion.intermedios:
+            return {"objetivos": [], "progreso_pct": 0, "evaluacion_lista": False}
+        cumplidos = set(self.progreso.objetivos_cumplidos.get(str(indice), []))
+        resultados = self.progreso.resultados_intermedios.get(str(indice), {})
+        sesion = self._lecciones_activas.get(indice)
+        paso_actual = sesion.paso if sesion else 0
+        en_curso = (
+            sesion.objetivo_de_paso(paso_actual)
+            if sesion
+            else min(
+                (k for k in range(len(guion.objetivos)) if k not in cumplidos),
+                default=len(guion.objetivos) - 1,
+            )
+        )
+        objetivos = []
+        avance_pct = 0.0
+        for k, (texto, intermedio) in enumerate(
+            zip(guion.objetivos, guion.intermedios, strict=True)
+        ):
+            r = resultados.get(str(k))
+            if k in cumplidos:
+                estado_objetivo = "cumplido"
+                avance_pct += 1
+            elif k == en_curso:
+                estado_objetivo = "en_curso"
+                inicio = guion.intermedios[k - 1].fin_paso + 1 if k else 0
+                pasos_objetivo = intermedio.fin_paso - inicio + 1
+                avance_pct += (paso_actual - inicio) / max(pasos_objetivo, 1)
+            else:
+                estado_objetivo = "pendiente"
+            objetivos.append(
+                {
+                    "texto": texto,
+                    "estado": estado_objetivo,
+                    "quiz": f"{r['aciertos']}/{r['total']}" if r else None,
+                    "repaso": bool(r and r["repaso"]),
+                }
+            )
+        return {
+            "objetivos": objetivos,
+            "progreso_pct": round(100 * avance_pct / len(guion.objetivos)),
+            "evaluacion_lista": len(cumplidos) >= len(guion.objetivos),
+        }
+
     def estado_repaso(self) -> dict[str, Any]:
         """Cuántos ítems vencen hoy y cuándo es el próximo (HU-32)."""
         self.progreso.purgar_repasos(len(self.curso.temario.unidades))
@@ -1038,7 +1094,13 @@ class Agente:
         sesion.resueltos.add(k)
         sesion.quiz_pendiente = None
         self.progreso.sumar_puntos(PUNTOS_ACIERTO_INTERMEDIO * aciertos)
-        self.progreso.cumplir_objetivo(unidad, k)
+        self.progreso.cumplir_objetivo(
+            unidad,
+            k,
+            aciertos=aciertos,
+            total=len(preguntas),
+            repaso=k in sesion.repaso_usado,
+        )
         hoy = date.today().isoformat()
         for pregunta, d in zip(preguntas, detalle, strict=True):
             if not d["acierto"]:
