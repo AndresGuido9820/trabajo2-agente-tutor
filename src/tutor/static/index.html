@@ -112,22 +112,23 @@
       overflow-y:auto;padding:18px 14px;background:rgba(13,17,26,.5);display:none}
   #panel .cabecera{display:flex;justify-content:space-between;align-items:center;margin:0 6px 12px}
   #panel .cabecera b{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)}
-  .obj{border:1px solid transparent;border-radius:var(--r);padding:10px 12px;margin-bottom:4px;
-      transition:all var(--t1)}
-  .obj.actual{background:var(--card);border-color:var(--linea-fuerte);box-shadow:var(--sombra)}
+  .obj{border-radius:var(--r);padding:9px 10px;margin-bottom:2px;transition:all var(--t1)}
+  .obj.actual{background:var(--card)}
   .obj .fila{display:flex;gap:10px;align-items:flex-start}
   .num{flex:none;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--linea-fuerte);
        display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--tx2);margin-top:1px}
   .num.hecha{background:var(--ok);border-color:var(--ok);color:#0a1020}
   .num.actual{border-color:var(--acc);color:var(--acc)}
-  .obj b{font-size:13px;line-height:1.35;font-weight:600;display:block}
-  .obj .objetivo{font-size:11.5px;color:var(--tx2);margin-top:3px;line-height:1.45}
-  .obj.completada b{text-decoration:line-through;color:var(--tx2)}
-  .obj.completada .objetivo{text-decoration:line-through;color:var(--tx3)}
-  .obj .meta{font-size:10.5px;color:var(--tx3);margin-top:4px}
-  .obj .acciones{display:flex;gap:6px;margin-top:8px;padding-left:32px}
-  .obj .acciones button{font-size:11px;padding:4px 10px}
-  .obj.bloq{opacity:.45}
+  .obj b{font-size:13px;line-height:1.4;font-weight:600;display:block}
+  .obj ul{list-style:none;margin:5px 0 0;padding:0 0 0 2px}
+  .obj ul li{font-size:11.5px;color:var(--tx2);line-height:1.6;padding-left:14px;position:relative}
+  .obj ul li::before{content:"·";position:absolute;left:4px;color:var(--tx3)}
+  .obj.completada b, .obj.completada ul li{text-decoration:line-through;color:var(--tx3)}
+  .obj .mini-acciones{display:inline-flex;gap:4px;margin-top:6px}
+  .obj .mini-acciones button{font-size:10.5px;padding:2px 9px;border-radius:var(--r-pill)}
+  .obj.bloq{opacity:.4}
+  .msg.sistema{background:transparent;border:none;margin:2px auto 10px;max-width:100%;
+      text-align:center;font-size:12px;color:var(--tx3);animation:none}
 
   /* hero de creación */
   .hero-chat{text-align:center;padding:48px 20px 24px}
@@ -308,37 +309,35 @@ async function cargarEstado(){
 function pintarPanel(e){
   const panel = $("#panel");
   panel.style.display = "block";
-  panel.innerHTML = `<div class="cabecera"><b>Plan del curso</b>
-    <button class="sutil" id="p-ver">📄 Ver .md</button></div>`;
+  panel.innerHTML = `<div class="cabecera"><b>Temario</b>
+    <button class="sutil" id="p-ver">📄 .md</button></div>`;
   $("#p-ver").onclick = abrirPlan;
   e.unidades.forEach(u => {
     const esActual = u.indice === e.unidad_actual;
+    const coronada = u.completada || u.estado === "aprobada";
     const div = document.createElement("div");
-    div.className = "obj" + (u.completada ? " completada" : "") +
+    div.className = "obj" + (coronada ? " completada" : "") +
       (esActual ? " actual" : "") + (u.estado === "bloqueada" ? " bloq" : "");
-    const numCl = u.completada || u.estado === "aprobada" ? "hecha" : (esActual ? "actual" : "");
-    const meta = u.estado === "aprobada" ? `Aprobada · ${u.mejor_nota}/100`
-      : u.estado === "bloqueada" ? "🔒 Aprueba la anterior para desbloquear"
-      : u.completada ? "Objetivo cumplido — puedes evaluarte o repasar"
-      : esActual ? "En el chat ahora" : "";
+    const numCl = coronada ? "hecha" : (esActual ? "actual" : "");
+    const subtemas = (u.conceptos || []).map(c => `<li>${c}</li>`).join("");
     div.innerHTML = `<div class="fila">
-        <span class="num ${numCl}">${u.completada || u.estado === "aprobada" ? "✓" : u.indice + 1}</span>
+        <span class="num ${numCl}">${coronada ? "✓" : u.indice + 1}</span>
         <div style="min-width:0"><b>${u.titulo}</b>
-          <div class="objetivo">${u.objetivo}</div>
-          ${meta ? `<div class="meta">${meta}</div>` : ""}</div>
-      </div><div class="acciones"></div>`;
-    const acc = div.querySelector(".acciones");
+          <ul>${subtemas}</ul>
+          <div class="mini-acciones"></div></div>
+      </div>`;
+    const acc = div.querySelector(".mini-acciones");
     if(u.estado !== "bloqueada"){
-      if(u.completada || u.estado === "aprobada"){
+      if(coronada){
         const b = document.createElement("button");
-        b.textContent = "↩ Repasar en el chat";
+        b.textContent = "↩ repasar";
         b.onclick = () => repasar(u.indice, u.titulo);
         acc.appendChild(b);
       }
       if(u.completada && u.estado !== "aprobada"){
         const b = document.createElement("button");
         b.className = "primario";
-        b.textContent = "🎯 Evaluarme";
+        b.textContent = "🎯 evaluar";
         b.onclick = () => iniciarQuiz(u.indice);
         acc.appendChild(b);
       }
@@ -631,12 +630,31 @@ area.addEventListener("input", () => {
 });
 
 /* ===== arranque ===== */
+async function pintarHistorial(){
+  try{
+    const h = await api("/api/historial");
+    const ultimos = h.mensajes.slice(-80);
+    if(ultimos.length){
+      ultimos.forEach(m => {
+        if(m.rol === "yo") burbuja("yo", md(m.texto));
+        else if(m.rol === "sistema") burbuja("sistema", md(m.texto));
+        else burbujaTutor(m.texto);
+      });
+      burbuja("sistema", "— hasta aquí tu conversación anterior —");
+      return true;
+    }
+  }catch(e){ /* sin historial no pasa nada */ }
+  return false;
+}
+
 (async () => {
   const e = await cargarEstado();
   if(!e || !e.perfil){ arrancarCreacion(); return; }
   modo = "estudio";
-  burbujaTutor(`**¡Volviste!** 🔥 Tu plan está a la derecha. Seguimos en la **unidad ${e.unidad_actual + 1}** —
-responde para continuar, pregunta lo que quieras, o toca ↩ Repasar en cualquier unidad del plan.`);
+  const hubo = await pintarHistorial();
+  burbujaTutor(hubo
+    ? `**¡Volviste!** 🔥 Seguimos en la **unidad ${e.unidad_actual + 1}** — responde para continuar o toca ↩ repasar en el temario.`
+    : `**¡Hola!** Tu temario está a la derecha. Arrancamos con la **unidad ${e.unidad_actual + 1}** cuando digas.`);
   ponerContexto(`<span class="avance">Unidad ${e.unidad_actual + 1}</span><span>Escribe para continuar</span>`,
     [["Continuar donde iba →", () => { burbuja("yo", "Continuemos"); turnoEstudio(null, e.unidad_actual, true); }]]);
   $("#entrada").focus();

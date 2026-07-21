@@ -104,6 +104,31 @@ class TestEstudioEnChat:
         r = agente.turno_estudio(None, unidad=0)
         assert r["paso"] == 1 and not r["terminada"]
 
+    def test_historial_persiste_y_se_sirve(self, tmp_path):
+        web, _ = web_con(
+            tmp_path,
+            [
+                turno_creacion("¿tu nivel?"),
+                turno_creacion("ok", True, PERFIL_OK),
+                temario_respuesta(),
+            ],
+        )
+        web.post("/api/creacion", json={"mensaje": "curso de datos"})
+        web.post("/api/creacion", json={"mensaje": "ya dale"})
+        h = web.get("/api/historial").json()["mensajes"]
+        assert h[0] == {"rol": "yo", "texto": "curso de datos"}
+        assert h[1] == {"rol": "tutor", "texto": "¿tu nivel?"}
+        assert len(h) == 4
+        assert (tmp_path / "chat.json").exists()
+
+    def test_estado_incluye_conceptos_para_el_temario(self, tmp_path):
+        web, _ = web_con(
+            tmp_path, [turno_creacion("ok", True, PERFIL_OK), temario_respuesta()]
+        )
+        web.post("/api/creacion", json={"mensaje": "curso de datos ya"})
+        u0 = web.get("/api/estado").json()["unidades"][0]
+        assert u0["conceptos"] == ["variables", "tipos"]
+
     def test_endpoint_estudio(self, tmp_path):
         web, _ = web_con(
             tmp_path,
