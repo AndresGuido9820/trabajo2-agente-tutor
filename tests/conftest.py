@@ -24,6 +24,16 @@ class ClienteLLMFalso:
     def generar(self, system: str, prompt: str, carril: str = "potente") -> str:
         self.llamadas.append((system, prompt))
         self.carriles.append(carril)
+        return self._siguiente()
+
+    def generar_stream(self, system: str, prompt: str, carril: str = "potente"):
+        """Emite la siguiente respuesta en trozos de ``tamano_trozo`` (HU-35)."""
+        respuesta = self.generar(system, prompt, carril)
+        n = getattr(self, "tamano_trozo", 7)
+        for i in range(0, len(respuesta), n):
+            yield respuesta[i : i + n]
+
+    def _siguiente(self) -> str:
         if not self.respuestas:
             raise AssertionError("ClienteLLMFalso se quedó sin respuestas.")
         siguiente = self.respuestas.pop(0)

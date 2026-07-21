@@ -54,3 +54,12 @@ no como pantalla congelada. (El mayor salto de percepción en apps LLM.)
 `test_generar_stream_fake_emite_trozos` · `test_parser_incremental_extrae_mensaje`
 · `test_turno_stream_misma_decision_que_no_stream` · `test_persistencia_si_cliente_se_va`
 · `test_endpoint_sse_eventos_delta_fin` (TestClient soporta streams)
+
+
+## Nota de alcance (ejecución 2026-07-21)
+
+Se streamea el turno de **estudio** (`POST /api/estudio/stream`), que es
+donde vive casi toda la conversación. Conversatorio, creación y
+reencuentro conservan el endpoint clásico (respuestas cortas; el costo de
+percepción es menor) y el front tiene fallback automático al clásico si
+el stream falla al abrir o emite `event: error`.

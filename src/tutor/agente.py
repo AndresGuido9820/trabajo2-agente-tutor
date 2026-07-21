@@ -6,7 +6,9 @@ La UI no llama al LLM ni toca archivos directamente: todo pasa por el
 
 from __future__ import annotations
 
+import json
 import logging
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import date
 from enum import Enum
@@ -32,9 +34,9 @@ from tutor.curso import (
     generar_temario,
     guardar_curso,
 )
-from tutor.errores import ErrorBloqueada, ErrorDatos
+from tutor.errores import ErrorBloqueada, ErrorDatos, ErrorLLM
 from tutor.evaluacion import Quiz, Retroalimentacion, calificar, generar_quiz
-from tutor.llm import ClienteLLM, pedir_json
+from tutor.llm import ClienteLLM, ExtractorCampoJSON, extraer_json, pedir_json
 from tutor.models import PerfilEstudiante
 from tutor.perfil import cargar_perfil, guardar_perfil
 from tutor.progreso import Progreso, Resultado, cargar_progreso, guardar_progreso
@@ -740,13 +742,140 @@ class Agente:
             validar=_validar_avance,
             carril="chat",
         )
-        if turno["avanza"] and hay_siguiente:
+        return self._cerrar_turno(sesion, mensaje, turno)
+
+    def _cerrar_turno(
+        self, sesion: _SesionLeccion, mensaje: str, turno: dict[str, object]
+    ) -> tuple[str, bool]:
+        """ÚNICO lugar que aplica la decisión de avance de un turno.
+
+        Lo usan la variante clásica y la de streaming (HU-35): avanza el
+        paso si corresponde, actualiza el historial y decide si terminó.
+        """
+        pasos = sesion.guion.pasos
+        if turno["avanza"] and sesion.paso + 1 < len(pasos):
             sesion.paso += 1
         texto = str(turno["mensaje"])
         sesion.historial.append((mensaje, texto))
         del sesion.historial[:-MAX_TURNOS_CHARLA]
         terminada = bool(turno["avanza"]) and sesion.paso == len(pasos) - 1
         return texto, terminada
+
+    def turno_leccion_stream(
+        self, indice: int, mensaje: str | None, apertura: str | None = None
+    ) -> Iterator[dict[str, Any]]:
+        """Como ``turno_leccion`` pero emitiendo la respuesta en vivo (HU-35).
+
+        Produce eventos ``{"delta": str}`` y cierra con
+        ``{"fin": (texto, terminada)}``. La decisión de avance pasa por el
+        mismo ``_cerrar_turno`` que la variante clásica.
+
+        Raises:
+            KeyError: Si la lección no fue iniciada.
+            ErrorLLM: Si el stream falla o el JSON final es inválido.
+        """
+        sesion = self._lecciones_activas[indice]
+        pasos = sesion.guion.pasos
+        guion_texto = "\n".join(f"- {o}" for o in sesion.guion.objetivos)
+
+        if mensaje is None:
+            paso = pasos[sesion.paso]
+            partes: list[str] = []
+            for delta in self._cliente.generar_stream(
+                system=system_leccion(self.perfil),
+                prompt=prompt_turno_leccion(
+                    guion_texto=guion_texto,
+                    numero_paso=sesion.paso + 1,
+                    total_pasos=len(pasos),
+                    paso_tipo=paso.tipo,
+                    paso_instruccion=paso.instruccion,
+                    historial=sesion.historial,
+                    mensaje=None,
+                    apertura=apertura,
+                ),
+                carril="chat",
+            ):
+                partes.append(delta)
+                yield {"delta": delta}
+            texto = "".join(partes)
+            sesion.historial.append((apertura or "", texto))
+            del sesion.historial[:-MAX_TURNOS_CHARLA]
+            yield {"fin": (texto, len(pasos) == 1)}
+            return
+
+        actual = pasos[sesion.paso]
+        hay_siguiente = sesion.paso + 1 < len(pasos)
+        siguiente = pasos[sesion.paso + 1] if hay_siguiente else None
+        extractor = ExtractorCampoJSON("mensaje")
+        for trozo in self._cliente.generar_stream(
+            system=system_leccion(self.perfil),
+            prompt=prompt_avance_leccion(
+                guion_texto=guion_texto,
+                numero_paso=sesion.paso + 1,
+                total_pasos=len(pasos),
+                paso_actual=f"({actual.tipo}) {actual.instruccion}",
+                paso_siguiente=(
+                    f"({siguiente.tipo}) {siguiente.instruccion}" if siguiente else None
+                ),
+                historial=sesion.historial,
+                mensaje=mensaje,
+            ),
+            carril="chat",
+        ):
+            delta = extractor.alimentar(trozo)
+            if delta:
+                yield {"delta": delta}
+        try:
+            turno = _validar_avance(extraer_json(extractor.crudo))
+        except (json.JSONDecodeError, ValueError, KeyError, TypeError) as error:
+            # Sin reintento aquí: el front hace fallback al turno clásico.
+            raise ErrorLLM(
+                f"El stream no produjo el formato esperado ({error})."
+            ) from error
+        yield {"fin": self._cerrar_turno(sesion, mensaje, turno)}
+
+    def turno_estudio_stream(
+        self, mensaje: str | None, unidad: int | None = None
+    ) -> Iterator[dict[str, Any]]:
+        """Variante en vivo de ``turno_estudio`` (HU-35).
+
+        Emite ``{"delta": str}`` y cierra con ``{"fin": payload}`` donde el
+        payload es idéntico al retorno de ``turno_estudio``.
+        """
+        if unidad is not None and mensaje is None:
+            self.unidad_actual = unidad
+            self.iniciar_leccion(unidad)
+            turnos = self.turno_leccion_stream(unidad, None)
+        else:
+            if unidad is not None:
+                self.unidad_actual = unidad
+            actual = self.unidad_actual
+            if actual not in self._lecciones_activas:
+                self.iniciar_leccion(actual)
+                turnos = self.turno_leccion_stream(actual, None, apertura=mensaje)
+            else:
+                turnos = self.turno_leccion_stream(actual, mensaje or "ok, sigamos")
+        resultado: tuple[str, bool] | None = None
+        for evento in turnos:
+            if "fin" in evento:
+                resultado = evento["fin"]
+            else:
+                yield evento
+        assert resultado is not None  # turno_leccion_stream siempre cierra
+        texto, terminada = resultado
+        if terminada:
+            self.progreso.completar(self.unidad_actual)
+            self.guardar()
+        paso, total = self.avance_leccion(self.unidad_actual)
+        yield {
+            "fin": {
+                "texto": texto,
+                "unidad": self.unidad_actual,
+                "paso": paso,
+                "total": total,
+                "terminada": terminada,
+            }
+        }
 
     def avance_leccion(self, indice: int) -> tuple[int, int]:
         """Paso actual (base 1) y total de la lección conversada activa."""

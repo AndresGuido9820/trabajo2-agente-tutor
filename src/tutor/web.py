@@ -8,15 +8,17 @@ quizzes nunca viajan al navegador antes de calificar.
 
 from __future__ import annotations
 
+import json
 import logging
 import shutil
 import sys
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Response
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -535,6 +537,45 @@ def crear_app(
             estado.anotar(canal, "yo", cuerpo.mensaje)
         estado.anotar(canal, "tutor", str(r["texto"]))
         return r
+
+    @app.post("/api/estudio/stream")
+    def api_estudio_stream(cuerpo: CuerpoEstudio) -> StreamingResponse:
+        """Turno del estudio transmitido por SSE (HU-35).
+
+        Eventos: ``delta`` ({"texto": ...}), ``fin`` (mismo payload que
+        /api/estudio) y ``error``. Si el cliente se desconecta a mitad, el
+        turno se completa y persiste igual en el servidor.
+        """
+        agente = _agente()
+
+        def _sse(evento: str, datos: dict[str, Any]) -> str:
+            return f"event: {evento}\ndata: {json.dumps(datos, ensure_ascii=False)}\n\n"
+
+        def _persistir(fin: dict[str, Any]) -> None:
+            canal = f"u{fin['unidad']}"
+            if cuerpo.mensaje:
+                estado.anotar(canal, "yo", cuerpo.mensaje)
+            estado.anotar(canal, "tutor", str(fin["texto"]))
+
+        def eventos() -> Iterator[str]:
+            turnos = agente.turno_estudio_stream(cuerpo.mensaje, cuerpo.unidad)
+            try:
+                for evento in turnos:
+                    if "fin" in evento:
+                        _persistir(evento["fin"])
+                        yield _sse("fin", evento["fin"])
+                    else:
+                        yield _sse("delta", {"texto": evento["delta"]})
+            except GeneratorExit:
+                # Cliente desconectado: el turno se termina y persiste igual.
+                for evento in turnos:
+                    if "fin" in evento:
+                        _persistir(evento["fin"])
+                raise
+            except (ErrorLLM, ErrorBloqueada, KeyError, IndexError) as error:
+                yield _sse("error", {"detail": str(error)})
+
+        return StreamingResponse(eventos(), media_type="text/event-stream")
 
     @app.get("/api/historial/{canal}")
     def api_historial(canal: str) -> dict[str, Any]:

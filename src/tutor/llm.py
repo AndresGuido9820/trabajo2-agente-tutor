@@ -12,8 +12,9 @@ from __future__ import annotations
 import json
 import logging
 import random
+import re
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from typing import Any, Protocol
 
 from openai import APIConnectionError, APIStatusError, OpenAI
@@ -43,6 +44,12 @@ class ClienteLLM(Protocol):
         ``carril`` elige el modelo (HU-39): "potente" para generaciones
         estructuradas, "chat" para turnos conversacionales.
         """
+        ...
+
+    def generar_stream(
+        self, system: str, prompt: str, carril: str = "potente"
+    ) -> Iterator[str]:
+        """Como ``generar`` pero emite la respuesta en fragmentos (HU-35)."""
         ...
 
 
@@ -177,6 +184,153 @@ class ClienteOpenAI:
             f"({_describir(ultimo_error) if ultimo_error else 'desconocido'}). "
             "Tu progreso está guardado; inténtalo de nuevo en unos minutos."
         ) from ultimo_error
+
+    def generar_stream(
+        self, system: str, prompt: str, carril: str = "potente"
+    ) -> Iterator[str]:
+        """Emite la respuesta en fragmentos (SSE, HU-35).
+
+        Los reintentos aplican solo a ABRIR el stream; una vez que empieza
+        a emitir, un corte se propaga como ``ErrorLLM`` (el llamador decide
+        el fallback). El uso se registra sin tokens (el SDK no los da en
+        streaming sin opciones extra).
+
+        Raises:
+            ErrorLLM: Si no se pudo abrir el stream o llegó vacío.
+        """
+        modelo = self._modelos.get(carril, self._modelos["potente"])
+        ultimo_error: Exception | None = None
+        stream = None
+        inicio = time.monotonic()
+        for intento in range(MAX_REINTENTOS_API):
+            try:
+                stream = self._cliente.chat.completions.create(
+                    model=modelo,
+                    max_completion_tokens=MAX_TOKENS_RESPUESTA,
+                    stream=True,
+                    messages=[
+                        {"role": "system", "content": system},
+                        {"role": "user", "content": prompt},
+                    ],
+                )
+                break
+            except (APIConnectionError, APIStatusError) as error:
+                if not _es_reintentable(error):
+                    raise ErrorLLM(
+                        f"Error de la API sin reintento: {_describir(error)}. "
+                        "Revisa tu configuración (API key, modelo)."
+                    ) from error
+                ultimo_error = error
+                logger.warning(
+                    "Stream intento %d/%d falló: %s",
+                    intento + 1,
+                    MAX_REINTENTOS_API,
+                    _describir(error),
+                )
+                if intento < MAX_REINTENTOS_API - 1:
+                    self._dormir(espera_backoff(intento))
+        if stream is None:
+            raise ErrorLLM(
+                f"La API siguió fallando tras {MAX_REINTENTOS_API} intentos "
+                f"({_describir(ultimo_error) if ultimo_error else 'desconocido'})."
+            ) from ultimo_error
+        hubo_contenido = False
+        try:
+            for parte in stream:
+                delta = parte.choices[0].delta.content if parte.choices else None
+                if delta:
+                    hubo_contenido = True
+                    yield delta
+        except (APIConnectionError, APIStatusError) as error:
+            raise ErrorLLM(
+                f"El stream se cortó a mitad: {_describir(error)}."
+            ) from error
+        if not hubo_contenido:
+            raise ErrorLLM("La API devolvió un stream vacío.")
+        duracion_ms = int((time.monotonic() - inicio) * 1000)
+        logger.info("LLM stream %s/%s terminó en %d ms", carril, modelo, duracion_ms)
+        try:
+            self._registrar(
+                carril=carril,
+                modelo=modelo,
+                tokens_prompt=None,
+                tokens_salida=None,
+                duracion_ms=duracion_ms,
+            )
+        except Exception:  # el registro jamás rompe la generación
+            logger.warning("No se pudo registrar el uso del LLM")
+
+
+class ExtractorCampoJSON:
+    r"""Extrae el valor string de un campo de un JSON streameado (HU-35).
+
+    Se alimenta con fragmentos crudos y devuelve los deltas DECODIFICADOS
+    del valor del campo (maneja escapes ``\"``, ``\n``, ``\uXXXX`` incluso
+    partidos entre fragmentos, porque re-escanea el buffer). El JSON crudo
+    completo queda en ``crudo`` para validarlo al final.
+    """
+
+    def __init__(self, campo: str = "mensaje") -> None:
+        """Prepara el extractor para ``campo``."""
+        self.crudo = ""
+        self._patron = f'"{campo}"'
+        self._emitido = ""
+
+    def alimentar(self, trozo: str) -> str:
+        """Acumula un fragmento y devuelve el delta decodificado (o '')."""
+        self.crudo += trozo
+        valor = self._valor_actual()
+        delta = valor[len(self._emitido) :]
+        self._emitido = valor
+        return delta
+
+    def _valor_actual(self) -> str:
+        """El valor del campo decodificado hasta donde llegó el buffer."""
+        inicio = self.crudo.find(self._patron)
+        if inicio < 0:
+            return self._emitido  # el campo aún no aparece
+        resto = self.crudo[inicio + len(self._patron) :]
+        coincidencia = re.match(r'\s*:\s*"', resto)
+        if not coincidencia:
+            return self._emitido
+        texto = resto[coincidencia.end() :]
+        piezas: list[str] = []
+        i = 0
+        while i < len(texto):
+            caracter = texto[i]
+            if caracter == '"':
+                break  # comilla de cierre sin escapar
+            if caracter != "\\":
+                piezas.append(caracter)
+                i += 1
+                continue
+            # Secuencia de escape: si está incompleta al final del buffer,
+            # se deja para el siguiente fragmento.
+            if i + 1 >= len(texto):
+                break
+            siguiente = texto[i + 1]
+            simples = {
+                '"': '"',
+                "\\": "\\",
+                "/": "/",
+                "n": "\n",
+                "t": "\t",
+                "r": "\r",
+                "b": "\b",
+                "f": "\f",
+            }
+            if siguiente in simples:
+                piezas.append(simples[siguiente])
+                i += 2
+                continue
+            if siguiente == "u":
+                if i + 6 > len(texto):
+                    break  # \uXXXX incompleto: esperar más datos
+                piezas.append(chr(int(texto[i + 2 : i + 6], 16)))
+                i += 6
+                continue
+            i += 2  # escape desconocido: se omite
+        return "".join(piezas)
 
 
 def extraer_json(texto: str) -> Any:
