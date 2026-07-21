@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import {
   Badge, Box, Button, Card, Group, Paper, Radio, Stack, Text, Textarea, Title,
 } from '@mantine/core'
-import { api } from './api.js'
+import { api, guardarBorrador, leerBorrador } from './api.js'
 import { avisar, avisarError } from './App.jsx'
 import { Escribiendo, Mensaje, ZonaChat } from './Chat.jsx'
 import Prosa from './Prosa.jsx'
@@ -17,8 +17,9 @@ function pausaLarga(ultimoEn, horas) {
 /** El chat de UNA clase: estudio, evaluación y conversatorio inline. */
 export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, haySiguiente }) {
   const [mensajes, setMensajes] = useState([])       // {rol, texto} o {rol:'quiz'|'resultado'|'demo', ...}
-  const [texto, setTexto] = useState('')
+  const [texto, setTexto] = useState(() => leerBorrador(`u${indice}`))
   const [ocupado, setOcupado] = useState(false)
+  const [fallo, setFallo] = useState(null)           // {m} del último turno fallido (HU-34)
   const [espera, setEspera] = useState(null)         // texto del indicador
   const [modo, setModo] = useState('estudio')        // estudio | conversatorio
   const [avance, setAvance] = useState(null)         // {paso, total}
@@ -51,13 +52,20 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
     })()
   }, [indice])
 
-  const enviar = async (directo) => {
+  const enviar = async (directo, esReintento = false) => {
     const m = (directo ?? texto).trim()
     if (!m || ocupado) return
-    setTexto('')
-    agregar({ rol: 'yo', texto: m })
+    if (!esReintento) {
+      setTexto('')
+      agregar({ rol: 'yo', texto: m })
+    }
+    setFallo(null)
     setOcupado(true)
     setEspera('')
+    // A los 2.5 min avisamos que va lento (el fetch aborta solo a los 3).
+    const tardando = setTimeout(() => {
+      setEspera('Esto está tardando más de lo normal — puedes seguir esperando o reintentar…')
+    }, 150000)
     try {
       if (modo === 'conversatorio') {
         const r = await api(`/api/conversatorio/${indice}`, { mensaje: m })
@@ -71,7 +79,12 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
           agregar({ rol: 'fin-clase' })
         }
       }
-    } catch (e) { avisarError(e) }
+      guardarBorrador(`u${indice}`, '')  // envío exitoso: borrador fuera
+    } catch (e) {
+      avisarError(e)
+      setFallo({ m })  // reintenta EXACTAMENTE esta llamada, sin reescribir
+    }
+    clearTimeout(tardando)
     setEspera(null)
     setOcupado(false)
   }
@@ -160,6 +173,15 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
           return <Mensaje key={i} rol={m.rol} lenguaje={lenguaje}>{m.texto}</Mensaje>
         })}
         {espera !== null && <Escribiendo texto={espera || undefined} />}
+        {fallo && (
+          <Group justify="flex-end" gap="xs">
+            <Text size="xs" c="red.5">⚠️ No enviado</Text>
+            <Button size="compact-xs" variant="default" disabled={ocupado}
+              onClick={() => enviar(fallo.m, true)}>
+              Reintentar
+            </Button>
+          </Group>
+        )}
       </ZonaChat>
 
       <Box p="md" style={{ borderTop: '1px solid var(--mantine-color-default-border)' }}>
@@ -181,7 +203,11 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
             <Textarea
               style={{ flex: 1 }} radius="lg" autosize minRows={1} maxRows={5}
               placeholder={modo === 'conversatorio' ? 'Tu respuesta o tu duda…' : 'Responde al tutor o pregunta lo que quieras…'}
-              value={texto} onChange={(e) => setTexto(e.target.value)}
+              value={texto}
+              onChange={(e) => {
+                setTexto(e.target.value)
+                guardarBorrador(`u${indice}`, e.target.value)
+              }}
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar() } }}
               autoFocus
             />

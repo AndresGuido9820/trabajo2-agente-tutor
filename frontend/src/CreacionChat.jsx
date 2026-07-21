@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import {
   Box, Button, Chip, Container, Group, Stack, Text, Textarea, ThemeIcon, Title,
 } from '@mantine/core'
-import { api } from './api.js'
+import { api, guardarBorrador, leerBorrador } from './api.js'
 import { avisarError } from './App.jsx'
 import { Escribiendo, Mensaje, ZonaChat } from './Chat.jsx'
 
@@ -14,9 +14,10 @@ const EJEMPLOS = [
 /** Conversación de diseño del curso: pregunta, propone y crea al confirmar. */
 export default function CreacionChat({ onCreado }) {
   const [mensajes, setMensajes] = useState([])
-  const [texto, setTexto] = useState('')
+  const [texto, setTexto] = useState(() => leerBorrador('creacion'))
   const [ocupado, setOcupado] = useState(false)
   const [creando, setCreando] = useState(false)
+  const [fallo, setFallo] = useState(null)  // {m} del último envío fallido (HU-34)
 
   useEffect(() => {
     api('/api/historial/creacion')
@@ -24,20 +25,27 @@ export default function CreacionChat({ onCreado }) {
       .catch(() => {})
   }, [])
 
-  const enviar = async (directo) => {
+  const enviar = async (directo, esReintento = false) => {
     const m = (directo ?? texto).trim()
     if (!m || ocupado) return
-    setTexto('')
-    setMensajes((prev) => [...prev, { rol: 'yo', texto: m }])
+    if (!esReintento) {
+      setTexto('')
+      setMensajes((prev) => [...prev, { rol: 'yo', texto: m }])
+    }
+    setFallo(null)
     setOcupado(true)
     try {
       const r = await api('/api/creacion', { mensaje: m })
       setMensajes((prev) => [...prev, { rol: 'tutor', texto: r.mensaje }])
+      guardarBorrador('creacion', '')
       if (r.listo) {
         setCreando(true)
         await onCreado()
       }
-    } catch (e) { avisarError(e) }
+    } catch (e) {
+      avisarError(e)
+      setFallo({ m })
+    }
     setOcupado(false)
   }
 
@@ -61,6 +69,15 @@ export default function CreacionChat({ onCreado }) {
           <Mensaje key={i} rol={m.rol}>{m.texto}</Mensaje>
         ))}
         {ocupado && <Escribiendo texto={creando ? 'Diseñando tu curso y guardando el plan (~1 min)…' : undefined} />}
+        {fallo && (
+          <Group justify="flex-end" gap="xs">
+            <Text size="xs" c="red.5">⚠️ No enviado</Text>
+            <Button size="compact-xs" variant="default" disabled={ocupado}
+              onClick={() => enviar(fallo.m, true)}>
+              Reintentar
+            </Button>
+          </Group>
+        )}
       </ZonaChat>
 
       <Box p="md" style={{ borderTop: '1px solid var(--mantine-color-default-border)' }}>
@@ -79,7 +96,11 @@ export default function CreacionChat({ onCreado }) {
             <Textarea
               style={{ flex: 1 }} radius="lg" autosize minRows={1} maxRows={5}
               placeholder="Hazme un curso de…"
-              value={texto} onChange={(e) => setTexto(e.target.value)}
+              value={texto}
+              onChange={(e) => {
+                setTexto(e.target.value)
+                guardarBorrador('creacion', e.target.value)
+              }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar() }
               }}

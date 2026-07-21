@@ -1,18 +1,63 @@
-// Cliente mínimo del API del tutor (mismos endpoints de siempre).
+// Cliente del API del tutor con clasificación de errores y timeout (HU-34).
+
+// Una generación larga legítima puede tardar ~2 min; a los 3 se aborta y
+// se ofrece reintentar (el backend ya corta a los 180 s por su lado).
+export const TIMEOUT_FETCH_MS = 3 * 60 * 1000
+
+export class ErrorRed extends Error {
+  constructor() {
+    super('Sin conexión con el tutor')
+    this.esRed = true
+  }
+}
+
 export async function api(ruta, cuerpo, metodo) {
   const m = metodo || (cuerpo !== undefined ? 'POST' : 'GET')
-  const opciones =
-    m === 'GET'
+  const control = new AbortController()
+  const temporizador = setTimeout(() => control.abort(), TIMEOUT_FETCH_MS)
+  const opciones = {
+    signal: control.signal,
+    ...(m === 'GET'
       ? {}
       : {
           method: m,
           headers: { 'Content-Type': 'application/json' },
           body: cuerpo !== undefined ? JSON.stringify(cuerpo) : undefined,
-        }
-  const r = await fetch(ruta, opciones)
+        }),
+  }
+  let r
+  try {
+    r = await fetch(ruta, opciones)
+  } catch (e) {
+    // TypeError = red caída; AbortError = timeout local. Ambos reintentables.
+    window.dispatchEvent(new Event('tutor:red'))
+    throw new ErrorRed()
+  } finally {
+    clearTimeout(temporizador)
+  }
   if (!r.ok) {
     const datos = await r.json().catch(() => ({}))
-    throw new Error(datos.detail || `Error ${r.status}`)
+    const error = new Error(datos.detail || `Error ${r.status}`)
+    error.status = r.status
+    throw error
   }
   return r.json()
+}
+
+// Borradores del composer por canal (best-effort: localStorage puede fallar).
+export function leerBorrador(canal) {
+  try {
+    return localStorage.getItem(`borrador:${canal}`) || ''
+  } catch {
+    return ''
+  }
+}
+
+export function guardarBorrador(canal, texto) {
+  try {
+    if (texto) localStorage.setItem(`borrador:${canal}`, texto)
+    else localStorage.removeItem(`borrador:${canal}`)
+  } catch {
+    // lleno o bloqueado: se ignora, es solo una comodidad
+  }
 }

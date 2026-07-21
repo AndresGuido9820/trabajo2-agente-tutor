@@ -25,13 +25,13 @@ en ella durante una sesión de estudio real.
 
 ## Tareas
 
-- [ ] `api.js`: clasificación de errores (red vs HTTP), AbortController,
+- [x] `api.js`: clasificación de errores (red vs HTTP), AbortController,
       helper `conReintento(fn)` que expone el retry al llamador.
-- [ ] Componente `BarraConexion` (listener online/offline + ping ligero a
+- [x] Componente `BarraConexion` (listener online/offline + ping ligero a
       `/api/estado` cada 30 s SOLO cuando está offline).
-- [ ] `Clase.jsx`/`CreacionChat.jsx`: burbuja "no enviado" + Reintentar;
+- [x] `Clase.jsx`/`CreacionChat.jsx`: burbuja "no enviado" + Reintentar;
       borradores en localStorage; timeout de 3 min con aviso.
-- [ ] Pruebas backend: ninguna (es front); pruebas de humo manuales con
+- [x] Pruebas backend: ninguna (es front); pruebas de humo manuales con
       el servidor apagado/encendido documentadas en la HU + prueba
       Playwright: matar el server, enviar, ver "no enviado", revivir,
       reintentar OK.
