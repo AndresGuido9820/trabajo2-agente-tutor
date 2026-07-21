@@ -585,11 +585,18 @@ def guardar_curso(curso: Curso, ruta: Path) -> None:
     """
     with db.abrir(ruta) as conexion:
         fila = conexion.execute("SELECT creado_en FROM curso WHERE id = 1").fetchone()
+        # INSERT OR REPLACE reemplaza la fila ENTERA: todo campo que no se
+        # liste vuelve a su default. plan_md, nombre y archivado se preservan
+        # explícitamente (hallazgo 2026-07-21: cada lección generada borraba
+        # el nombre del curso).
         conexion.execute(
             "INSERT OR REPLACE INTO curso"
-            "(id, lenguaje, plan_md, artefactos, prompts_version, creado_en) "
+            "(id, lenguaje, plan_md, artefactos, prompts_version, creado_en, "
+            "nombre, archivado) "
             "VALUES(1, ?, COALESCE((SELECT plan_md FROM curso WHERE id=1), ''), "
-            "?, ?, ?)",
+            "?, ?, ?, "
+            "COALESCE((SELECT nombre FROM curso WHERE id=1), ''), "
+            "COALESCE((SELECT archivado FROM curso WHERE id=1), 0))",
             (
                 curso.temario.lenguaje,
                 json.dumps(curso.artefactos, ensure_ascii=False),
