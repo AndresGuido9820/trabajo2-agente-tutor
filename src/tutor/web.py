@@ -16,6 +16,7 @@ from typing import Any
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from tutor import db
@@ -38,6 +39,7 @@ from tutor.prompts import prompt_creacion, prompt_extraer_perfil, system_creacio
 logger = logging.getLogger(__name__)
 
 RUTA_INDEX = Path(__file__).parent / "static" / "index.html"
+RUTA_DIST = Path(__file__).parent / "static" / "dist"
 HOST = "127.0.0.1"
 PUERTO = 8017
 
@@ -249,10 +251,14 @@ def crear_app(
         except ErrorLLM as error:
             raise HTTPException(502, str(error)) from error
 
+    if RUTA_DIST.exists():
+        app.mount("/assets", StaticFiles(directory=RUTA_DIST / "assets"), "assets")
+
     @app.get("/")
     def raiz() -> FileResponse:
-        """Sirve la página única del front (sin caché: siempre la última versión)."""
-        return FileResponse(RUTA_INDEX, headers={"Cache-Control": "no-store"})
+        """Sirve el front React (dist) o el HTML clásico si no hay build."""
+        indice = RUTA_DIST / "index.html" if RUTA_DIST.exists() else RUTA_INDEX
+        return FileResponse(indice, headers={"Cache-Control": "no-store"})
 
     @app.get("/api/estado")
     def api_estado() -> dict[str, Any]:
