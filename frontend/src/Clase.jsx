@@ -414,7 +414,15 @@ export function QuizCard({ preguntas, onCalificar, indice, titulo }) {
       <Stack gap="md">
         {preguntas.map((p, i) => (
           <Card key={i} withBorder radius="md" p="md">
-            <Text size="xs" c="dimmed" fw={700} mb={6}>PREGUNTA {i + 1} DE {preguntas.length}</Text>
+            <Group gap={6} mb={6}>
+              <Text size="xs" c="dimmed" fw={700}>PREGUNTA {i + 1} DE {preguntas.length}</Text>
+              {p.nivel && (
+                <Badge size="xs" variant="light"
+                  color={{ recordar: 'gray', comprender: 'indigo', aplicar: 'grape' }[p.nivel]}>
+                  {p.nivel}
+                </Badge>
+              )}
+            </Group>
             <Prosa>{p.enunciado}</Prosa>
             <Radio.Group value={respuestas[i] ?? undefined}
               onChange={(v) => { const r = respuestas.slice(); r[i] = v; setRespuestas(r) }}>
@@ -457,6 +465,20 @@ function ResultadoCard({ r, onSiguiente, onReintentar }) {
           </Card>
         ))}
       </Stack>
+      {r.resumen_conceptos && (
+        <Group gap={6} mt="md">
+          {Object.entries(r.resumen_conceptos).map(([c, [ok, total]]) => (
+            <Badge key={c} variant="light" color={ok === total ? 'teal' : 'orange'}>
+              {c} {ok}/{total}
+            </Badge>
+          ))}
+          {Object.entries(r.resumen_niveles || {}).map(([n, [ok, total]]) => (
+            <Badge key={n} variant="outline" color={ok === total ? 'teal' : 'orange'}>
+              {n} {ok}/{total}
+            </Badge>
+          ))}
+        </Group>
+      )}
       <Group gap="xs" mt="md">
         {r.aprobado && onSiguiente && <Button onClick={onSiguiente}>Ir a la siguiente clase →</Button>}
         {r.aprobado && !onSiguiente && <Text fw={700} c="teal.4">🏆 ¡Terminaste el curso completo!</Text>}

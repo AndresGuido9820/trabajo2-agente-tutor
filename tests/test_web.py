@@ -151,24 +151,28 @@ class TestQuizWeb:
     def test_calificar_registra_progreso(self, crear_cliente_web):
         web, _ = crear_cliente_web([temario_respuesta(), "# lección", quiz_respuesta()])
         web.post("/api/quiz/0")
-        r = web.post("/api/quiz/0/calificar", json={"respuestas": [0, 0, 1, 1]}).json()
-        assert r["nota"] == 50
-        assert len(r["detalle"]) == 4
+        r = web.post(
+            "/api/quiz/0/calificar", json={"respuestas": [0, 0, 0, 1, 1, 1]}
+        ).json()
+        assert r["nota"] == 54  # ponderada por nivel (HU-26)
+        assert len(r["detalle"]) == 6
 
         progreso = web.get("/api/progreso").json()
-        assert progreso["filas"][0]["mejor_nota"] == 50
+        assert progreso["filas"][0]["mejor_nota"] == 54
         assert progreso["filas"][0]["intentos"] == 1
 
     def test_calificar_sin_quiz_activo_da_409(self, crear_cliente_web):
         web, _ = crear_cliente_web([temario_respuesta()])
         web.get("/api/estado")
-        r = web.post("/api/quiz/0/calificar", json={"respuestas": [0, 0, 0, 0]})
+        r = web.post("/api/quiz/0/calificar", json={"respuestas": [0, 0, 0, 0, 0, 0]})
         assert r.status_code == 409
 
     def test_calificar_indica_aprobado_y_desbloquea(self, crear_cliente_web):
         web, _ = crear_cliente_web([temario_respuesta(), "# lección", quiz_respuesta()])
         web.post("/api/quiz/0")
-        r = web.post("/api/quiz/0/calificar", json={"respuestas": [0, 0, 0, 0]}).json()
+        r = web.post(
+            "/api/quiz/0/calificar", json={"respuestas": [0, 0, 0, 0, 0, 0]}
+        ).json()
         assert r["aprobado"] is True and r["nota"] == 100
         assert r["puntos_totales"] > 0
         estado = web.get("/api/estado").json()

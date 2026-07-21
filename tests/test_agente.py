@@ -22,7 +22,8 @@ def temario_respuesta():
     )
 
 
-def quiz_respuesta():
+def quiz_respuesta(n=6):
+    """Quiz falso: la evaluación pide mínimo 6 preguntas (HU-26)."""
     return json.dumps(
         {
             "preguntas": [
@@ -32,8 +33,11 @@ def quiz_respuesta():
                     "correcta": 0,
                     "explicacion": "porque sí",
                     "concepto": "variables",
+                    "nivel": ["recordar", "aplicar", "aplicar"][i % 3]
+                    if i < 3
+                    else "comprender",
                 }
-                for i in range(4)
+                for i in range(n)
             ]
         }
     )
@@ -76,8 +80,10 @@ class TestAgente:
 
         # Evaluar: quiz del LLM, calificación local, progreso actualizado
         quiz = agente.quiz_de_unidad(0)  # la lección sale del cache
-        resultado, _detalle = agente.calificar_quiz(quiz, [0, 0, 1, 1])
-        assert resultado.nota == 50
+        resultado, _detalle = agente.calificar_quiz(quiz, [0, 0, 0, 1, 1, 1])
+        # Nota ponderada (HU-26): acierta recordar(0.5)+aplicar(1.5)x2 de
+        # un total de 6.5 → 3.5/6.5 = 54.
+        assert resultado.nota == 54
         assert agente.filas_unidades()[0].estado is EstadoUnidad.EVALUADA
         assert len(falso.llamadas) == 3  # temario + lección + quiz, sin extras
 
@@ -85,7 +91,7 @@ class TestAgente:
         falso2 = ClienteLLMFalso([])
         agente2 = Agente(cliente=falso2, dir_datos=tmp_path, perfil=perfil)
         assert agente2.curso_ya_generado()
-        assert agente2.progreso.mejor_nota(0) == 50
+        assert agente2.progreso.mejor_nota(0) == 54
         assert agente2.abrir_unidad(0) == "# Lección 1"  # cache, sin LLM
         assert falso2.llamadas == []
 
@@ -93,7 +99,7 @@ class TestAgente:
         falso = ClienteLLMFalso([temario_respuesta(), "# L", quiz_respuesta()])
         agente = Agente(cliente=falso, dir_datos=tmp_path, perfil=perfil)
         quiz = agente.quiz_de_unidad(0)
-        agente.calificar_quiz(quiz, [0, 0, 0, 0])
+        agente.calificar_quiz(quiz, [0, 0, 0, 0, 0, 0])
 
         agente.rehacer_perfil(perfil)
         assert not agente.curso_ya_generado()

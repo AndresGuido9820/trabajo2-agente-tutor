@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from tutor import prompts
-from tutor.config import PREGUNTAS_POR_QUIZ
+from tutor.config import PESOS_NIVEL, PREGUNTAS_POR_QUIZ
 from tutor.llm import ClienteLLM, pedir_json
 from tutor.progreso import Resultado, crear_resultado
 
@@ -24,13 +24,18 @@ OPCIONES_POR_PREGUNTA = 4
 
 @dataclass(frozen=True)
 class Pregunta:
-    """Pregunta de opción múltiple con explicación pedagógica."""
+    """Pregunta de opción múltiple con explicación pedagógica.
+
+    ``nivel`` (HU-26) etiqueta la dificultad Bloom y pesa en la nota;
+    las preguntas antiguas sin nivel cargan como "comprender".
+    """
 
     enunciado: str
     opciones: list[str]
     correcta: int
     explicacion: str
     concepto: str
+    nivel: str = "comprender"
 
 
 @dataclass(frozen=True)
@@ -75,6 +80,12 @@ def validar_quiz(datos: Any, unidad: int, num_preguntas: int) -> Quiz:
         concepto = str(cruda["concepto"]).strip()
         if not enunciado or not explicacion or not concepto:
             raise ValueError(f"la pregunta {numero} tiene campos vacíos")
+        nivel = str(cruda.get("nivel", "comprender")).strip()
+        if nivel not in PESOS_NIVEL:
+            raise ValueError(
+                f"nivel desconocido en la pregunta {numero}: {nivel} "
+                f"(esperado: {', '.join(PESOS_NIVEL)})"
+            )
         preguntas.append(
             Pregunta(
                 enunciado=enunciado,
@@ -82,6 +93,7 @@ def validar_quiz(datos: Any, unidad: int, num_preguntas: int) -> Quiz:
                 correcta=correcta,
                 explicacion=explicacion,
                 concepto=concepto,
+                nivel=nivel,
             )
         )
     return Quiz(unidad=unidad, preguntas=preguntas)
@@ -96,6 +108,7 @@ def generar_quiz(
     system: str,
     preguntas_previas: list[str] | None = None,
     priorizar: list[str] | None = None,
+    num_preguntas: int = PREGUNTAS_POR_QUIZ,
 ) -> Quiz:
     """Genera el quiz de una unidad a partir de su lección.
 
@@ -109,6 +122,7 @@ def generar_quiz(
         preguntas_previas: Enunciados ya vistos; exige variantes (HU-13).
         priorizar: Conceptos fallados en mini-quices intermedios; el quiz
             los cubre primero (HU-24).
+        num_preguntas: Tamaño del quiz (HU-26: 2 x objetivos, mínimo 6).
 
     Raises:
         ErrorLLM: Si el modelo no produce un quiz válido tras reintentos.
@@ -121,11 +135,11 @@ def generar_quiz(
             titulo_unidad=titulo_unidad,
             conceptos=conceptos,
             leccion_md=leccion_md,
-            num_preguntas=PREGUNTAS_POR_QUIZ,
+            num_preguntas=num_preguntas,
             preguntas_previas=preguntas_previas,
             priorizar=priorizar,
         ),
-        validar=lambda datos: validar_quiz(datos, unidad, PREGUNTAS_POR_QUIZ),
+        validar=lambda datos: validar_quiz(datos, unidad, num_preguntas),
     )
 
 
@@ -178,7 +192,27 @@ def calificar(
         )
         for pregunta, respuesta in zip(quiz.preguntas, respuestas, strict=True)
     ]
-    aciertos = sum(1 for r in detalle if r.acierto)
-    nota = round(100 * aciertos / len(quiz.preguntas))
+    # Nota ponderada por nivel Bloom (HU-26): aplicar pesa 3x recordar.
+    peso_total = sum(PESOS_NIVEL[r.pregunta.nivel] for r in detalle)
+    peso_logrado = sum(PESOS_NIVEL[r.pregunta.nivel] for r in detalle if r.acierto)
+    nota = round(100 * peso_logrado / peso_total)
     fallados = sorted({r.pregunta.concepto for r in detalle if not r.acierto})
     return crear_resultado(quiz.unidad, nota, fallados), detalle
+
+
+def resumenes(detalle: list[Retroalimentacion]) -> dict[str, dict[str, list[int]]]:
+    """Resumen [aciertos, total] por concepto y por nivel (HU-26).
+
+    Alimenta la tarjeta de resultado y el conversatorio: dice QUÉ atacar.
+    """
+    por_concepto: dict[str, list[int]] = {}
+    por_nivel: dict[str, list[int]] = {}
+    for r in detalle:
+        for clave, grupo in (
+            (r.pregunta.concepto, por_concepto),
+            (r.pregunta.nivel, por_nivel),
+        ):
+            fila = grupo.setdefault(clave, [0, 0])
+            fila[0] += int(r.acierto)
+            fila[1] += 1
+    return {"conceptos": por_concepto, "niveles": por_nivel}
