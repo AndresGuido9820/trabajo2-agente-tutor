@@ -44,6 +44,35 @@ export async function api(ruta, cuerpo, metodo) {
   return r.json()
 }
 
+/**
+ * POST con respuesta SSE (HU-35): invoca callbacks.delta/fin/error por evento.
+ * Lanza si el stream no se puede abrir (el llamador hace fallback al clásico).
+ */
+export async function apiStream(ruta, cuerpo, callbacks) {
+  const r = await fetch(ruta, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(cuerpo),
+  })
+  if (!r.ok || !r.body) throw new Error(`Stream no disponible (${r.status})`)
+  const lector = r.body.getReader()
+  const decodificador = new TextDecoder()
+  let buffer = ''
+  for (;;) {
+    const { done, value } = await lector.read()
+    if (done) break
+    buffer += decodificador.decode(value, { stream: true })
+    let corte
+    while ((corte = buffer.indexOf('\n\n')) >= 0) {
+      const marco = buffer.slice(0, corte)
+      buffer = buffer.slice(corte + 2)
+      const evento = /^event: (.+)$/m.exec(marco)?.[1]
+      const datos = JSON.parse(/^data: (.+)$/m.exec(marco)?.[1] ?? '{}')
+      callbacks[evento]?.(datos)
+    }
+  }
+}
+
 // Borradores del composer por canal (best-effort: localStorage puede fallar).
 export function leerBorrador(canal) {
   try {

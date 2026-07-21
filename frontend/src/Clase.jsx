@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import {
   Badge, Box, Button, Card, Group, Paper, Radio, Stack, Text, Textarea, Title,
 } from '@mantine/core'
-import { api, guardarBorrador, leerBorrador } from './api.js'
+import { api, apiStream, guardarBorrador, leerBorrador } from './api.js'
 import { avisar, avisarError } from './App.jsx'
 import { Escribiendo, Mensaje, ZonaChat } from './Chat.jsx'
 import Prosa from './Prosa.jsx'
@@ -83,8 +83,7 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
         const r = await api(`/api/conversatorio/${indice}`, { mensaje: m })
         agregar({ rol: 'tutor', texto: r.texto })
       } else {
-        const r = await api('/api/estudio', { mensaje: m, unidad: indice })
-        agregar({ rol: 'tutor', texto: r.texto })
+        const r = await turnoEstudio(m)
         setAvance({ paso: r.paso, total: r.total })
         if (r.terminada) {
           await refrescar()
@@ -99,6 +98,53 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
     clearTimeout(tardando)
     setEspera(null)
     setOcupado(false)
+  }
+
+  // Turno de estudio en vivo por SSE, con fallback al endpoint clásico (HU-35).
+  const turnoEstudio = async (m) => {
+    let fin = null
+    let huboDelta = false
+    try {
+      await apiStream('/api/estudio/stream', { mensaje: m, unidad: indice }, {
+        delta: (d) => {
+          setEspera(null)
+          if (!huboDelta) {
+            huboDelta = true
+            agregar({ rol: 'tutor', texto: d.texto })
+          } else {
+            setMensajes((prev) => {
+              const copia = prev.slice()
+              const ultimo = copia[copia.length - 1]
+              copia[copia.length - 1] = { ...ultimo, texto: ultimo.texto + d.texto }
+              return copia
+            })
+          }
+        },
+        fin: (d) => { fin = d },
+        error: (d) => { throw new Error(d.detail) },
+      })
+    } catch (e) {
+      // Fallback: se descarta la burbuja parcial y se rehace el turno clásico.
+      if (huboDelta) setMensajes((prev) => prev.slice(0, -1))
+      fin = null
+    }
+    if (!fin) {
+      setEspera('')
+      const r = await api('/api/estudio', { mensaje: m, unidad: indice })
+      agregar({ rol: 'tutor', texto: r.texto })
+      return r
+    }
+    // El texto final es la fuente de verdad (el stream pudo perder deltas).
+    if (!huboDelta) {
+      agregar({ rol: 'tutor', texto: fin.texto })
+    } else {
+      setMensajes((prev) => {
+        const copia = prev.slice()
+        copia[copia.length - 1] = { rol: 'tutor', texto: fin.texto }
+        return copia
+      })
+    }
+    return fin
   }
 
   const repasar = async () => {
