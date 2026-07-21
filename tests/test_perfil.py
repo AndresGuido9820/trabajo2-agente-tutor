@@ -39,6 +39,8 @@ class TestValidaciones:
     def test_valida_lenguaje_normaliza(self):
         assert validar_lenguaje("  Python ") == "python"
         assert validar_lenguaje("C++") == "c++"
+        # Multi-tecnología: lo que el asesor propone para cursos web.
+        assert validar_lenguaje("HTML/CSS + JavaScript") == "html/css + javascript"
 
     def test_valida_lenguaje_vacio_significa_decide_el_tutor(self):
         assert validar_lenguaje("") == ""

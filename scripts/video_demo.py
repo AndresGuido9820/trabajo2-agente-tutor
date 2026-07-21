@@ -58,25 +58,32 @@ def escribir(page: Page, texto: str) -> None:
     """Tipea en el composer con ritmo humano y envía."""
     caja = page.get_by_role("textbox").last
     caja.click()
+    caja.fill("")  # nunca heredar texto a medias
     caja.press_sequentially(texto, delay=22)
     time.sleep(0.4)
     page.keyboard.press("Enter")
 
 
-def esperar_respuesta(page: Page, n_antes: int) -> None:
-    """Espera a que aparezca al menos un mensaje nuevo del tutor."""
+def esperar(page: Page, n_minimo: int) -> None:
+    """Espera ``n_minimo`` burbujas Y que nada esté cargando.
+
+    El propio mensaje del estudiante también es una burbuja `.prosa`, y con
+    streaming la respuesta crece en vivo: contar burbujas no basta — hay
+    que esperar además a que ningún botón siga en estado loading.
+    """
     page.wait_for_function(
-        f"document.querySelectorAll('.prosa').length >= {n_antes + 1}",
+        f"() => document.querySelectorAll('.prosa').length >= {n_minimo}"
+        " && !document.querySelector('button[data-loading]')",
         timeout=ESPERA_LLM,
     )
     time.sleep(1.2)
 
 
 def turno(page: Page, texto: str) -> None:
-    """Envía un mensaje y espera la respuesta del tutor."""
+    """Envía un mensaje y espera la respuesta COMPLETA del tutor."""
     n = page.locator(".prosa").count()
     escribir(page, texto)
-    esperar_respuesta(page, n)
+    esperar(page, n + 2)  # +1 mi burbuja, +1 la del tutor
 
 
 def pausa(segundos: float = 2.0) -> None:
@@ -120,19 +127,34 @@ def recorrer(page: Page) -> None:
     page.click("text=Nuevo curso")
     page.wait_for_selector("text=¿Qué quieres aprender?", timeout=15_000)
     pausa(2)
-    n = page.locator(".prosa").count()
-    escribir(
-        page, "Quiero aprender a hacer páginas web desde cero, nunca he programado"
-    )
-    esperar_respuesta(page, n)
-    pausa(2)
-    turno(page, "Nunca he programado nada; tengo unas 4 horas a la semana")
-    pausa(2)
-    n = page.locator(".prosa").count()
-    escribir(page, "Me encanta la propuesta: ya, dale, arranca")
-    # Confirmar crea el curso y entra a la clase 1 (generación ~1 min)
-    page.wait_for_selector("text=Clase 1", timeout=ESPERA_LLM)
-    esperar_respuesta(page, 0)
+    # Diálogo de creación: responder y confirmar turno a turno hasta que la
+    # vista cambie a la clase — la ÚNICA señal fiable de que el asesor creó
+    # el curso (sus mensajes usan listas tanto para preguntar como para
+    # proponer: el texto no sirve como detector).
+    mensajes_creacion = [
+        "Quiero aprender a hacer páginas web desde cero, nunca he programado",
+        "Nunca he programado; tengo 4 horas a la semana; mi meta es mi "
+        "página personal; elige tú las tecnologías",
+        "Sí, es correcto: proponme el plan",
+        "Me encanta la propuesta: ya, dale, arranca",
+        "Sí, confirmo: crea el curso ya, tal como está",
+        "ya, dale",
+    ]
+    en_clase = "document.body.innerText.includes('Clase 1:')"
+    for mensaje in mensajes_creacion:
+        if page.evaluate(f"() => {en_clase}"):
+            break
+        n = page.locator(".prosa").count()
+        escribir(page, mensaje)
+        # Espera la respuesta O el salto a la clase (crear tarda ~1-2 min).
+        page.wait_for_function(
+            f"() => (document.querySelectorAll('.prosa').length >= {n + 2}"
+            f" && !document.querySelector('button[data-loading]')) || {en_clase}",
+            timeout=ESPERA_LLM,
+        )
+        pausa(2)
+    page.wait_for_selector("text=Clase 1:", timeout=ESPERA_LLM)
+    esperar(page, 1)  # la apertura del tutor
     marca("E3b · Clase 1 del curso nuevo: panel de objetivos + apertura")
     pausa(4)
     turno(page, "creo que esa línea muestra un texto en la página, ¿no?")
@@ -153,7 +175,7 @@ def recorrer(page: Page) -> None:
     pausa(1.5)
     n = page.locator(".prosa").count()
     page.locator("text=↩ Repasar desde el inicio").click()
-    esperar_respuesta(page, n)
+    esperar(page, n + 2)
     pausa(3)
 
     # ---- Escena 5: conversar hasta el mini-quiz (y el reto si sale) ------
@@ -191,7 +213,7 @@ def recorrer(page: Page) -> None:
         pausa(14)  # Pyodide carga la primera vez
         n = page.locator(".prosa").count()
         page.locator("text=💡 Pista").last.click()
-        esperar_respuesta(page, n)
+        esperar(page, n + 1)
         pausa(3)
 
     # ---- Escena 6: demo interactiva ✨ ------------------------------------

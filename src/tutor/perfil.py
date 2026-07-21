@@ -60,7 +60,9 @@ def validar_lenguaje(texto: str) -> str:
         ValueError: Si contiene caracteres que no parecen nombre de lenguaje.
     """
     lenguaje = texto.strip().lower()
-    if lenguaje and not all(c.isalnum() or c in "+#. -" for c in lenguaje):
+    # "/" y "," permiten multi-tecnología ("html/css + javascript"), que es
+    # lo que el asesor propone para cursos web (hallazgo 2026-07-21).
+    if lenguaje and not all(c.isalnum() or c in "+#. -/," for c in lenguaje):
         raise ValueError("Eso no parece un nombre de lenguaje de programación.")
     return lenguaje
 
