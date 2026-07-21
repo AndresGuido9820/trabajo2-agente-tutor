@@ -9,6 +9,7 @@ quizzes nunca viajan al navegador antes de calificar.
 from __future__ import annotations
 
 import logging
+import shutil
 import sys
 from pathlib import Path
 from typing import Any
@@ -125,6 +126,13 @@ class CuerpoDiseno(BaseModel):
 
     lenguaje: str
     clases: list[ClaseDiseno]
+
+
+class CuerpoCursoPatch(BaseModel):
+    """Body de edición de metadata de un curso (HU-29)."""
+
+    nombre: str | None = None
+    archivado: bool | None = None
 
 
 class _SesionCurso:
@@ -308,10 +316,12 @@ def crear_app(
                         >= NOTA_APROBATORIA
                     )
                 nombre = descripcion[:70] or f"Curso de {lenguaje or '…'}"
+            meta = db.leer_meta_curso(sesion.dir / ARCHIVO_DB)
             cursos.append(
                 {
                     "id": curso_id,
-                    "nombre": nombre,
+                    "nombre": str(meta["nombre"]) or nombre,
+                    "archivado": bool(meta["archivado"]),
                     "lenguaje": lenguaje,
                     "aprobadas": aprobadas,
                     "total": total,
@@ -319,6 +329,36 @@ def crear_app(
                 }
             )
         return {"cursos": cursos}
+
+    @app.patch("/api/cursos/{curso_id}")
+    def api_editar_curso(curso_id: int, cuerpo: CuerpoCursoPatch) -> dict[str, Any]:
+        """Renombra y/o archiva un curso (HU-29)."""
+        if curso_id not in estado.sesiones:
+            raise HTTPException(404, f"No existe el curso {curso_id}.")
+        if cuerpo.nombre is not None and not cuerpo.nombre.strip():
+            raise HTTPException(400, "El nombre no puede quedar vacío.")
+        ruta = estado.sesiones[curso_id].dir / ARCHIVO_DB
+        db.escribir_meta_curso(
+            ruta,
+            nombre=cuerpo.nombre.strip() if cuerpo.nombre is not None else None,
+            archivado=cuerpo.archivado,
+        )
+        return {"ok": True}
+
+    @app.delete("/api/cursos/{curso_id}")
+    def api_borrar_curso(curso_id: int) -> dict[str, Any]:
+        """Borra un curso moviéndolo a la papelera (HU-29, reversible)."""
+        if curso_id not in estado.sesiones:
+            raise HTTPException(404, f"No existe el curso {curso_id}.")
+        sesion = estado.sesiones.pop(curso_id)
+        papelera = estado.base / ".papelera"
+        papelera.mkdir(parents=True, exist_ok=True)
+        destino = papelera / f"{curso_id}-{db.ahora().replace(':', '-')}"
+        shutil.move(str(sesion.dir), str(destino))
+        if estado.activo == curso_id:
+            estado.activo = min(estado.sesiones) if estado.sesiones else None
+        logger.info("Curso %d movido a %s", curso_id, destino)
+        return {"ok": True, "papelera": str(destino)}
 
     @app.post("/api/cursos")
     def api_crear_curso_nuevo() -> dict[str, Any]:
