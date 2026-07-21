@@ -100,8 +100,11 @@ function TarjetaCurso({ c, onEntrar, onRenombrar, onArchivar, onBorrar }) {
               <Menu.Item onClick={onArchivar}>
                 {c.archivado ? '📤 Restaurar' : '📦 Archivar'}
               </Menu.Item>
-              <Menu.Item component="a" href={`/api/cursos/${c.id}/exportar`}
-                style={{ display: 'none' }}>⬇️ Exportar</Menu.Item>
+              {c.total > 0 && (
+                <Menu.Item component="a" href={`/api/cursos/${c.id}/exportar`}>
+                  ⬇️ Exportar (.zip)
+                </Menu.Item>
+              )}
               <Menu.Divider />
               <Menu.Item color="red" onClick={onBorrar}>🗑 Borrar curso…</Menu.Item>
             </Menu.Dropdown>
