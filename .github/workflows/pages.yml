@@ -1,0 +1,67 @@
+name: Publicar reporte (GitHub Pages)
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "entregables/REPORTE.md"
+      - "entregables/capturas/**"
+      - ".github/pages/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  construir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar pandoc
+        run: sudo apt-get update -q && sudo apt-get install -y -q pandoc
+
+      - name: Construir la página del reporte
+        run: |
+          mkdir -p _site
+          cp .github/pages/estilo.css _site/estilo.css
+          cp -r entregables/capturas _site/capturas
+          # Quita el H1 del markdown (el título lo pone el bloque de portada)
+          tail -n +2 entregables/REPORTE.md > /tmp/reporte.md
+          pandoc /tmp/reporte.md \
+            --standalone \
+            --toc --toc-depth=2 \
+            --css=estilo.css \
+            --metadata title="Profe Bit — Tutor de Programación con LLMs" \
+            --metadata author="Trabajo 02 · Normalización: aplicaciones de LLMs y Agentes para la enseñanza de la programación básica" \
+            --metadata date="Prof. Juan David Ospina Arango · $(date +%Y-%m-%d)" \
+            --metadata lang=es \
+            -o _site/index.html
+          cat >> _site/index.html <<'HTML'
+          <footer class="pie">
+            Código: <a href="https://github.com/AndresGuido9820/trabajo2-agente-tutor">
+            github.com/AndresGuido9820/trabajo2-agente-tutor</a> ·
+            Reporte generado automáticamente con GitHub Actions + pandoc.
+          </footer>
+          HTML
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  desplegar:
+    needs: construir
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
