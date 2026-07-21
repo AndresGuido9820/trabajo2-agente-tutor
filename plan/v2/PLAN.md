@@ -12,21 +12,21 @@ pruebas. Orden de implementación sugerido (dependencias primero):
 | 4 | [HU-27](HU-27-mejores-artefactos.md) | Mejores artefactos: plantillas por concepto, verificación y regenerar | — |
 | 5 | [HU-28](HU-28-practica-con-codigo.md) | Práctica con código real: retos verificados con Pyodide | HU-24, HU-27 |
 
-## Segunda tanda (calidad de producto ×1000)
+## Segunda tanda (calidad de producto ×1000) — EJECUTADA 2026-07-21
 
 | # | HU | Qué mejora | Depende de |
 |---|----|------------|------------|
-| 6 | [HU-29](HU-29-gestion-cursos.md) | Renombrar, archivar y borrar cursos (con papelera) | — |
-| 7 | [HU-36](HU-36-tema-y-preferencias.md) | Tema claro/oscuro y tamaño de texto | — |
-| 8 | [HU-30](HU-30-bienvenida-inteligente.md) | "¿Dónde iba?": reencuentro al volver a una clase | — |
-| 9 | [HU-31](HU-31-estadisticas.md) | Mi progreso: actividad, notas y conceptos débiles | — |
-| 10 | [HU-33](HU-33-exportar-curso.md) | Exportar el curso completo (.zip de Markdown) | HU-29 |
-| 11 | [HU-39](HU-39-modelos-por-tarea.md) | Modelo por tarea (rápido en chat, potente en diseño) + registro de uso | — |
-| 12 | [HU-34](HU-34-robustez-front.md) | Robustez: desconexión, reintentos, borradores | — |
-| 13 | [HU-37](HU-37-buscador.md) | Buscador global ⌘K (clases y conversaciones) | — |
-| 14 | [HU-38](HU-38-accesibilidad.md) | Accesibilidad y teclado (axe sin violaciones) | HU-36 |
-| 15 | [HU-32](HU-32-repaso-espaciado.md) | Repaso del día (repetición espaciada 1-3-7) | HU-26 |
-| 16 | [HU-35](HU-35-streaming.md) | Streaming SSE: el tutor escribe en vivo | — |
+| 6 | ✅ [HU-29](HU-29-gestion-cursos.md) | Renombrar, archivar y borrar cursos (con papelera) | — |
+| 7 | ✅ [HU-36](HU-36-tema-y-preferencias.md) | Tema claro/oscuro y tamaño de texto | — |
+| 8 | ✅ [HU-30](HU-30-bienvenida-inteligente.md) | "¿Dónde iba?": reencuentro al volver a una clase | — |
+| 9 | ✅ [HU-31](HU-31-estadisticas.md) | Mi progreso: actividad, notas y conceptos débiles | — |
+| 10 | ✅ [HU-33](HU-33-exportar-curso.md) | Exportar el curso completo (.zip de Markdown) | HU-29 |
+| 11 | ✅ [HU-39](HU-39-modelos-por-tarea.md) | Modelo por tarea (rápido en chat, potente en diseño) + registro de uso | — |
+| 12 | ✅ [HU-34](HU-34-robustez-front.md) | Robustez: desconexión, reintentos, borradores | — |
+| 13 | ✅ [HU-37](HU-37-buscador.md) | Buscador global ⌘K (clases y conversaciones) | — |
+| 14 | ✅ [HU-38](HU-38-accesibilidad.md) | Accesibilidad y teclado (axe sin violaciones) | HU-36 |
+| 15 | ✅ [HU-32](HU-32-repaso-espaciado.md) | Repaso del día (repetición espaciada 1-3-7) | HU-26 |
+| 16 | ✅ [HU-35](HU-35-streaming.md) | Streaming SSE: el tutor escribe en vivo | — |
 
 ## Principios (heredados de v1)
 

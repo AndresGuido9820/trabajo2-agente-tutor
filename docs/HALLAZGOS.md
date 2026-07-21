@@ -362,6 +362,49 @@ compatibilidad.
 
 <!-- Plantilla:
 
+## 2026-07-21 — Segunda tanda v2 (HU-29…39): 11 mejoras ejecutadas
+
+**Contexto:** ejecución completa de la segunda tanda del plan v2 en un día,
+cada HU en su rama `feature/*` con merge `--no-ff` a develop y compuertas
+(ruff, mypy estricto, pytest, build del front) en verde. La suite pasó de
+179 a 229 pruebas.
+
+**Hallazgos:**
+
+- *Contraste AA no viene gratis con Mantine* (HU-38): axe-core encontró
+  violaciones serias reales — los `Progress` sin nombre accesible, el
+  `dimmed` y el texto de la variante `light` (badges 🔥/⭐) por debajo de
+  4.5:1 incluso subiendo al tono 9. Se corrigió con variables CSS a medida
+  en `global.css` y `primaryShade {light: 7}`; la auditoría quedó en 0
+  violaciones serias/críticas y el script (`scripts/a11y_playwright.py`)
+  queda como compuerta repetible.
+- *Streamear un campo de un JSON en vivo requiere parser incremental*
+  (HU-35): el turno con decisión `{avanza, mensaje}` no puede esperar el
+  JSON completo. `ExtractorCampoJSON` re-escanea el buffer en cada
+  fragmento (maneja `\"`, `\n` y `\uXXXX` partidos entre trozos) y el
+  JSON completo se valida al final con el MISMO `_cerrar_turno` que la
+  variante clásica: un solo lugar decide el avance. Validado contra la API
+  real (deltas limpios extraídos del JSON en vivo).
+- *La desconexión del cliente no debe abortar el turno* (HU-35/HU-34): el
+  generador SSE captura `GeneratorExit` y termina/persiste el turno
+  server-side; el E2E de HU-34 (matar el servidor, ver "No enviado",
+  revivir, reintentar) pasó contra el servidor real.
+- *El agente cachea estado en memoria* (HU-31/32): escribir la BD "por
+  detrás" de un servidor vivo no se refleja hasta reiniciar; los tests que
+  siembran datos crean un `crear_app` nuevo (reinicio simulado) en vez de
+  parchear el caché.
+- *Aciertos por concepto son una aproximación* (HU-31): el quiz no
+  persiste sus preguntas, así que "acertado" = conceptos de la unidad
+  menos los fallados del intento; documentado en `estadisticas()`.
+- *Carriles de modelo* (HU-39): separar chat (`TUTOR_MODEL_CHAT`) de
+  generación estructurada baja latencia sin tocar la calidad del diseño;
+  el registro `llm_uso` es global (`data/uso.db`) porque el costo es del
+  operador, no del curso.
+
+**Decisión/acción:** el repaso espaciado usa intervalos fijos 1-3-7 (no
+FSRS) y el streaming cubre solo `/api/estudio` con fallback clásico en el
+front — alcance documentado en cada HU.
+
 ## AAAA-MM-DD — Título corto
 
 **Contexto:** qué se estaba haciendo (HU-XX).
