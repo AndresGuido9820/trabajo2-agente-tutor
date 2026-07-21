@@ -22,7 +22,8 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
   const [fallo, setFallo] = useState(null)           // {m} del último turno fallido (HU-34)
   const [espera, setEspera] = useState(null)         // texto del indicador
   const [modo, setModo] = useState('estudio')        // estudio | conversatorio
-  const [avance, setAvance] = useState(null)         // {paso, total}
+  const [avance, setAvance] = useState(null)         // {paso, total, objetivo?, objetivos_total?}
+  const [finPendiente, setFinPendiente] = useState(false)  // fin-clase espera al mini-quiz (HU-24)
   const inicio = useRef(false)
 
   const agregar = (m) => setMensajes((prev) => [...prev, m])
@@ -84,8 +85,13 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
         agregar({ rol: 'tutor', texto: r.texto })
       } else {
         const r = await turnoEstudio(m)
-        setAvance({ paso: r.paso, total: r.total })
-        if (r.terminada) {
+        setAvance({ paso: r.paso, total: r.total, objetivo: r.objetivo, objetivos_total: r.objetivos_total })
+        // HU-24: al cerrar un objetivo llega su mini-quiz; el cierre de
+        // clase espera a que se responda.
+        if (r.quiz_intermedio) {
+          agregar({ rol: 'quiz-mini', preguntas: r.quiz_intermedio })
+          if (r.terminada) { await refrescar(); setFinPendiente(true) }
+        } else if (r.terminada) {
           await refrescar()
           agregar({ rol: 'fin-clase' })
         }
@@ -187,6 +193,24 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
     } catch (e) { avisarError(e); return false }
   }
 
+  // Mini-quiz de cierre de objetivo (HU-24): calificación en el servidor.
+  const calificarMini = (preguntas) => async (respuestas) => {
+    try {
+      const r = await api('/api/estudio/quiz-intermedio', { unidad: indice, respuestas })
+      agregar({ rol: 'tutor', texto: r.texto })
+      if (r.repite) {
+        agregar({ rol: 'quiz-mini', preguntas })  // mismo quiz, tras el repaso
+        return true
+      }
+      if (r.aciertos > 0) avisar(`+${5 * r.aciertos} ⭐ por tu mini-quiz`)
+      if (finPendiente) {
+        setFinPendiente(false)
+        agregar({ rol: 'fin-clase' })
+      }
+      return true
+    } catch (e) { avisarError(e); return false }
+  }
+
   const demo = async () => {
     agregar({ rol: 'yo', texto: '✨ Muéstrame una demo interactiva de esto' })
     setEspera('Creando tu demo interactiva (vale la pena: ~1-2 min)…')
@@ -206,12 +230,20 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
         <Text size="xs" c="dimmed" truncate style={{ flex: 1 }}>
           {(unidad.conceptos || []).join(' · ')}
         </Text>
+        {avance?.objetivos_total && (
+          <Badge variant="light" color="teal">objetivo {avance.objetivo}/{avance.objetivos_total}</Badge>
+        )}
         {avance && <Badge variant="light">paso {avance.paso}/{avance.total}</Badge>}
       </Group>
 
       <ZonaChat dep={mensajes.length + (espera !== null ? 1 : 0)}>
         {mensajes.map((m, i) => {
           if (m.rol === 'quiz') return <QuizCard key={i} preguntas={m.preguntas} onCalificar={calificar} indice={indice} />
+          if (m.rol === 'quiz-mini') return (
+            <QuizCard key={i} preguntas={m.preguntas} indice={indice}
+              titulo="⚡ MINI-QUIZ · CIERRE DE OBJETIVO"
+              onCalificar={calificarMini(m.preguntas)} />
+          )
           if (m.rol === 'resultado') return <ResultadoCard key={i} r={m.r} onSiguiente={haySiguiente ? () => irAClase(indice + 1) : null} onReintentar={evaluar} />
           if (m.rol === 'demo') return (
             <Mensaje key={i} rol="tutor" ancho>

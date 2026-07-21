@@ -19,6 +19,7 @@ from tutor import db
 from tutor.config import (
     MAX_TURNOS_CHARLA,
     NOTA_APROBATORIA,
+    PUNTOS_ACIERTO_INTERMEDIO,
     PUNTOS_PRIMER_INTENTO,
     PUNTOS_QUIZ_APROBADO,
     PUNTOS_SEGUNDO_INTENTO,
@@ -92,11 +93,41 @@ class RespuestaCheckpoint:
 
 @dataclass
 class _SesionLeccion:
-    """Estado en memoria de una lección conversada (HU-10)."""
+    """Estado en memoria de una lección conversada (HU-10, ampliada HU-24)."""
 
     guion: GuionLeccion
     paso: int = 0
     historial: list[tuple[str, str]] = field(default_factory=list)
+    # Guion v2 (HU-24): quiz intermedio pendiente (índice de objetivo),
+    # objetivos ya resueltos y si el repaso del objetivo ya se usó.
+    quiz_pendiente: int | None = None
+    resueltos: set[int] = field(default_factory=set)
+    repaso_usado: set[int] = field(default_factory=set)
+
+    def objetivo_de_paso(self, paso: int) -> int:
+        """Índice del objetivo (v2) al que pertenece un paso; 0 en v1."""
+        for k, intermedio in enumerate(self.guion.intermedios):
+            if paso <= intermedio.fin_paso:
+                return k
+        return max(len(self.guion.intermedios) - 1, 0)
+
+    def detectar_cierre(self, paso_antes: int, terminada: bool) -> int | None:
+        """Objetivo que se cerró en el último avance, si dispara quiz.
+
+        Un objetivo cierra cuando el avance deja atrás su ``fin_paso`` (o
+        la lección termina en él). Solo dispara si su quiz no se resolvió.
+        """
+        for k, intermedio in enumerate(self.guion.intermedios):
+            cerrado = self.paso > intermedio.fin_paso or (
+                terminada and self.paso == intermedio.fin_paso
+            )
+            if (
+                cerrado
+                and paso_antes <= intermedio.fin_paso
+                and k not in self.resueltos
+            ):
+                return k
+        return None
 
 
 @dataclass(frozen=True)
@@ -246,6 +277,7 @@ class Agente:
             unidad=indice,
             system=system_tutor(self.perfil),
             preguntas_previas=self._quizzes_previos.get(indice),
+            priorizar=self.progreso.fallados_intermedios.get(str(indice)),
         )
         self._quizzes_previos[indice] = [p.enunciado for p in quiz.preguntas]
         return quiz
@@ -845,6 +877,7 @@ class Agente:
         if unidad is not None and mensaje is None:
             self.unidad_actual = unidad
             self.iniciar_leccion(unidad)
+            paso_antes = 0
             turnos = self.turno_leccion_stream(unidad, None)
         else:
             if unidad is not None:
@@ -852,8 +885,10 @@ class Agente:
             actual = self.unidad_actual
             if actual not in self._lecciones_activas:
                 self.iniciar_leccion(actual)
+                paso_antes = 0
                 turnos = self.turno_leccion_stream(actual, None, apertura=mensaje)
             else:
+                paso_antes = self._lecciones_activas[actual].paso
                 turnos = self.turno_leccion_stream(actual, mensaje or "ok, sigamos")
         resultado: tuple[str, bool] | None = None
         for evento in turnos:
@@ -863,19 +898,7 @@ class Agente:
                 yield evento
         assert resultado is not None  # turno_leccion_stream siempre cierra
         texto, terminada = resultado
-        if terminada:
-            self.progreso.completar(self.unidad_actual)
-            self.guardar()
-        paso, total = self.avance_leccion(self.unidad_actual)
-        yield {
-            "fin": {
-                "texto": texto,
-                "unidad": self.unidad_actual,
-                "paso": paso,
-                "total": total,
-                "terminada": terminada,
-            }
-        }
+        yield {"fin": self._payload_estudio(texto, terminada, paso_antes)}
 
     def avance_leccion(self, indice: int) -> tuple[int, int]:
         """Paso actual (base 1) y total de la lección conversada activa."""
@@ -899,6 +922,7 @@ class Agente:
             # Entrar/repasar: (re)inicia la lección de esa clase.
             self.unidad_actual = unidad
             self.iniciar_leccion(unidad)
+            paso_antes = 0
             texto, terminada = self.turno_leccion(unidad, None)
         else:
             # Continuar la conversación de la clase indicada (o la actual).
@@ -907,19 +931,140 @@ class Agente:
             actual = self.unidad_actual
             if actual not in self._lecciones_activas:
                 self.iniciar_leccion(actual)
+                paso_antes = 0
                 texto, terminada = self.turno_leccion(actual, None, apertura=mensaje)
             else:
+                paso_antes = self._lecciones_activas[actual].paso
                 texto, terminada = self.turno_leccion(actual, mensaje or "ok, sigamos")
+        return self._payload_estudio(texto, terminada, paso_antes)
+
+    def _payload_estudio(
+        self, texto: str, terminada: bool, paso_antes: int
+    ) -> dict[str, object]:
+        """Payload de un turno de estudio, con el estado del guion v2.
+
+        ÚNICO lugar que marca la clase completada y dispara el quiz
+        intermedio al cerrar un objetivo (HU-24): lo usan la variante
+        clásica y la de streaming.
+        """
         if terminada:
             self.progreso.completar(self.unidad_actual)
             self.guardar()
+        sesion = self._lecciones_activas[self.unidad_actual]
+        cierre = sesion.detectar_cierre(paso_antes, terminada)
+        if cierre is not None:
+            sesion.quiz_pendiente = cierre
+        pendiente = sesion.quiz_pendiente
         paso, total = self.avance_leccion(self.unidad_actual)
-        return {
+        payload: dict[str, object] = {
             "texto": texto,
             "unidad": self.unidad_actual,
             "paso": paso,
             "total": total,
             "terminada": terminada,
+        }
+        if sesion.guion.intermedios:
+            payload["objetivo"] = sesion.objetivo_de_paso(sesion.paso) + 1
+            payload["objetivos_total"] = len(sesion.guion.objetivos)
+            payload["quiz_intermedio"] = (
+                [
+                    {"enunciado": p.enunciado, "opciones": p.opciones}
+                    for p in sesion.guion.intermedios[pendiente].preguntas
+                ]
+                if pendiente is not None
+                else None
+            )
+        return payload
+
+    def responder_quiz_intermedio(
+        self, unidad: int, respuestas: list[int]
+    ) -> dict[str, Any]:
+        """Califica el mini-quiz del objetivo pendiente (HU-24, local).
+
+        1+ aciertos → objetivo cumplido (+5 ⭐ por acierto). 0 aciertos la
+        primera vez → repaso con explicación nueva y el MISMO quiz otra
+        vez; a la segunda, el flujo avanza igual pero los conceptos quedan
+        anotados para la evaluación final y la cola de repaso.
+
+        Raises:
+            ErrorDatos: Si no hay quiz intermedio pendiente.
+            ValueError: Si las respuestas no calzan con las preguntas.
+        """
+        if unidad not in self._lecciones_activas:
+            raise ErrorDatos("La clase no tiene una conversación activa.")
+        sesion = self._lecciones_activas[unidad]
+        k = sesion.quiz_pendiente
+        if k is None:
+            raise ErrorDatos("No hay un mini-quiz pendiente en esta clase.")
+        preguntas = sesion.guion.intermedios[k].preguntas
+        if len(respuestas) != len(preguntas):
+            raise ValueError(f"se esperaban {len(preguntas)} respuestas")
+        detalle = []
+        for pregunta, respuesta in zip(preguntas, respuestas, strict=True):
+            if not 0 <= respuesta < len(pregunta.opciones):
+                raise ValueError(f"respuesta fuera de rango: {respuesta}")
+            detalle.append(
+                {
+                    "acierto": respuesta == pregunta.correcta,
+                    "correcta": pregunta.opciones[pregunta.correcta],
+                    "explicacion": pregunta.explicacion,
+                }
+            )
+        aciertos = sum(1 for d in detalle if d["acierto"])
+
+        if aciertos == 0 and k not in sesion.repaso_usado:
+            # Repaso único: explicación nueva con otro ejemplo, mismo quiz.
+            sesion.repaso_usado.add(k)
+            texto = self._cliente.generar(
+                system=system_leccion(self.perfil),
+                prompt=(
+                    f"El estudiante falló las 2 preguntas del objetivo "
+                    f'"{sesion.guion.objetivos[k]}". Vuelve a explicarlo en '
+                    "4-6 frases con un EJEMPLO DISTINTO al que usaste, y "
+                    "anímalo a reintentar el mini-quiz. Sin regañar."
+                ),
+                carril="chat",
+            )
+            return {
+                "aciertos": 0,
+                "cumplido": False,
+                "repite": True,
+                "detalle": detalle,
+                "puntos_totales": self.progreso.puntos,
+                "texto": texto,
+            }
+
+        # Cumplido (1+ aciertos, o segundo intento sin importar el resultado).
+        sesion.resueltos.add(k)
+        sesion.quiz_pendiente = None
+        self.progreso.sumar_puntos(PUNTOS_ACIERTO_INTERMEDIO * aciertos)
+        self.progreso.cumplir_objetivo(unidad, k)
+        hoy = date.today().isoformat()
+        for pregunta, d in zip(preguntas, detalle, strict=True):
+            if not d["acierto"]:
+                self.progreso.anotar_fallado_intermedio(unidad, pregunta.concepto)
+                self.progreso.programar_repaso(pregunta.concepto, unidad, hoy)
+        self.guardar()
+        nota = f"{aciertos}/{len(preguntas)}"
+        if aciertos == len(preguntas):
+            texto = f"✅ ¡Objetivo cumplido ({nota})! Sigamos con el próximo."
+        elif aciertos > 0:
+            texto = (
+                f"✅ Objetivo cumplido ({nota} — la que falló la "
+                "reforzaremos en la evaluación). ¡Sigamos!"
+            )
+        else:
+            texto = (
+                f"Objetivo visto ({nota}). No pasa nada: esos conceptos "
+                "quedan anotados y los repasaremos. ¡Sigamos!"
+            )
+        return {
+            "aciertos": aciertos,
+            "cumplido": True,
+            "repite": False,
+            "detalle": detalle,
+            "puntos_totales": self.progreso.puntos,
+            "texto": texto,
         }
 
     def charlar(self, indice: int, pregunta: str) -> str:

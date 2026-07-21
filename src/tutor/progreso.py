@@ -70,6 +70,22 @@ class Progreso:
     completadas: list[int] = field(default_factory=list)  # lecciones terminadas
     # Cola de repaso espaciado (HU-32): ítems {concepto, clase, vence, nivel}.
     cola_repaso: list[dict[str, Any]] = field(default_factory=list)
+    # Guion v2 (HU-24): objetivos cumplidos y conceptos fallados en los
+    # mini-quices, por clase (clave: str(indice de clase)).
+    objetivos_cumplidos: dict[str, list[int]] = field(default_factory=dict)
+    fallados_intermedios: dict[str, list[str]] = field(default_factory=dict)
+
+    def cumplir_objetivo(self, clase: int, objetivo: int) -> None:
+        """Marca un objetivo del guion v2 como cumplido (idempotente)."""
+        cumplidos = self.objetivos_cumplidos.setdefault(str(clase), [])
+        if objetivo not in cumplidos:
+            cumplidos.append(objetivo)
+
+    def anotar_fallado_intermedio(self, clase: int, concepto: str) -> None:
+        """Anota un concepto fallado en un mini-quiz (para la evaluación)."""
+        fallados = self.fallados_intermedios.setdefault(str(clase), [])
+        if concepto not in fallados:
+            fallados.append(concepto)
 
     def completar(self, unidad: int) -> None:
         """Marca la lección de la unidad como completada en el chat (HU-16)."""
@@ -186,6 +202,8 @@ def guardar_progreso(progreso: Progreso, ruta: Path) -> None:
         "ultima_sesion": progreso.ultima_sesion,
         "completadas": progreso.completadas,
         "cola_repaso": progreso.cola_repaso,
+        "objetivos_cumplidos": progreso.objetivos_cumplidos,
+        "fallados_intermedios": progreso.fallados_intermedios,
         "vistas": {str(unidad): fecha for unidad, fecha in progreso.vistas.items()},
         "resultados": [
             {
@@ -231,6 +249,14 @@ def _parsear(datos: Any) -> Progreso:
             }
             for i in datos.get("cola_repaso", [])
         ],
+        objetivos_cumplidos={
+            str(clase): [int(o) for o in objetivos]
+            for clase, objetivos in datos.get("objetivos_cumplidos", {}).items()
+        },
+        fallados_intermedios={
+            str(clase): [str(c) for c in conceptos]
+            for clase, conceptos in datos.get("fallados_intermedios", {}).items()
+        },
     )
 
 

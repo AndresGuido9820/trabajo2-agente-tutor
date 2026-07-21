@@ -122,6 +122,13 @@ class CuerpoEstudio(BaseModel):
     unidad: int | None = None
 
 
+class CuerpoQuizIntermedio(BaseModel):
+    """Body del mini-quiz que cierra un objetivo (plan/v2/HU-24)."""
+
+    unidad: int
+    respuestas: list[int]
+
+
 class ClaseDiseno(BaseModel):
     """Una clase dentro de la edición estructurada del diseño (HU-20)."""
 
@@ -537,6 +544,25 @@ def crear_app(
             estado.anotar(canal, "yo", cuerpo.mensaje)
         estado.anotar(canal, "tutor", str(r["texto"]))
         return r
+
+    @app.post("/api/estudio/quiz-intermedio")
+    def api_quiz_intermedio(cuerpo: CuerpoQuizIntermedio) -> dict[str, Any]:
+        """Califica el mini-quiz que cierra un objetivo del guion v2 (HU-24)."""
+        agente = _agente()
+
+        def operacion() -> dict[str, Any]:
+            try:
+                return agente.responder_quiz_intermedio(
+                    cuerpo.unidad, cuerpo.respuestas
+                )
+            except ErrorDatos as error:
+                raise HTTPException(409, str(error)) from error
+            except ValueError as error:
+                raise HTTPException(400, str(error)) from error
+
+        r = _con_llm(operacion)
+        estado.anotar(f"u{cuerpo.unidad}", "tutor", str(r["texto"]))
+        return dict(r)
 
     @app.post("/api/estudio/stream")
     def api_estudio_stream(cuerpo: CuerpoEstudio) -> StreamingResponse:
