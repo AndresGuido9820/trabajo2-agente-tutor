@@ -290,6 +290,53 @@ function ponerContexto(texto, chips){
   });
 }
 
+/* ===== mis cursos (menú de todos los cursos) ===== */
+async function verMisCursos(){
+  canalActivo = null;
+  $("#composer").style.display = "none";
+  $("#cab-titulo").textContent = "Mis cursos";
+  $("#cab-sub").textContent = "";
+  $("#convos").innerHTML = "";
+  $("#progreso-curso").style.display = "none";
+  let lista;
+  try{ lista = (await api("/api/cursos")).cursos; }
+  catch(e){ mostrarError(e.message); return; }
+  const cont = $("#mensajes");
+  cont.innerHTML = `<div class="menu-cursos" style="display:grid;gap:12px">
+    <div class="clase" style="cursor:pointer;border-style:dashed" id="mc-nuevo">
+      <span class="num actual">＋</span>
+      <div class="cuerpo"><b>Nuevo curso</b>
+        <div class="meta">Dale un prompt al tutor y diseñen juntos el curso</div></div>
+    </div></div>`;
+  $("#mc-nuevo").onclick = async () => {
+    try{ await api("/api/cursos", {}, "POST"); }
+    catch(e){ mostrarError(e.message); return; }
+    planMd = ""; estadoCurso = null;
+    abrirConversacion("creacion");
+  };
+  const grid = cont.querySelector(".menu-cursos");
+  lista.forEach(c => {
+    const div = document.createElement("div");
+    div.className = "clase";
+    div.style.cursor = "pointer";
+    const pct = c.total ? Math.round(100 * c.aprobadas / c.total) : 0;
+    div.innerHTML = `<span class="num ${c.aprobadas === c.total && c.total ? "hecha" : ""}">${c.id}</span>
+      <div class="cuerpo"><b>${c.nombre}</b>
+        <div class="meta">${c.total ? `${c.lenguaje} · ${c.aprobadas}/${c.total} clases aprobadas` : "Sin diseñar todavía"}</div>
+        ${c.total ? `<div class="barra" style="margin-top:8px;max-width:220px"><div style="width:${pct}%"></div></div>` : ""}</div>
+      <div class="cta"><button class="primario">Entrar →</button></div>`;
+    div.onclick = async () => {
+      try{ await api(`/api/cursos/${c.id}/activar`, {}, "POST"); }
+      catch(e){ mostrarError(e.message); return; }
+      planMd = ""; estadoCurso = null;
+      const e2 = await refrescar();
+      if(!e2 || !e2.perfil){ abrirConversacion("creacion"); return; }
+      abrirConversacion(e2.unidad_actual ?? 0);
+    };
+    grid.appendChild(div);
+  });
+}
+
 /* ===== estado + barra lateral ===== */
 async function refrescar(){
   try{
@@ -313,6 +360,13 @@ async function refrescar(){
 function pintarLateral(){
   const cont = $("#convos");
   cont.innerHTML = "";
+  const volver = document.createElement("div");
+  volver.className = "convo";
+  volver.innerHTML = `<span class="icono">←</span>
+    <div class="datos"><div class="titulo">Mis cursos</div>
+    <div class="sub">Todos tus cursos</div></div>`;
+  volver.onclick = () => verMisCursos();
+  cont.appendChild(volver);
   const e = estadoCurso;
 
   // Conversación de diseño del curso (arriba, como un chat más)
@@ -442,26 +496,61 @@ async function verDiseno(){
     a.href = URL.createObjectURL(new Blob([planMd], {type:"text/markdown"}));
     a.download = "mi-curso.md"; a.click();
   };
-  $("#d-editar").onclick = () => {
-    cont.innerHTML = `<div style="display:flex;gap:8px;margin-bottom:14px">
-        <button class="primario" id="d-guardar">💾 Guardar</button>
-        <button id="d-cancelar">Cancelar</button>
-      </div>
-      <textarea id="d-md" spellcheck="false" style="width:100%;min-height:60vh;background:var(--card);
-        border:1px solid var(--linea-fuerte);border-radius:var(--r);color:var(--tx);
-        font-family:ui-monospace,Menlo,monospace;font-size:13px;line-height:1.6;padding:16px"></textarea>`;
-    $("#d-md").value = planMd;
-    $("#d-md").focus();
-    $("#d-cancelar").onclick = () => verDiseno();
-    $("#d-guardar").onclick = async () => {
-      const nuevo = $("#d-md").value;
-      try{
-        await api("/api/plan", {md: nuevo});
-        planMd = nuevo;
-        toast("Plan guardado 💾 (BD + curso.md)");
-        verDiseno();
-      }catch(e){ mostrarError(e.message); }
-    };
+  $("#d-editar").onclick = () => editarDiseno();
+}
+
+// Edición ESTRUCTURADA del diseño: campos por clase (lo que el LLM recibe)
+async function editarDiseno(){
+  let diseno;
+  try{ diseno = await api("/api/diseno"); }
+  catch(e){ mostrarError(e.message); return; }
+  const cont = $("#mensajes");
+  cont.innerHTML = `<div style="display:flex;gap:8px;margin-bottom:14px;align-items:center">
+      <button class="primario" id="d-guardar">💾 Guardar estructura</button>
+      <button id="d-cancelar">Cancelar</button>
+      <span class="dim" style="font-size:12px">Esto es lo que el tutor (LLM) recibe: mantenlo claro.</span>
+    </div>
+    <div class="campo" style="max-width:260px;margin-bottom:16px">
+      <label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px">Lenguaje</label>
+      <input id="d-lenguaje" style="width:100%;background:var(--card);border:1px solid var(--linea-fuerte);
+        border-radius:8px;color:var(--tx);padding:8px 10px"></div>
+    <div id="d-clases" style="display:grid;gap:12px"></div>`;
+  $("#d-lenguaje").value = diseno.lenguaje;
+  diseno.clases.forEach((c, i) => {
+    const f = document.createElement("div");
+    f.className = "clase";
+    f.style.display = "block";
+    f.innerHTML = `<div class="meta" style="margin-bottom:6px">CLASE ${i + 1}</div>
+      <input class="d-titulo" placeholder="Título" style="width:100%;background:var(--card2);
+        border:1px solid var(--linea-fuerte);border-radius:8px;color:var(--tx);padding:8px 10px;
+        font-weight:600;margin-bottom:8px">
+      <textarea class="d-objetivo" placeholder="Objetivo: qué sabrá HACER el estudiante" rows="2"
+        style="width:100%;background:var(--card2);border:1px solid var(--linea-fuerte);
+        border-radius:8px;color:var(--tx);padding:8px 10px;font-family:inherit;
+        font-size:13px;resize:vertical;margin-bottom:8px"></textarea>
+      <input class="d-conceptos" placeholder="Subtemas separados por coma"
+        style="width:100%;background:var(--card2);border:1px solid var(--linea-fuerte);
+        border-radius:8px;color:var(--tx);padding:8px 10px;font-size:13px">`;
+    f.querySelector(".d-titulo").value = c.titulo;
+    f.querySelector(".d-objetivo").value = c.objetivo;
+    f.querySelector(".d-conceptos").value = c.conceptos.join(", ");
+    $("#d-clases").appendChild(f);
+  });
+  $("#d-cancelar").onclick = () => verDiseno();
+  $("#d-guardar").onclick = async () => {
+    const clases = [...document.querySelectorAll("#d-clases .clase")].map(f => ({
+      titulo: f.querySelector(".d-titulo").value.trim(),
+      objetivo: f.querySelector(".d-objetivo").value.trim(),
+      conceptos: f.querySelector(".d-conceptos").value.split(",")
+        .map(s => s.trim()).filter(Boolean),
+    }));
+    try{
+      await api("/api/diseno", {lenguaje: $("#d-lenguaje").value.trim(), clases});
+      planMd = ""; estadoCurso = null;
+      await refrescar();
+      toast("Diseño guardado 💾 — el tutor ya usa la nueva estructura");
+      verDiseno();
+    }catch(e){ mostrarError(e.message); }
   };
 }
 
@@ -743,13 +832,8 @@ area.addEventListener("input", () => {
   area.style.height = Math.min(120, area.scrollHeight) + "px";
 });
 
-/* ===== arranque ===== */
-(async () => {
-  const e = await refrescar();
-  if(!e || !e.perfil){ abrirConversacion("creacion"); return; }
-  // Abre la última clase activa (como un chat reciente en ChatGPT)
-  abrirConversacion(e.unidad_actual ?? 0);
-})();
+/* ===== arranque: menú de Mis cursos ===== */
+(async () => { await verMisCursos(); })();
 </script>
 </body>
 </html>

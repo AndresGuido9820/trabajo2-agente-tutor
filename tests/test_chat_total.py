@@ -63,7 +63,7 @@ class TestCreacionConversacional:
         assert estado["unidades"][0]["completada"] is False
         plan = web.get("/api/plan").json()["md"]
         assert "# Tu curso de python" in plan and "Unidad 0" in plan
-        assert (tmp_path / "curso.md").exists()
+        assert (tmp_path / "cursos" / "1" / "curso.md").exists()
 
     def test_con_curso_existente_da_409(self, tmp_path):
         web, _ = web_con(
@@ -131,7 +131,7 @@ class TestEstudioEnChat:
         assert h[0] == {"rol": "yo", "texto": "curso de datos"}
         assert h[1] == {"rol": "tutor", "texto": "¿tu nivel?"}
         assert len(h) == 4
-        assert (tmp_path / "tutor.db").exists()
+        assert (tmp_path / "cursos" / "1" / "tutor.db").exists()
         # Cada clase es una conversación aparte
         assert web.get("/api/historial/u0").json()["mensajes"] == []
 
@@ -151,7 +151,9 @@ class TestEstudioEnChat:
         r = web.post("/api/plan", json={"md": "# Mi plan editado a mano"})
         assert r.status_code == 200
         assert web.get("/api/plan").json()["md"] == "# Mi plan editado a mano"
-        assert (tmp_path / "curso.md").read_text("utf-8") == "# Mi plan editado a mano"
+        assert (tmp_path / "cursos" / "1" / "curso.md").read_text(
+            "utf-8"
+        ) == "# Mi plan editado a mano"
         assert web.post("/api/plan", json={"md": "  "}).status_code == 400
 
     def test_endpoint_estudio(self, tmp_path):

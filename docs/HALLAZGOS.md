@@ -335,6 +335,31 @@ se consulta (clases, chat). SQLite de la stdlib: cero dependencias nuevas.
 
 ---
 
+## 2026-07-20 — HU-20: multicurso y diseño estructurado
+
+**Contexto:** menú "Mis cursos", cada curso aislado, y el diseño como
+información estructurada para el LLM (el `.md` pasa a ser solo la vista).
+
+**Hallazgos:**
+
+1. **Un directorio + una BD por curso** (`cursos/<id>/tutor.db`) resultó más
+   simple y seguro que añadir `curso_id` a todas las tablas: el stack
+   monocurso completo funciona intacto por curso, y borrar/respaldar un
+   curso es mover una carpeta.
+2. Las **propiedades de compatibilidad** en `_Estado` (agente/quizzes/
+   creacion/ruta_db delegando al curso activo) permitieron el multicurso
+   sin tocar ningún endpoint existente.
+3. La **edición estructurada del diseño** reutiliza `validar_temario` como
+   contrato: lo que el humano edita pasa por las mismas reglas que lo que
+   genera el LLM, así los prompts siempre reciben datos limpios; el plan
+   `.md` se regenera desde la estructura (una sola fuente de verdad).
+
+**Decisión/acción:** el editor de `.md` crudo se retiró del front (quedaba
+como segunda fuente de verdad divergente); el endpoint permanece para
+compatibilidad.
+
+---
+
 <!-- Plantilla:
 
 ## AAAA-MM-DD — Título corto
