@@ -109,3 +109,14 @@ class TestPersistencia:
         db.guardar_documento(ruta, "perfil", datos)
         with pytest.raises(ErrorDatos):
             cargar_perfil(ruta)
+
+
+def test_perfil_extraido_degrada_lenguaje_raro_a_vacio():
+    """Un lenguaje inválido del LLM no tumba la creación (hallazgo 2026-07-21)."""
+    from tutor.perfil import validar_perfil_extraido
+
+    perfil = validar_perfil_extraido(
+        {"nivel": "nunca", "objetivo": "front", "lenguaje": "¿JS (vanilla)?"},
+        "quiero una página web",
+    )
+    assert perfil.lenguaje == ""  # que el tutor decida

@@ -157,12 +157,18 @@ def validar_perfil_extraido(datos: object, descripcion: str) -> PerfilEstudiante
     detalle = str(datos.get("objetivo_detalle", "")).strip()
     if objetivo is Objetivo.OTRO and not detalle:
         detalle = descripcion
+    # Un lenguaje raro del LLM no debe tumbar la creación: se degrada a ""
+    # (que el tutor decida), que es el mismo significado que en el CLI.
+    try:
+        lenguaje = validar_lenguaje(str(datos.get("lenguaje", "")))
+    except ValueError:
+        lenguaje = ""
     return PerfilEstudiante(
         nivel=Nivel(str(datos["nivel"]).strip().lower()),
         experiencia=str(datos.get("experiencia", "")).strip(),
         objetivo=objetivo,
         objetivo_detalle=detalle,
-        lenguaje=validar_lenguaje(str(datos.get("lenguaje", ""))),
+        lenguaje=lenguaje,
         descripcion=descripcion,
     )
 
