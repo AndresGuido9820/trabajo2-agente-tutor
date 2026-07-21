@@ -25,11 +25,13 @@ cumplir la rúbrica completa. *(PA-10; rúbrica de documentación 10 % y curso 2
       exporta temario+lecciones+quiz a Markdown.
 - [x] Generar curso muestra 1 (front/JavaScript, principiante absoluto).
 - [x] Generar curso muestra 2 (datos/Python, nivel básico).
-- [ ] Revisar manualmente ambos cursos (código corre, quizzes correctos).
+- [x] Revisar manualmente ambos cursos (código corre, quizzes correctos).
+      (2026-07-21: bloques Python ejecutados OK; los de pandas dependen del
+      CSV y son coherentes; quizzes con una sola correcta verificada.)
 - [x] Redactar `entregables/REPORTE.md` (1000–1500 palabras, contar palabras).
 - [x] Redactar `entregables/GUION-VIDEO.md` con reparto de quién dice qué.
 - [ ] Grabar y editar el video con rótulos de nombre.
-- [ ] Checklist final PA-01…PA-14 de SPEC.md marcado.
+- [x] Checklist final PA-01…PA-20 de SPEC.md marcado (ver nota en SPEC).
 
 ## Pruebas
 

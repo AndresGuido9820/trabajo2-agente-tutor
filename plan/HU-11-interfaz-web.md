@@ -41,7 +41,8 @@ permite CLI o interfaz web simple; ofrecemos ambas.)*
 - [x] `static/index.html`: perfil, temario, chat de lección, quiz, progreso.
 - [x] Pruebas con `TestClient` y `ClienteLLMFalso`: flujo completo, quiz sin
       fuga de respuestas, errores mapeados.
-- [ ] Humo real en el navegador.
+- [x] Humo real en el navegador (bots Playwright: capturas, E2E de
+      reintento y auditoría axe recorren la app real).
 - [x] Actualizar README (cómo correr la web) y SPEC.
 
 ## Pruebas

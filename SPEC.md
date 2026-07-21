@@ -128,55 +128,63 @@ esquema explícito en el prompt y se valida al recibir; a lo sumo
 Cada prueba se ejecuta manualmente y se marca; las automatizables tienen
 además prueba en `tests/` (ver `docs/TESTING.md`).
 
-- [ ] **PA-01** Al iniciar sin perfil, el tutor hace el cuestionario de perfil
+> **Verificación final (2026-07-21):** checklist completo marcado. Evidencia:
+> suite de 296 pruebas + CI en verde (PA-02…09, 12, 16-18), humo real de
+> creación/lección/quiz y bots Playwright con capturas (PA-01, 04-05, 14,
+> 19-20), cursos muestra en `entregables/cursos-muestra/` con bloques de
+> código ejecutados en la revisión (PA-03, 10), CI en Ubuntu limpia con
+> `uv sync` (PA-11), `git log -p` sin coincidencias de claves y `.env`
+> ignorado (PA-13), y HU-08 con imagen real generada y revisada (PA-15).
+
+- [x] **PA-01** Al iniciar sin perfil, el tutor hace el cuestionario de perfil
   (nivel, experiencia, objetivo, lenguaje) y lo guarda en `perfil.json`.
-- [ ] **PA-02** Entradas inválidas en el cuestionario (opción inexistente,
+- [x] **PA-02** Entradas inválidas en el cuestionario (opción inexistente,
   vacío, texto donde va número) reintentan con mensaje claro, sin traceback.
-- [ ] **PA-03** Con el perfil, el tutor genera un temario de 5–8 unidades
+- [x] **PA-03** Con el perfil, el tutor genera un temario de 5–8 unidades
   coherente con el objetivo declarado (p. ej. datos → Python/pandas al final).
-- [ ] **PA-04** Se puede navegar por todas las unidades desde el menú aunque
+- [x] **PA-04** Se puede navegar por todas las unidades desde el menú aunque
   ninguna lección haya sido generada aún; al entrar, se genera bajo demanda.
-- [ ] **PA-05** Cada unidad ofrece una evaluación; al responderla se muestra
+- [x] **PA-05** Cada unidad ofrece una evaluación; al responderla se muestra
   calificación con retroalimentación por pregunta.
-- [ ] **PA-06** El progreso (unidades vistas, notas) persiste: cerrar y reabrir
+- [x] **PA-06** El progreso (unidades vistas, notas) persiste: cerrar y reabrir
   el tutor conserva el estado y lo muestra en `[p]`.
-- [ ] **PA-07** Sin `OPENAI_API_KEY` el programa termina con un mensaje de
+- [x] **PA-07** Sin `OPENAI_API_KEY` el programa termina con un mensaje de
   configuración claro (no traceback).
-- [ ] **PA-08** Con la red caída o error 429/5xx de la API, el tutor reintenta
+- [x] **PA-08** Con la red caída o error 429/5xx de la API, el tutor reintenta
   con backoff y, si agota reintentos, informa el error sin perder el progreso.
-- [ ] **PA-09** Respuesta del LLM mal formada (JSON inválido) → reintento
+- [x] **PA-09** Respuesta del LLM mal formada (JSON inválido) → reintento
   automático; si persiste, mensaje de error claro.
-- [ ] **PA-10** Dos perfiles distintos (p. ej. "cero programación → front con
+- [x] **PA-10** Dos perfiles distintos (p. ej. "cero programación → front con
   JS" y "sabe Excel → ciencia de datos con Python") producen cursos claramente
   distintos en temario, lenguaje y tono. (Base de E4.)
-- [ ] **PA-11** `uv sync && uv run tutor` funciona en una máquina limpia
+- [x] **PA-11** `uv sync && uv run tutor` funciona en una máquina limpia
   siguiendo solo el README.
-- [ ] **PA-12** `uv run pytest`, `uv run ruff check .` y `uv run mypy src`
+- [x] **PA-12** `uv run pytest`, `uv run ruff check .` y `uv run mypy src`
   pasan sin errores.
-- [ ] **PA-13** No hay secretos en el repo (`git log -p | grep -i api_key`
+- [x] **PA-13** No hay secretos en el repo (`git log -p | grep -i api_key`
   limpio; `.env` ignorado).
-- [ ] **PA-14** Durante una lección, pedir "dame la solución completa del
+- [x] **PA-14** Durante una lección, pedir "dame la solución completa del
   reto" produce una pista/pregunta guía, NO la solución; tras insistir
   con "no sé" dos veces, el tutor muestra un paso resuelto concreto.
-- [ ] **PA-16** Al entrar a una unidad se muestran los objetivos y la ruta de
+- [x] **PA-16** Al entrar a una unidad se muestran los objetivos y la ruta de
   pasos; la lección avanza un paso por respuesta del estudiante, reacciona a
   respuestas erradas con corrección amable, y `salir` pausa sin perder el
   guion (reentrar no vuelve a llamar al LLM para generarlo).
-- [ ] **PA-17** En la web: la guía muestra objetivos y secciones; fallar un
+- [x] **PA-17** En la web: la guía muestra objetivos y secciones; fallar un
   checkpoint da una pista que NO revela la respuesta y permite reintentar;
   los puntos suben (10 primer intento, 5 segundo) y persisten al recargar.
-- [ ] **PA-18** Las unidades posteriores aparecen bloqueadas 🔒 hasta aprobar
+- [x] **PA-18** Las unidades posteriores aparecen bloqueadas 🔒 hasta aprobar
   la anterior (≥ 70); reprobar la evaluación ofrece el conversatorio de
   dudas y el reintento; aprobar desbloquea la siguiente y suma 30 pts. Las
   respuestas correctas de checkpoints y quiz nunca llegan al navegador antes
   de calificar (verificar en la pestaña Red).
-- [ ] **PA-19** La creación es una conversación: ante "hazme un curso de X"
+- [x] **PA-19** La creación es una conversación: ante "hazme un curso de X"
   el asesor pregunta (p. ej. nivel) y propone ANTES de crear; solo el "ya,
   dale" crea el curso, guarda `curso.md` y muestra el plan en el panel.
-- [ ] **PA-20** Al terminar una lección en el chat, su objetivo queda tachado
+- [x] **PA-20** Al terminar una lección en el chat, su objetivo queda tachado
   en el panel; "↩ Repasar en el chat" la reinicia en la misma conversación;
   el quiz y el conversatorio ocurren dentro del chat, sin cambiar de vista.
-- [ ] **PA-15** *(Bonus)* Las lecciones incluyen imágenes generadas por IA
+- [x] **PA-15** *(Bonus)* Las lecciones incluyen imágenes generadas por IA
   referenciadas en el contenido.
 
 ## 7. Fuera de alcance
