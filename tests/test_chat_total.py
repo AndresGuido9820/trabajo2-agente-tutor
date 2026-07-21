@@ -143,6 +143,17 @@ class TestEstudioEnChat:
         u0 = web.get("/api/estado").json()["unidades"][0]
         assert u0["conceptos"] == ["variables", "tipos"]
 
+    def test_plan_editable_a_mano(self, tmp_path):
+        web, _ = web_con(
+            tmp_path, [turno_creacion("ok", True, PERFIL_OK), temario_respuesta()]
+        )
+        web.post("/api/creacion", json={"mensaje": "curso de datos ya"})
+        r = web.post("/api/plan", json={"md": "# Mi plan editado a mano"})
+        assert r.status_code == 200
+        assert web.get("/api/plan").json()["md"] == "# Mi plan editado a mano"
+        assert (tmp_path / "curso.md").read_text("utf-8") == "# Mi plan editado a mano"
+        assert web.post("/api/plan", json={"md": "  "}).status_code == 400
+
     def test_endpoint_estudio(self, tmp_path):
         web, _ = web_con(
             tmp_path,

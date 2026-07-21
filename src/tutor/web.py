@@ -91,6 +91,12 @@ class CuerpoPromptCurso(BaseModel):
     prompt: str
 
 
+class CuerpoPlan(BaseModel):
+    """Body de edición manual del plan del curso."""
+
+    md: str
+
+
 class CuerpoEstudio(BaseModel):
     """Body de un turno del estudio en chat (HU-16)."""
 
@@ -233,6 +239,17 @@ def crear_app(
         guardar_plan_md(estado.ruta_db, plan)  # metadata del diseño en la BD
         (estado.configuracion.dir_datos / "curso.md").write_text(plan, "utf-8")
         return {"mensaje": turno["mensaje"], "listo": True}
+
+    @app.post("/api/plan")
+    def api_actualizar_plan(cuerpo: CuerpoPlan) -> dict[str, Any]:
+        """Guarda el plan editado a mano (BD + copia curso.md)."""
+        _agente()
+        plan = cuerpo.md.strip()
+        if not plan:
+            raise HTTPException(400, "El plan no puede quedar vacío.")
+        guardar_plan_md(estado.ruta_db, plan)
+        (estado.configuracion.dir_datos / "curso.md").write_text(plan, "utf-8")
+        return {"ok": True}
 
     @app.get("/api/plan")
     def api_plan() -> dict[str, Any]:

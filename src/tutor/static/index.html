@@ -321,9 +321,10 @@ function pintarLateral(){
   seccion1.textContent = "Curso";
   cont.appendChild(seccion1);
   cont.appendChild(itemConvo({
-    id: "creacion", icono: "🎨", titulo: "Diseño del curso",
-    sub: e && e.perfil ? "Curso creado" : "Cuéntame qué quieres aprender",
-    conChat: !!conversaciones["creacion"], bloqueada: false,
+    id: "creacion", icono: e && e.perfil ? "📄" : "🎨",
+    titulo: "Diseño del curso",
+    sub: e && e.perfil ? "Documento .md — editable" : "Cuéntame qué quieres aprender",
+    conChat: !e?.perfil && !!conversaciones["creacion"], bloqueada: false,
   }));
 
   if(!e || !e.perfil) return;
@@ -384,6 +385,7 @@ async function abrirConversacion(id){
   pintarLateral();
   $("#mensajes").innerHTML = "";
   if(id === "creacion"){ await abrirCreacion(); return; }
+  $("#composer").style.display = "block";
   const u = estadoCurso.unidades[id];
   $("#cab-titulo").textContent = `Clase ${id + 1}: ${u.titulo}`;
   $("#cab-sub").textContent = (u.conceptos || []).join(" · ");
@@ -402,9 +404,11 @@ async function abrirConversacion(id){
 }
 
 async function abrirCreacion(){
+  // Con curso creado, "Diseño del curso" es un DOCUMENTO (.md editable), no un chat.
+  if(estadoCurso && estadoCurso.perfil){ await verDiseno(); return; }
+  $("#composer").style.display = "block";
   $("#cab-titulo").textContent = "Diseño del curso";
-  $("#cab-sub").textContent = estadoCurso && estadoCurso.perfil
-    ? "Tu curso ya está creado" : "";
+  $("#cab-sub").textContent = "";
   const hubo = await pintarHistorial("creacion");
   if(!hubo){
     $("#mensajes").innerHTML = `<div class="hero-chat">
@@ -413,21 +417,52 @@ async function abrirCreacion(){
       <p class="sub">Cuéntamelo con tus palabras. Te haré un par de preguntas, te propondré
       un plan y cuando digas “ya, dale” creo tu curso.</p></div>`;
   }
-  if(estadoCurso && estadoCurso.perfil){
-    // Mostrar el diseño resultante del curso (viene de la BD)
-    try{
-      if(!planMd) planMd = (await api("/api/plan")).md;
-      if(planMd) burbujaTutor("**Este es el diseño de tu curso** (guardado en la base de datos y en `curso.md`):\n\n" + planMd);
-    }catch(e){ /* sin plan no bloqueamos */ }
-    ponerContexto("Tu curso ya está creado — entra a una clase en la barra de la izquierda 👈",
-      [["📄 Descargar el plan (.md)", () => $("#b-plan").click()]]);
-  }else{
-    ponerContexto("Diseñando tu curso", [
-      ["Quiero analizar datos con Python; sé Excel", () => enviar("Hazme un curso de Python para análisis de datos; manejo bien Excel")],
-      ["Nunca he programado, quiero hacer webs", () => enviar("Quiero aprender a hacer páginas web desde cero, nunca he programado")],
-    ]);
-  }
+  ponerContexto("Diseñando tu curso", [
+    ["Quiero analizar datos con Python; sé Excel", () => enviar("Hazme un curso de Python para análisis de datos; manejo bien Excel")],
+    ["Nunca he programado, quiero hacer webs", () => enviar("Quiero aprender a hacer páginas web desde cero, nunca he programado")],
+  ]);
   $("#entrada").focus();
+}
+
+/* ===== documento del diseño (.md renderizado + edición manual) ===== */
+async function verDiseno(){
+  $("#composer").style.display = "none";
+  $("#cab-titulo").textContent = "📄 Diseño del curso";
+  $("#cab-sub").textContent = "curso.md — guardado en la base de datos";
+  try{ planMd = (await api("/api/plan")).md; }
+  catch(e){ mostrarError(e.message); return; }
+  const cont = $("#mensajes");
+  cont.innerHTML = `<div style="display:flex;gap:8px;margin-bottom:14px">
+      <button id="d-editar">✏️ Editar a mano</button>
+      <button id="d-descargar">⬇️ Descargar .md</button>
+    </div>
+    <div class="msg tutor ancha" style="margin:0"><div class="prosa" id="d-render">${md(planMd)}</div></div>`;
+  $("#d-descargar").onclick = () => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([planMd], {type:"text/markdown"}));
+    a.download = "mi-curso.md"; a.click();
+  };
+  $("#d-editar").onclick = () => {
+    cont.innerHTML = `<div style="display:flex;gap:8px;margin-bottom:14px">
+        <button class="primario" id="d-guardar">💾 Guardar</button>
+        <button id="d-cancelar">Cancelar</button>
+      </div>
+      <textarea id="d-md" spellcheck="false" style="width:100%;min-height:60vh;background:var(--card);
+        border:1px solid var(--linea-fuerte);border-radius:var(--r);color:var(--tx);
+        font-family:ui-monospace,Menlo,monospace;font-size:13px;line-height:1.6;padding:16px"></textarea>`;
+    $("#d-md").value = planMd;
+    $("#d-md").focus();
+    $("#d-cancelar").onclick = () => verDiseno();
+    $("#d-guardar").onclick = async () => {
+      const nuevo = $("#d-md").value;
+      try{
+        await api("/api/plan", {md: nuevo});
+        planMd = nuevo;
+        toast("Plan guardado 💾 (BD + curso.md)");
+        verDiseno();
+      }catch(e){ mostrarError(e.message); }
+    };
+  };
 }
 
 function ponerContextoClase(u, r){
