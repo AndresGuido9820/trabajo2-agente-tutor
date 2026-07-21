@@ -99,11 +99,14 @@ def paquete_zip(dir_curso: Path) -> bytes:
         titulos = [u.titulo for u in curso.temario.unidades]
         for indice, titulo in enumerate(titulos):
             mensajes = db.historial_chat(ruta, f"u{indice}")
-            contenido = (
-                f"# Clase {indice + 1}: {titulo}\n\n"
-                + _hitos(progreso, indice)
-                + _transcripcion(mensajes)
-            )
+            encabezado = f"# Clase {indice + 1}: {titulo}\n\n"
+            # Ilustración de la clase (HU-08): se incrusta si existe.
+            imagen = dir_curso / "imagenes" / f"unidad-{indice}.png"
+            if imagen.exists():
+                nombre_png = f"imagenes/unidad-{indice}.png"
+                zip_.write(imagen, f"{raiz}/{nombre_png}")
+                encabezado += f"![Ilustración de la clase]({nombre_png})\n\n"
+            contenido = encabezado + _hitos(progreso, indice) + _transcripcion(mensajes)
             zip_.writestr(f"{raiz}/clase-{indice + 1:02d}-{slug(titulo)}.md", contenido)
         zip_.writestr(f"{raiz}/resultados.md", _resultados_md(progreso, titulos))
     return buffer.getvalue()

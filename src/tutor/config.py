@@ -78,6 +78,8 @@ class Configuracion:
     dir_datos: Path
     # Carril conversacional (HU-39): vacío = usar ``modelo`` para todo.
     modelo_chat: str = ""
+    # Ilustraciones con IA (HU-08, bonus): apagadas por defecto (costo).
+    imagenes: bool = False
 
 
 def cargar_configuracion(entorno: dict[str, str] | None = None) -> Configuracion:
@@ -111,4 +113,5 @@ def cargar_configuracion(entorno: dict[str, str] | None = None) -> Configuracion
             entorno.get("TUTOR_DATA_DIR", "").strip() or DIR_DATOS_POR_DEFECTO
         ),
         modelo_chat=entorno.get("TUTOR_MODEL_CHAT", "").strip(),
+        imagenes=entorno.get("TUTOR_IMAGENES", "").strip() == "1",
     )

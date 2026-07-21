@@ -185,6 +185,27 @@ class ClienteOpenAI:
             "Tu progreso está guardado; inténtalo de nuevo en unos minutos."
         ) from ultimo_error
 
+    def generar_imagen(self, prompt: str) -> bytes:
+        """Genera una imagen PNG con la API de imágenes (HU-08, bonus).
+
+        Sin reintentos: la imagen es opcional y el llamador degrada solo.
+
+        Raises:
+            Exception: Cualquier error del SDK (el llamador lo degrada).
+        """
+        from tutor.imagenes import MODELO_IMAGENES, TAMANO_IMAGEN, decodificar_b64
+
+        respuesta = self._cliente.images.generate(
+            model=MODELO_IMAGENES,
+            prompt=prompt,
+            size=TAMANO_IMAGEN,
+            quality="low",
+            n=1,
+        )
+        if not respuesta.data or not respuesta.data[0].b64_json:
+            raise ValueError("La API de imágenes devolvió una respuesta vacía.")
+        return decodificar_b64(respuesta.data[0].b64_json)
+
     def generar_stream(
         self, system: str, prompt: str, carril: str = "potente"
     ) -> Iterator[str]:

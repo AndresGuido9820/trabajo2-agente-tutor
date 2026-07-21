@@ -448,6 +448,21 @@ pasó de 229 a 289 pruebas; humo real por HU donde aplicaba.
 conceptos fallados en los mini-quices y estos también alimentan la cola de
 repaso espaciado (HU-32): las tres olas quedaron conectadas.
 
+## 2026-07-21 — HU-08 (bonus): ilustraciones con gpt-image-1
+
+**Contexto:** bonus de imágenes detrás del flag `TUTOR_IMAGENES=1`.
+
+**Hallazgo:** se eligió OpenAI Images (`gpt-image-1`, calidad low) por usar
+la MISMA API key del proyecto (cero fricción de credenciales). Dos reglas
+del prompt visual importaron: prohibir texto/letras (los modelos de imagen
+tipografían mal) y limitar a 3 conceptos (más diluye la ilustración). La
+imagen es siempre opcional: cliente sin soporte (dobles) o API caída →
+`None` + warning, la clase funciona igual; cache por archivo evita pagar
+dos veces.
+
+**Decisión/acción:** endpoint `GET /api/clase/{i}/imagen` con 404 limpio si
+el flag está apagado; el front la esconde con `onError` (cero acoplamiento).
+
 ## AAAA-MM-DD — Título corto
 
 **Contexto:** qué se estaba haciendo (HU-XX).
