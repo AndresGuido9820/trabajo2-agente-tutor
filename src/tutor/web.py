@@ -41,6 +41,7 @@ from tutor.curso import (
 from tutor.errores import ErrorBloqueada, ErrorConfiguracion, ErrorDatos, ErrorLLM
 from tutor.evaluacion import Quiz, resumenes
 from tutor.exportar import paquete_zip
+from tutor.imagenes import ilustrar_unidad
 from tutor.llm import ClienteLLM, ClienteOpenAI, pedir_json
 from tutor.models import Nivel, Objetivo, PerfilEstudiante
 from tutor.perfil import guardar_perfil, validar_perfil_extraido
@@ -688,6 +689,31 @@ def crear_app(
             if len(clases) >= 8 and len(mensajes) >= 8:
                 break
         return {"clases": clases, "mensajes": mensajes}
+
+    @app.get("/api/clase/{indice}/imagen")
+    def api_imagen_clase(indice: int) -> FileResponse:
+        """Ilustración de la clase (HU-08, bonus): genera con cache.
+
+        404 si el flag ``TUTOR_IMAGENES`` está apagado, la unidad no
+        existe o la generación falló (la clase funciona igual sin imagen).
+        """
+        agente = _agente()
+        if not configuracion.imagenes:
+            raise HTTPException(404, "Las ilustraciones están desactivadas.")
+        if not 0 <= indice < len(_con_llm(lambda: agente.curso).temario.unidades):
+            raise HTTPException(404, f"No existe la clase {indice}.")
+        unidad = agente.curso.temario.unidades[indice]
+        ruta = ilustrar_unidad(
+            estado.cliente,
+            estado.dir_activo,
+            indice,
+            unidad.titulo,
+            unidad.conceptos,
+            agente.curso.temario.lenguaje,
+        )
+        if ruta is None:
+            raise HTTPException(404, "No hay ilustración para esta clase.")
+        return FileResponse(ruta, media_type="image/png")
 
     @app.get("/api/clase/{indice}/panel")
     def api_panel_clase(indice: int) -> dict[str, Any]:

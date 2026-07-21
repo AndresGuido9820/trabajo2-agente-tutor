@@ -360,7 +360,7 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
       </Box>
     </Box>
     {hayPanel && panelAbierto && (
-      <PanelClase panel={panel} onEvaluar={evaluar} onDemo={() => demo()}
+      <PanelClase panel={panel} indiceClase={indice} onEvaluar={evaluar} onDemo={() => demo()}
         onRepasar={(texto) => enviar(`Quiero repasar este objetivo: ${texto}`)} />
     )}
     </Box>
@@ -368,13 +368,26 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
 }
 
 /** Panel lateral de la clase: objetivos en vivo + progreso + CTAs (HU-25). */
-function PanelClase({ panel, onEvaluar, onDemo, onRepasar }) {
+/** Ilustración de la clase (HU-08, bonus): solo aparece si el flag está activo. */
+function IlustracionClase({ indice }) {
+  const [visible, setVisible] = useState(true)
+  if (!visible) return null
+  return (
+    <img src={`/api/clase/${indice}/imagen`}
+      alt={`Ilustración de la clase ${indice + 1}`}
+      onError={() => setVisible(false)}
+      style={{ width: '100%', borderRadius: 12, marginBottom: 12 }} />
+  )
+}
+
+function PanelClase({ panel, onEvaluar, onDemo, onRepasar, indiceClase }) {
   const iconos = { cumplido: '●', en_curso: '◐', pendiente: '○' }
   return (
     <Box w={330} p="md" style={{
       borderLeft: '1px solid var(--mantine-color-default-border)',
       height: '100vh', overflowY: 'auto', flexShrink: 0,
     }}>
+      <IlustracionClase indice={indiceClase} />
       <Text size="xs" fw={700} c="dimmed" tt="uppercase" mb="xs">Objetivos de la clase</Text>
       <Stack gap={8} mb="lg">
         {panel.objetivos.map((o, k) => (
