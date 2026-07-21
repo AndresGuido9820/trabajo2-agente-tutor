@@ -35,7 +35,7 @@
   header{padding:12px 22px;display:flex;gap:14px;align-items:center;
          border-bottom:1px solid var(--linea);background:rgba(11,14,20,.85);
          backdrop-filter:blur(8px);flex:none}
-  .marca{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px}
+  .marca{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;cursor:pointer}
   .marca .logo{width:26px;height:26px;border-radius:8px;
       background:linear-gradient(135deg,#4ade80,#5c8aff);display:grid;place-items:center;
       color:#0a1020;font-size:13px;font-weight:800}
@@ -48,11 +48,34 @@
   .barra > div{height:100%;background:linear-gradient(90deg,#4ade80,#5c8aff);
       transition:width 400ms cubic-bezier(0,0,0,1)}
 
-  main{flex:1;display:flex;min-height:0}
-  /* ---- chat ---- */
-  #zona-chat{flex:1;display:flex;flex-direction:column;min-width:0}
+  main{flex:1;display:flex;flex-direction:column;min-height:0}
   #chat{flex:1;overflow-y:auto;padding:26px 24px;scroll-behavior:smooth}
   #chat .interior{max-width:760px;margin:0 auto}
+
+  /* ---- menú de clases ---- */
+  .menu-cabecera{margin-bottom:18px}
+  .menu-cabecera h2{font-size:24px;margin-bottom:4px}
+  .clase{background:var(--card);border:1px solid var(--linea);border-radius:var(--r);
+      padding:16px 18px;margin-bottom:10px;box-shadow:var(--sombra);
+      display:flex;gap:14px;align-items:flex-start;transition:all var(--t1)}
+  .clase:hover:not(.bloq){border-color:var(--linea-fuerte)}
+  .clase.siguiente{border-color:rgba(74,222,128,.4)}
+  .clase.bloq{opacity:.45}
+  .num{flex:none;width:30px;height:30px;border-radius:50%;border:2px solid var(--linea-fuerte);
+       display:grid;place-items:center;font-size:13px;font-weight:700;color:var(--tx2);margin-top:2px}
+  .num.hecha{background:var(--ok);border-color:var(--ok);color:#0a1020}
+  .num.actual{border-color:var(--acc);color:var(--acc)}
+  .clase .cuerpo{flex:1;min-width:0}
+  .clase b{font-size:15px;font-weight:600;display:block;line-height:1.35}
+  .clase ul{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:4px 14px}
+  .clase ul li{font-size:12px;color:var(--tx2);position:relative;padding-left:12px}
+  .clase ul li::before{content:"·";position:absolute;left:2px;color:var(--tx3)}
+  .clase.coronada b, .clase.coronada ul li{text-decoration:line-through;color:var(--tx3)}
+  .clase .meta{font-size:11.5px;color:var(--tx3);margin-top:6px}
+  .clase .cta{flex:none;display:flex;flex-direction:column;gap:6px;align-items:stretch}
+  .clase .cta button{font-size:12px;white-space:nowrap}
+
+  /* ---- chat de clase ---- */
   .msg{max-width:88%;padding:13px 17px;border-radius:16px;margin-bottom:12px;
        animation:aparecer 240ms cubic-bezier(0,0,0,1)}
   .msg.tutor{background:var(--card);border:1px solid var(--linea);margin-right:auto;
@@ -60,13 +83,14 @@
   .msg.yo{background:var(--acc-fondo);border:1px solid rgba(122,162,255,.25);
       margin-left:auto;border-bottom-right-radius:5px}
   .msg.ancha{max-width:100%;width:100%}
+  .msg.sistema{background:transparent;border:none;margin:2px auto 10px;max-width:100%;
+      text-align:center;font-size:12px;color:var(--tx3);animation:none;padding:2px}
   .msg .quien{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
       color:var(--tx3);margin-bottom:6px}
   @keyframes aparecer{from{opacity:0;transform:translateY(5px)}to{opacity:1}}
   .escribiendo::after{content:"···";animation:puntos 1.2s infinite;letter-spacing:2px;font-weight:700}
   @keyframes puntos{0%{opacity:.2}50%{opacity:1}100%{opacity:.2}}
 
-  /* prosa dentro de mensajes */
   .prosa{line-height:1.65}
   .prosa p{margin:0 0 10px} .prosa p:last-child{margin-bottom:0}
   .prosa ul,.prosa ol{margin:0 0 10px;padding-left:22px}
@@ -88,13 +112,13 @@
       font-family:ui-monospace,Menlo,monospace;font-size:12.5px;white-space:pre-wrap;color:#7dd3fc}
   .runner .salida.err{color:var(--err)}
 
-  /* composer */
   #composer{flex:none;border-top:1px solid var(--linea);padding:12px 24px 16px;
-      background:rgba(11,14,20,.85);backdrop-filter:blur(8px)}
+      background:rgba(11,14,20,.85);backdrop-filter:blur(8px);display:none}
   #composer .interior{max-width:760px;margin:0 auto}
   #contexto{font-size:11.5px;color:var(--tx3);margin-bottom:8px;display:flex;
       gap:10px;align-items:center;flex-wrap:wrap}
   #contexto .avance{color:var(--acc)}
+  #contexto a{color:var(--acc);text-decoration:none}
   .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
   .chips button{font-size:11.5px;padding:4px 11px;border-radius:var(--r-pill);color:var(--tx2)}
   .caja-input{display:flex;gap:8px;background:var(--card);border:1px solid var(--linea-fuerte);
@@ -104,33 +128,7 @@
       font-family:inherit;font-size:14.5px;line-height:1.5;padding:8px 10px;resize:none;
       max-height:120px;min-height:38px}
   .caja-input textarea:focus{outline:none}
-  .caja-input .primario{padding:9px 16px}
-  #b-demo{flex:none}
 
-  /* ---- panel del plan ---- */
-  #panel{width:340px;min-width:280px;border-left:1px solid var(--linea);
-      overflow-y:auto;padding:18px 14px;background:rgba(13,17,26,.5);display:none}
-  #panel .cabecera{display:flex;justify-content:space-between;align-items:center;margin:0 6px 12px}
-  #panel .cabecera b{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)}
-  .obj{border-radius:var(--r);padding:9px 10px;margin-bottom:2px;transition:all var(--t1)}
-  .obj.actual{background:var(--card)}
-  .obj .fila{display:flex;gap:10px;align-items:flex-start}
-  .num{flex:none;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--linea-fuerte);
-       display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--tx2);margin-top:1px}
-  .num.hecha{background:var(--ok);border-color:var(--ok);color:#0a1020}
-  .num.actual{border-color:var(--acc);color:var(--acc)}
-  .obj b{font-size:13px;line-height:1.4;font-weight:600;display:block}
-  .obj ul{list-style:none;margin:5px 0 0;padding:0 0 0 2px}
-  .obj ul li{font-size:11.5px;color:var(--tx2);line-height:1.6;padding-left:14px;position:relative}
-  .obj ul li::before{content:"·";position:absolute;left:4px;color:var(--tx3)}
-  .obj.completada b, .obj.completada ul li{text-decoration:line-through;color:var(--tx3)}
-  .obj .mini-acciones{display:inline-flex;gap:4px;margin-top:6px}
-  .obj .mini-acciones button{font-size:10.5px;padding:2px 9px;border-radius:var(--r-pill)}
-  .obj.bloq{opacity:.4}
-  .msg.sistema{background:transparent;border:none;margin:2px auto 10px;max-width:100%;
-      text-align:center;font-size:12px;color:var(--tx3);animation:none}
-
-  /* hero de creación */
   .hero-chat{text-align:center;padding:48px 20px 24px}
   .hero-chat .logo-xl{width:52px;height:52px;border-radius:15px;margin:0 auto 16px;
       background:linear-gradient(135deg,#4ade80,#5c8aff);display:grid;place-items:center;
@@ -138,7 +136,6 @@
   .hero-chat h2{font-size:26px;margin-bottom:8px}
   .hero-chat .sub{color:var(--tx2);font-size:14px;max-width:460px;margin:0 auto}
 
-  /* modal del plan .md */
   #modal{position:fixed;inset:0;background:rgba(5,8,14,.75);backdrop-filter:blur(4px);
       display:none;place-items:center;z-index:20;padding:24px}
   #modal .ventana{background:var(--card);border:1px solid var(--linea-fuerte);
@@ -155,7 +152,6 @@
       transition:all var(--t1);background:var(--card2)}
   .opcion:hover{border-color:var(--acc)}
   .dim{color:var(--tx2)} .ok{color:var(--ok)} .mal{color:var(--err)}
-  .puntos-pop{color:var(--warn);font-weight:700}
   .celebra{animation:celebra 500ms cubic-bezier(0,0,0,1)}
   @keyframes celebra{0%{transform:scale(.95);opacity:0}60%{transform:scale(1.02)}100%{transform:scale(1)}}
   #toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%);
@@ -167,33 +163,29 @@
   .spin{display:inline-block;width:13px;height:13px;border:2px solid var(--tx3);
       border-top-color:var(--acc);border-radius:50%;animation:g .8s linear infinite;vertical-align:-2px}
   @keyframes g{to{transform:rotate(360deg)}}
-  @media(max-width:840px){#panel{display:none!important}}
 </style>
 </head>
 <body>
 <header>
-  <span class="marca"><span class="logo">Pb</span> Profe Bit</span>
+  <span class="marca" id="ir-menu" title="Ir al menú de clases"><span class="logo">Pb</span> Profe Bit</span>
   <div id="progreso-curso">
     <div class="texto" id="progreso-texto"></div>
     <div class="barra"><div id="progreso-barra" style="width:0%"></div></div>
   </div>
   <span class="chip-stat" id="racha" title="Días seguidos estudiando."></span>
-  <span class="chip-stat" id="puntos" title="Puntos por avanzar y aprobar unidades."></span>
+  <span class="chip-stat" id="puntos" title="Puntos por avanzar y aprobar clases."></span>
 </header>
 <main>
-  <div id="zona-chat">
-    <div id="chat"><div class="interior" id="mensajes"></div></div>
-    <div id="composer"><div class="interior">
-      <div id="contexto"></div>
-      <div class="chips" id="sugerencias"></div>
-      <div class="caja-input">
-        <textarea id="entrada" rows="1" placeholder="Escribe aquí…"></textarea>
-        <button id="b-demo" title="Pídele al tutor una demo interactiva de lo que estás viendo">✨</button>
-        <button class="primario" id="b-enviar">Enviar</button>
-      </div>
-    </div></div>
-  </div>
-  <nav id="panel" aria-label="Plan del curso"></nav>
+  <div id="chat"><div class="interior" id="mensajes"></div></div>
+  <div id="composer"><div class="interior">
+    <div id="contexto"></div>
+    <div class="chips" id="sugerencias"></div>
+    <div class="caja-input">
+      <textarea id="entrada" rows="1" placeholder="Escribe aquí…"></textarea>
+      <button id="b-demo" title="Pídele al tutor una demo interactiva">✨</button>
+      <button class="primario" id="b-enviar">Enviar</button>
+    </div>
+  </div></div>
 </main>
 <div id="modal"><div class="ventana">
   <div class="barra-m"><b>📄 Plan del curso</b>
@@ -208,10 +200,12 @@
 <script>
 "use strict";
 const $ = (s) => document.querySelector(s);
-let modo = "creacion";          // creacion | estudio | quiz | conversatorio
+let vista = "menu";              // menu | creacion | clase
+let modo = "estudio";            // estudio | quiz | conversatorio  (dentro de clase)
+let claseActual = null;
+let estadoCurso = null;
 let lenguajeCurso = "";
-let quizActual = null;           // {indice, preguntas}
-let convIndice = null;
+let quizActual = null;
 let planMd = "";
 
 /* ===== utilidades ===== */
@@ -253,7 +247,6 @@ function md(texto){
   return html;
 }
 
-/* ===== chat ===== */
 function burbuja(clase, html, quien){
   const d = document.createElement("div");
   d.className = "msg " + clase;
@@ -267,18 +260,17 @@ function burbujaTutor(texto){
   activarBloquesDeCodigo(d);
   return d;
 }
-function burbujaEspera(){
-  return burbuja("tutor dim escribiendo", "El tutor escribe");
-}
+function burbujaEspera(){ return burbuja("tutor dim escribiendo", "El tutor escribe"); }
 function reemplazarEspera(espera, texto){
   espera.classList.remove("dim","escribiendo");
   espera.innerHTML = `<div class="quien">Profe Bit</div><div class="prosa">${md(texto)}</div>`;
   activarBloquesDeCodigo(espera);
   $("#chat").scrollTop = $("#chat").scrollHeight;
 }
-
 function ponerContexto(texto, chips){
   $("#contexto").innerHTML = texto || "";
+  const enlace = $("#ctx-menu");
+  if(enlace) enlace.onclick = (e) => { e.preventDefault(); verMenu(); };
   const zona = $("#sugerencias");
   zona.innerHTML = "";
   (chips || []).forEach(([etiqueta, accion]) => {
@@ -289,62 +281,76 @@ function ponerContexto(texto, chips){
   });
 }
 
-/* ===== estado / panel ===== */
+/* ===== estado ===== */
 async function cargarEstado(){
   let e;
   try{ e = await api("/api/estado"); }
   catch(err){ mostrarError(err.message); return null; }
+  estadoCurso = e;
   if(!e.perfil) return e;
   lenguajeCurso = e.lenguaje;
   $("#puntos").style.display = "inline-block"; $("#puntos").textContent = `⭐ ${e.puntos}`;
   $("#racha").style.display = "inline-block"; $("#racha").textContent = `🔥 ${e.racha}`;
   const aprob = e.unidades.filter(u => u.estado === "aprobada").length;
   $("#progreso-curso").style.display = "block";
-  $("#progreso-texto").textContent = `${aprob} de ${e.unidades.length} unidades · ${e.lenguaje}`;
+  $("#progreso-texto").textContent = `${aprob} de ${e.unidades.length} clases aprobadas · ${e.lenguaje}`;
   $("#progreso-barra").style.width = `${Math.round(100 * aprob / e.unidades.length)}%`;
-  pintarPanel(e);
   return e;
 }
 
-function pintarPanel(e){
-  const panel = $("#panel");
-  panel.style.display = "block";
-  panel.innerHTML = `<div class="cabecera"><b>Temario</b>
-    <button class="sutil" id="p-ver">📄 .md</button></div>`;
-  $("#p-ver").onclick = abrirPlan;
+/* ===== vista: menú de clases ===== */
+async function verMenu(){
+  vista = "menu";
+  claseActual = null;
+  $("#composer").style.display = "none";
+  const e = estadoCurso && estadoCurso.perfil ? estadoCurso : await cargarEstado();
+  if(!e || !e.perfil){ verCreacion(); return; }
+  const cont = $("#mensajes");
+  cont.innerHTML = `<div class="menu-cabecera">
+    <h2>Tus clases</h2>
+    <p class="dim" style="font-size:13px">Cada clase es una conversación con tu tutor.
+    Aprueba la evaluación (70+) para desbloquear la siguiente.
+    <a href="#" id="ver-plan" style="color:var(--acc)">📄 Ver el plan del curso (.md)</a></p></div>`;
+  $("#ver-plan").onclick = (ev) => { ev.preventDefault(); abrirPlan(); };
+  const siguiente = e.unidades.find(u => u.estado !== "aprobada" && u.estado !== "bloqueada");
   e.unidades.forEach(u => {
-    const esActual = u.indice === e.unidad_actual;
     const coronada = u.completada || u.estado === "aprobada";
+    const bloqueada = u.estado === "bloqueada";
+    const esSiguiente = siguiente && u.indice === siguiente.indice;
     const div = document.createElement("div");
-    div.className = "obj" + (coronada ? " completada" : "") +
-      (esActual ? " actual" : "") + (u.estado === "bloqueada" ? " bloq" : "");
-    const numCl = coronada ? "hecha" : (esActual ? "actual" : "");
-    const subtemas = (u.conceptos || []).map(c => `<li>${c}</li>`).join("");
-    div.innerHTML = `<div class="fila">
-        <span class="num ${numCl}">${coronada ? "✓" : u.indice + 1}</span>
-        <div style="min-width:0"><b>${u.titulo}</b>
-          <ul>${subtemas}</ul>
-          <div class="mini-acciones"></div></div>
-      </div>`;
-    const acc = div.querySelector(".mini-acciones");
-    if(u.estado !== "bloqueada"){
-      if(coronada){
-        const b = document.createElement("button");
-        b.textContent = "↩ repasar";
-        b.onclick = () => repasar(u.indice, u.titulo);
-        acc.appendChild(b);
-      }
+    div.className = "clase" + (coronada ? " coronada" : "") + (bloqueada ? " bloq" : "")
+      + (esSiguiente ? " siguiente" : "");
+    const numCl = coronada ? "hecha" : (esSiguiente ? "actual" : "");
+    const meta = u.estado === "aprobada" ? `✓ Aprobada con ${u.mejor_nota}/100`
+      : bloqueada ? "🔒 Se desbloquea aprobando la clase anterior"
+      : u.completada ? "Clase completada — te falta la evaluación"
+      : u.estado === "evaluada" ? `Último intento: ${u.mejor_nota}/100 — reintenta cuando quieras`
+      : u.estado === "vista" ? "Conversación en curso" : "";
+    div.innerHTML = `<span class="num ${numCl}">${coronada ? "✓" : u.indice + 1}</span>
+      <div class="cuerpo"><b>${u.titulo}</b>
+        <ul>${(u.conceptos || []).map(c => `<li>${c}</li>`).join("")}</ul>
+        ${meta ? `<div class="meta">${meta}</div>` : ""}</div>
+      <div class="cta"></div>`;
+    const cta = div.querySelector(".cta");
+    if(!bloqueada){
+      const b = document.createElement("button");
+      b.textContent = u.estado === "aprobada" ? "↩ Repasar"
+        : (u.estado === "vista" || u.completada) ? "Continuar →" : "Entrar a la clase →";
+      if(esSiguiente) b.className = "primario";
+      b.onclick = () => entrarClase(u.indice);
+      cta.appendChild(b);
       if(u.completada && u.estado !== "aprobada"){
-        const b = document.createElement("button");
-        b.className = "primario";
-        b.textContent = "🎯 evaluar";
-        b.onclick = () => iniciarQuiz(u.indice);
-        acc.appendChild(b);
+        const be = document.createElement("button");
+        be.textContent = "🎯 Evaluarme";
+        be.onclick = () => { entrarClase(u.indice, true); };
+        cta.appendChild(be);
       }
     }
-    panel.appendChild(div);
+    cont.appendChild(div);
   });
+  $("#chat").scrollTop = 0;
 }
+$("#ir-menu").onclick = () => { if(vista !== "creacion") verMenu(); };
 
 async function abrirPlan(){
   if(!planMd){
@@ -361,15 +367,17 @@ async function abrirPlan(){
 }
 $("#m-cerrar").onclick = () => $("#modal").style.display = "none";
 
-/* ===== flujo: creación conversacional ===== */
-function arrancarCreacion(){
-  modo = "creacion";
+/* ===== vista: creación (su propia conversación) ===== */
+async function verCreacion(){
+  vista = "creacion";
+  $("#composer").style.display = "block";
   $("#mensajes").innerHTML = `<div class="hero-chat">
     <div class="logo-xl">Pb</div>
     <h2>¿Qué quieres aprender?</h2>
     <p class="sub">Cuéntamelo con tus palabras. Te haré un par de preguntas, te propondré
     un plan y cuando digas “ya, dale” creo tu curso.</p></div>`;
-  ponerContexto("", [
+  await pintarHistorial("creacion");
+  ponerContexto("Diseñando tu curso", [
     ["Quiero analizar datos con Python; sé Excel", () => enviar("Hazme un curso de Python para análisis de datos; manejo bien Excel")],
     ["Nunca he programado, quiero hacer webs", () => enviar("Quiero aprender a hacer páginas web desde cero, nunca he programado")],
   ]);
@@ -380,58 +388,104 @@ async function turnoCreacion(mensaje){
   const espera = burbujaEspera();
   try{
     const r = await api("/api/creacion", {mensaje});
-    if(!r.listo){ reemplazarEspera(espera, r.mensaje); return; }
     reemplazarEspera(espera, r.mensaje);
+    if(!r.listo) return;
     const gen = burbuja("tutor dim", '<span class="spin"></span> Diseñando tu curso y guardando el plan (~1 min)…');
-    const e = await cargarEstado();
+    await cargarEstado();
     gen.remove();
-    toast("Curso creado · plan guardado en curso.md 📄");
-    burbujaTutor(`**¡Listo!** Tu plan quedó a la derecha 👉 (y en \`curso.md\`). Arranquemos con la primera unidad.`);
-    modo = "estudio";
-    await turnoEstudio(null, e ? e.unidad_actual : 0, true);
+    toast("Curso creado · plan en curso.md 📄");
+    verMenu();
   }catch(err){ espera.remove(); mostrarError(err.message); }
 }
 
-/* ===== flujo: estudio en chat ===== */
-async function turnoEstudio(mensaje, unidad, primera){
-  const espera = burbujaEspera();
-  if(primera) espera.innerHTML = '<span class="spin"></span> Preparando la lección (primera vez en la unidad: ~1 min)…';
+/* ===== vista: clase (una conversación por clase) ===== */
+async function pintarHistorial(canal){
   try{
-    const cuerpo = unidad !== undefined && unidad !== null ? {unidad} : {mensaje};
-    const r = await api("/api/estudio", cuerpo);
+    const h = await api(`/api/historial/${canal}`);
+    const ultimos = h.mensajes.slice(-80);
+    ultimos.forEach(m => {
+      if(m.rol === "yo") burbuja("yo", md(m.texto));
+      else if(m.rol === "sistema") burbuja("sistema", md(m.texto));
+      else burbujaTutor(m.texto);
+    });
+    return ultimos.length > 0;
+  }catch(e){ return false; }
+}
+
+async function entrarClase(indice, directoAQuiz){
+  vista = "clase";
+  modo = "estudio";
+  claseActual = indice;
+  const u = estadoCurso.unidades[indice];
+  $("#composer").style.display = "block";
+  $("#mensajes").innerHTML = "";
+  burbuja("sistema", `— Clase ${indice + 1}: ${u.titulo} —`);
+  const hubo = await pintarHistorial(`u${indice}`);
+  ponerContextoClase(u);
+  if(directoAQuiz){ iniciarQuiz(indice); return; }
+  if(!hubo){
+    // Primera vez en esta clase: el tutor abre la conversación
+    const espera = burbujaEspera();
+    espera.innerHTML = '<span class="spin"></span> Preparando tu clase (primera vez: ~1 min)…';
+    try{
+      const r = await api("/api/estudio", {unidad: indice});
+      reemplazarEspera(espera, r.texto);
+      ponerContextoClase(u, r);
+    }catch(e){ espera.remove(); mostrarError(e.message); }
+  }else{
+    burbuja("sistema", "— continúas donde ibas: responde para seguir —");
+  }
+  $("#entrada").focus();
+}
+
+function ponerContextoClase(u, r){
+  const avance = r ? ` · paso ${r.paso}/${r.total}` : "";
+  const chips = [];
+  if(u.completada || u.estado === "aprobada")
+    chips.push(["🎯 Presentar la evaluación", () => iniciarQuiz(claseActual)]);
+  if(u.completada || u.estado === "aprobada")
+    chips.push(["↩ Repasar desde el inicio", () => reiniciarClase()]);
+  ponerContexto(
+    `<a href="#" id="ctx-menu">← Menú</a>
+     <span class="avance">Clase ${claseActual + 1}${avance}</span>
+     <span>Responde para avanzar — pregunta lo que quieras</span>`, chips);
+}
+
+async function reiniciarClase(){
+  burbuja("yo", "Quiero repasar esta clase desde el inicio");
+  const espera = burbujaEspera();
+  try{
+    const r = await api("/api/estudio", {unidad: claseActual});
     reemplazarEspera(espera, r.texto);
-    ponerContexto(
-      `<span class="avance">Unidad ${r.unidad + 1} · paso ${r.paso}/${r.total}</span>
-       <span>Responde para avanzar — pregunta lo que quieras</span>`,
-      r.terminada ? [] : [["No entiendo, explícame otra vez", () => enviar("No entiendo, ¿me lo explicas de otra forma?")]]
-    );
+  }catch(e){ espera.remove(); mostrarError(e.message); }
+}
+
+async function turnoEstudio(mensaje){
+  const espera = burbujaEspera();
+  try{
+    const r = await api("/api/estudio", {mensaje, unidad: claseActual});
+    reemplazarEspera(espera, r.texto);
+    const u = estadoCurso.unidades[claseActual];
+    ponerContextoClase(u, r);
     if(r.terminada){
-      const e = await cargarEstado();
-      burbuja("tutor ancha celebra",
+      await cargarEstado();
+      const card = burbuja("tutor ancha celebra",
         `<div class="quien">Profe Bit</div><div class="prosa">
-        <p>🎉 <b>Objetivo de la unidad ${r.unidad + 1} cumplido</b> — quedó tachado en tu plan.</p></div>
+        <p>🎉 <b>¡Clase ${r.unidad + 1} completada!</b> Quedó tachada en tu menú.</p></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
           <button class="primario" id="c-evaluar">🎯 Presentar la evaluación</button>
-          <button id="c-repasar">↩ Repasar algo</button>
+          <button id="c-menu">🏠 Volver al menú</button>
         </div>`);
-      $("#c-evaluar").onclick = () => iniciarQuiz(r.unidad);
-      $("#c-repasar").onclick = () => enviar("Quiero repasar: tengo dudas todavía");
-      ponerContexto(`<span class="avance">Unidad ${r.unidad + 1} completada</span>
-        <span>Evalúate para desbloquear la siguiente, o sigue preguntando</span>`);
+      card.querySelector("#c-evaluar").onclick = () => iniciarQuiz(r.unidad);
+      card.querySelector("#c-menu").onclick = () => verMenu();
     }
   }catch(err){ espera.remove(); mostrarError(err.message); }
 }
 
-async function repasar(indice, titulo){
-  modo = "estudio";
-  burbuja("yo", `Quiero repasar la unidad ${indice + 1}: ${titulo}`);
-  await turnoEstudio(null, indice, true);
-}
-
-/* ===== flujo: evaluación dentro del chat ===== */
+/* ===== evaluación dentro de la clase ===== */
 async function iniciarQuiz(indice){
   modo = "quiz";
-  burbuja("yo", `Quiero presentar la evaluación de la unidad ${indice + 1}`);
+  burbuja("yo", "Quiero presentar la evaluación");
   const espera = burbujaEspera();
   espera.innerHTML = '<span class="spin"></span> Escribiendo tus preguntas y verificándolas (~40 s)…';
   let quiz;
@@ -439,7 +493,7 @@ async function iniciarQuiz(indice){
   catch(e){ espera.remove(); mostrarError(e.message); modo = "estudio"; return; }
   espera.remove();
   quizActual = {indice, preguntas: quiz.preguntas};
-  const card = burbuja("tutor ancha", `<div class="quien">Evaluación · unidad ${indice + 1}</div>
+  const card = burbuja("tutor ancha", `<div class="quien">🎯 Evaluación · clase ${indice + 1}</div>
     <p class="dim" style="font-size:12.5px;margin-bottom:10px">Apruebas con 70+. Puedes reintentar con preguntas nuevas.</p>
     <div id="q-zona"></div><div id="q-error"></div>
     <button class="primario" id="q-calificar" style="margin-top:8px">Calificar</button>`);
@@ -454,7 +508,8 @@ async function iniciarQuiz(indice){
     card.querySelector("#q-zona").appendChild(f);
   });
   card.querySelector("#q-calificar").onclick = () => calificarQuiz(card);
-  ponerContexto(`<span class="avance">Evaluación en curso</span><span>Responde y pulsa Calificar</span>`);
+  ponerContexto(`<a href="#" id="ctx-menu">← Menú</a>
+    <span class="avance">Evaluación en curso</span><span>Responde y pulsa Calificar</span>`);
   $("#chat").scrollTop = $("#chat").scrollHeight;
 }
 
@@ -477,9 +532,9 @@ async function calificarQuiz(card){
   $("#puntos").textContent = `⭐ ${r.puntos_totales}`;
   let html = r.aprobado
     ? `<div class="quien">Resultado</div><h3 class="ok">🎉 Aprobada · ${r.nota}/100</h3>
-       <p class="dim">Desbloqueaste la siguiente unidad (+30 ⭐).</p>`
+       <p class="dim">Desbloqueaste la siguiente clase (+30 ⭐).</p>`
     : `<div class="quien">Resultado</div><h3>${r.detalle.filter(d=>d.acierto).length} de ${r.detalle.length} — cerremos esas brechas</h3>
-       <p class="dim">Conversemos tus dudas y reintentas con preguntas nuevas.</p>`;
+       <p class="dim">Conversemos tus dudas aquí mismo y reintentas con preguntas nuevas.</p>`;
   r.detalle.forEach((d, i) => {
     html += `<div style="border:1px solid var(--linea);border-radius:10px;padding:10px;margin:8px 0">
       ${d.acierto ? "✅" : "❌"} <b>P${i + 1}</b> — elegiste: <span class="prosa">${md(d.elegida)}</span>
@@ -487,25 +542,26 @@ async function calificarQuiz(card){
       <div class="dim prosa" style="font-size:12.5px;margin-top:4px">${md(d.explicacion)}</div></div>`;
   });
   const res = burbuja("tutor ancha" + (r.aprobado ? " celebra" : ""), html);
-  const e = await cargarEstado();
+  await cargarEstado();
   if(r.aprobado){
-    toast(`+30 ⭐ · Unidad ${q.indice + 1} aprobada`);
+    toast(`+30 ⭐ · Clase ${q.indice + 1} aprobada`);
     const sig = q.indice + 1;
-    const hay = e && sig < e.unidades.length;
+    const hay = estadoCurso && sig < estadoCurso.unidades.length;
     const botones = document.createElement("div");
     botones.style.cssText = "display:flex;gap:8px;margin-top:8px";
-    botones.innerHTML = hay ? `<button class="primario" id="r-seguir">Seguir con la unidad ${sig + 1} →</button>`
-      : `<p class="ok"><b>🏆 ¡Terminaste el curso completo!</b></p>`;
+    botones.innerHTML = (hay ? `<button class="primario" id="r-seguir">Ir a la clase ${sig + 1} →</button>` :
+      `<p class="ok"><b>🏆 ¡Terminaste el curso completo!</b></p>`) +
+      `<button id="r-menu">🏠 Menú</button>`;
     res.appendChild(botones);
-    if(hay) $("#r-seguir").onclick = () => { modo = "estudio"; turnoEstudio(null, sig, true); };
+    if(hay) botones.querySelector("#r-seguir").onclick = () => entrarClase(sig);
+    botones.querySelector("#r-menu").onclick = () => verMenu();
     modo = "estudio";
-    ponerContexto(`<span class="avance">Unidad ${q.indice + 1} aprobada 🎉</span>`);
   }else{
     modo = "conversatorio";
-    convIndice = q.indice;
     const falladas = r.detalle.map((d, i) => !d.acierto ? i + 1 : null).filter(Boolean);
     ponerContexto(
-      `<span class="avance">Conversatorio de dudas</span><span>Cuando estés al día, reintenta</span>`,
+      `<a href="#" id="ctx-menu">← Menú</a>
+       <span class="avance">Conversatorio de dudas</span><span>Cuando estés al día, reintenta</span>`,
       [...falladas.slice(0, 2).map(n => [`Explícame la pregunta ${n}`,
           () => enviar(`Explícame en qué me equivoqué en la pregunta ${n}`)]),
        ["Ya estoy listo: reintentar 🎯", () => iniciarQuiz(q.indice)]]
@@ -522,19 +578,19 @@ async function calificarQuiz(card){
 async function turnoConversatorio(mensaje){
   const espera = burbujaEspera();
   try{
-    const r = await api(`/api/conversatorio/${convIndice}`, {mensaje});
+    const r = await api(`/api/conversatorio/${claseActual}`, {mensaje});
     reemplazarEspera(espera, r.texto);
   }catch(e){ espera.remove(); mostrarError(e.message); }
 }
 
-/* ===== demo interactiva (✨ mini-artefacto) ===== */
+/* ===== demo ✨ ===== */
 $("#b-demo").onclick = async () => {
-  if(modo === "creacion"){ toast("Primero creemos tu curso 😊"); return; }
+  if(vista !== "clase"){ toast("Entra a una clase para pedir demos ✨"); return; }
   burbuja("yo", "✨ Muéstrame una demo interactiva de esto");
   const espera = burbujaEspera();
   espera.innerHTML = '<span class="spin"></span> Creando tu demo interactiva (vale la pena: ~1-2 min)…';
   try{
-    const r = await api("/api/artefacto", {});
+    const r = await api("/api/artefacto", {unidad: claseActual});
     espera.remove();
     const card = burbuja("tutor ancha", `<div class="quien">✨ Demo interactiva — juega con ella</div>`);
     const f = document.createElement("iframe");
@@ -546,7 +602,7 @@ $("#b-demo").onclick = async () => {
   }catch(e){ espera.remove(); mostrarError(e.message); }
 };
 
-/* ===== Pyodide + Python Tutor en los mensajes ===== */
+/* ===== Pyodide + Python Tutor ===== */
 let pyodideListo = null;
 function cargarPyodide(){
   if(!pyodideListo){
@@ -615,7 +671,7 @@ function enviar(textoDirecto){
   if(!textoDirecto) area.value = "";
   area.style.height = "auto";
   burbuja("yo", md(texto));
-  if(modo === "creacion") turnoCreacion(texto);
+  if(vista === "creacion") turnoCreacion(texto);
   else if(modo === "conversatorio") turnoConversatorio(texto);
   else turnoEstudio(texto);
 }
@@ -630,34 +686,10 @@ area.addEventListener("input", () => {
 });
 
 /* ===== arranque ===== */
-async function pintarHistorial(){
-  try{
-    const h = await api("/api/historial");
-    const ultimos = h.mensajes.slice(-80);
-    if(ultimos.length){
-      ultimos.forEach(m => {
-        if(m.rol === "yo") burbuja("yo", md(m.texto));
-        else if(m.rol === "sistema") burbuja("sistema", md(m.texto));
-        else burbujaTutor(m.texto);
-      });
-      burbuja("sistema", "— hasta aquí tu conversación anterior —");
-      return true;
-    }
-  }catch(e){ /* sin historial no pasa nada */ }
-  return false;
-}
-
 (async () => {
   const e = await cargarEstado();
-  if(!e || !e.perfil){ arrancarCreacion(); return; }
-  modo = "estudio";
-  const hubo = await pintarHistorial();
-  burbujaTutor(hubo
-    ? `**¡Volviste!** 🔥 Seguimos en la **unidad ${e.unidad_actual + 1}** — responde para continuar o toca ↩ repasar en el temario.`
-    : `**¡Hola!** Tu temario está a la derecha. Arrancamos con la **unidad ${e.unidad_actual + 1}** cuando digas.`);
-  ponerContexto(`<span class="avance">Unidad ${e.unidad_actual + 1}</span><span>Escribe para continuar</span>`,
-    [["Continuar donde iba →", () => { burbuja("yo", "Continuemos"); turnoEstudio(null, e.unidad_actual, true); }]]);
-  $("#entrada").focus();
+  if(!e || !e.perfil){ verCreacion(); return; }
+  verMenu();
 })();
 </script>
 </body>

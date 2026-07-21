@@ -357,6 +357,57 @@ el estudiante (en el paso "recap", termina invitando a presentar el quiz).
 conversación, no un documento."""
 
 
+def prompt_avance_leccion(
+    guion_texto: str,
+    numero_paso: int,
+    total_pasos: int,
+    paso_actual: str,
+    paso_siguiente: str | None,
+    historial: list[tuple[str, str]],
+    mensaje: str,
+) -> str:
+    """Prompt de turno con decisión de avance (HU-18 hotfix).
+
+    El tutor decide si el mensaje del estudiante atiende el paso actual
+    (avanza) o si es un saludo/duda/comentario (responde natural, no avanza).
+    Evita que un "hola" dispare la siguiente parte de la lección.
+    """
+    transcripcion = ""
+    if historial:
+        lineas = []
+        for m, r in historial:
+            if m:
+                lineas.append(f"Estudiante: {m}")
+            lineas.append(f"Tú: {r}")
+        transcripcion = "\nConversación hasta ahora:\n" + "\n".join(lineas) + "\n"
+    siguiente = (
+        f"El paso SIGUIENTE del guion es: {paso_siguiente}"
+        if paso_siguiente
+        else "No hay más pasos: si avanza, cierra celebrando y sugiere la evaluación."
+    )
+    return f"""Objetivos de esta lección:
+{guion_texto}
+{transcripcion}
+Estudiante: {mensaje}
+
+Estás en el paso {numero_paso} de {total_pasos}. Lo que le pediste en este
+paso: {paso_actual}
+{siguiente}
+
+DECIDE con criterio:
+- Si su mensaje ATIENDE lo que el paso le pidió (respondió la predicción,
+intentó el ejercicio, pidió seguir, etc.): reacciona a su respuesta
+(celebra lo correcto, corrige con amabilidad lo incorrecto explicando por
+qué) y desarrolla el paso siguiente. → "avanza": true.
+- Si es un saludo, un comentario casual, o una duda/pregunta: responde
+NATURAL y BREVE (saluda de vuelta si saluda; resuelve la duda con pistas,
+no con soluciones de ejercicios) y cierra re-invitando a lo que el paso
+actual le pidió, SIN repetirlo entero. → "avanza": false.
+
+Responde ÚNICAMENTE este JSON:
+{{"avanza": true, "mensaje": "<tu respuesta en Markdown>"}}"""
+
+
 def prompt_turno_leccion(
     guion_texto: str,
     numero_paso: int,
@@ -365,6 +416,7 @@ def prompt_turno_leccion(
     paso_instruccion: str,
     historial: list[tuple[str, str]],
     mensaje: str | None,
+    apertura: str | None = None,
 ) -> str:
     """Prompt de un turno de la lección conversada.
 
@@ -376,6 +428,8 @@ def prompt_turno_leccion(
         paso_instruccion: Instrucción del guion para este paso.
         historial: Turnos previos (respuesta_estudiante, texto_tutor).
         mensaje: Última respuesta del estudiante; ``None`` en el primer turno.
+        apertura: Mensaje casual con el que el estudiante arrancó (se saluda
+            antes de empezar la lección).
     """
     transcripcion = ""
     if historial:
@@ -387,9 +441,15 @@ def prompt_turno_leccion(
         transcripcion = "\nConversación hasta ahora:\n" + "\n".join(lineas) + "\n"
 
     ultima = f"\nEstudiante: {mensaje}\n" if mensaje else ""
+    saludo = (
+        f'\nEl estudiante acaba de escribir: "{apertura}" — respóndelo con '
+        "naturalidad en la primera frase antes de arrancar.\n"
+        if apertura
+        else ""
+    )
     return f"""Objetivos de esta lección:
 {guion_texto}
-{transcripcion}{ultima}
+{transcripcion}{ultima}{saludo}
 Estás en el paso {numero_paso} de {total_pasos} (tipo: {paso_tipo}).
 Instrucción del guion para este paso: {paso_instruccion}
 

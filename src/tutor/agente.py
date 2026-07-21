@@ -32,12 +32,13 @@ from tutor.curso import (
 )
 from tutor.errores import ErrorBloqueada, ErrorDatos
 from tutor.evaluacion import Quiz, Retroalimentacion, calificar, generar_quiz
-from tutor.llm import ClienteLLM
+from tutor.llm import ClienteLLM, pedir_json
 from tutor.models import PerfilEstudiante
 from tutor.perfil import cargar_perfil, guardar_perfil
 from tutor.progreso import Progreso, Resultado, cargar_progreso, guardar_progreso
 from tutor.prompts import (
     prompt_artefacto,
+    prompt_avance_leccion,
     prompt_charla,
     prompt_turno_leccion,
     system_charla,
@@ -45,6 +46,14 @@ from tutor.prompts import (
     system_leccion,
     system_tutor,
 )
+
+
+def _validar_avance(datos: object) -> dict[str, object]:
+    """Valida el JSON de un turno con decisión de avance."""
+    if not isinstance(datos, dict) or "mensaje" not in datos or "avanza" not in datos:
+        raise ValueError("se esperaban los campos 'avanza' y 'mensaje'")
+    return {"avanza": bool(datos["avanza"]), "mensaje": str(datos["mensaje"])}
+
 
 logger = logging.getLogger(__name__)
 
@@ -464,40 +473,72 @@ class Agente:
         self._lecciones_activas[indice] = _SesionLeccion(guion=guion)
         return guion
 
-    def turno_leccion(self, indice: int, mensaje: str | None) -> tuple[str, bool]:
+    def turno_leccion(
+        self, indice: int, mensaje: str | None, apertura: str | None = None
+    ) -> tuple[str, bool]:
         """Un turno de la lección conversada.
 
-        Con ``mensaje=None`` produce el primer paso; con la respuesta del
-        estudiante avanza al paso siguiente y lo desarrolla reaccionando a
-        ella.
+        Con ``mensaje=None`` produce el primer paso (``apertura`` permite
+        saludar si el estudiante escribió algo casual al arrancar). Con un
+        mensaje, el TUTOR decide si atiende el paso (reacciona y desarrolla
+        el siguiente) o si es un saludo/duda (responde natural sin avanzar).
 
         Returns:
-            El mensaje del tutor y si la lección quedó terminada (se acaba
-            de desarrollar el último paso).
+            El mensaje del tutor y si la lección quedó terminada.
 
         Raises:
             KeyError: Si la lección no fue iniciada con ``iniciar_leccion``.
             ErrorLLM: Si la API falla tras los reintentos.
         """
         sesion = self._lecciones_activas[indice]
-        if mensaje is not None and sesion.paso < len(sesion.guion.pasos) - 1:
-            sesion.paso += 1
-        paso = sesion.guion.pasos[sesion.paso]
-        texto = self._cliente.generar(
+        pasos = sesion.guion.pasos
+        guion_texto = "\n".join(f"- {o}" for o in sesion.guion.objetivos)
+
+        if mensaje is None:
+            paso = pasos[sesion.paso]
+            texto = self._cliente.generar(
+                system=system_leccion(self.perfil),
+                prompt=prompt_turno_leccion(
+                    guion_texto=guion_texto,
+                    numero_paso=sesion.paso + 1,
+                    total_pasos=len(pasos),
+                    paso_tipo=paso.tipo,
+                    paso_instruccion=paso.instruccion,
+                    historial=sesion.historial,
+                    mensaje=None,
+                    apertura=apertura,
+                ),
+            )
+            sesion.historial.append((apertura or "", texto))
+            del sesion.historial[:-MAX_TURNOS_CHARLA]
+            return texto, len(pasos) == 1
+
+        actual = pasos[sesion.paso]
+        hay_siguiente = sesion.paso + 1 < len(pasos)
+        siguiente = pasos[sesion.paso + 1] if hay_siguiente else None
+        turno = pedir_json(
+            self._cliente,
             system=system_leccion(self.perfil),
-            prompt=prompt_turno_leccion(
-                guion_texto="\n".join(f"- {o}" for o in sesion.guion.objetivos),
+            prompt=prompt_avance_leccion(
+                guion_texto=guion_texto,
                 numero_paso=sesion.paso + 1,
-                total_pasos=len(sesion.guion.pasos),
-                paso_tipo=paso.tipo,
-                paso_instruccion=paso.instruccion,
+                total_pasos=len(pasos),
+                paso_actual=f"({actual.tipo}) {actual.instruccion}",
+                paso_siguiente=(
+                    f"({siguiente.tipo}) {siguiente.instruccion}" if siguiente else None
+                ),
                 historial=sesion.historial,
                 mensaje=mensaje,
             ),
+            validar=_validar_avance,
         )
-        sesion.historial.append((mensaje or "", texto))
+        if turno["avanza"] and hay_siguiente:
+            sesion.paso += 1
+        texto = str(turno["mensaje"])
+        sesion.historial.append((mensaje, texto))
         del sesion.historial[:-MAX_TURNOS_CHARLA]
-        return texto, sesion.paso == len(sesion.guion.pasos) - 1
+        terminada = bool(turno["avanza"]) and sesion.paso == len(pasos) - 1
+        return texto, terminada
 
     def avance_leccion(self, indice: int) -> tuple[int, int]:
         """Paso actual (base 1) y total de la lección conversada activa."""
@@ -517,15 +558,19 @@ class Agente:
             ErrorBloqueada: Si la unidad pedida está bloqueada.
             ErrorLLM: Si la API falla tras los reintentos.
         """
-        if unidad is not None:
+        if unidad is not None and mensaje is None:
+            # Entrar/repasar: (re)inicia la lección de esa clase.
             self.unidad_actual = unidad
             self.iniciar_leccion(unidad)
             texto, terminada = self.turno_leccion(unidad, None)
         else:
+            # Continuar la conversación de la clase indicada (o la actual).
+            if unidad is not None:
+                self.unidad_actual = unidad
             actual = self.unidad_actual
             if actual not in self._lecciones_activas:
                 self.iniciar_leccion(actual)
-                texto, terminada = self.turno_leccion(actual, None)
+                texto, terminada = self.turno_leccion(actual, None, apertura=mensaje)
             else:
                 texto, terminada = self.turno_leccion(actual, mensaje or "ok, sigamos")
         if terminada:
