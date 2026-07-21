@@ -634,6 +634,14 @@ def crear_app(
                 break
         return {"clases": clases, "mensajes": mensajes}
 
+    @app.get("/api/clase/{indice}/panel")
+    def api_panel_clase(indice: int) -> dict[str, Any]:
+        """Objetivos y avance de la clase para el panel lateral (HU-25)."""
+        try:
+            return _agente().panel_de_clase(indice)
+        except IndexError as error:
+            raise HTTPException(404, str(error)) from error
+
     @app.post("/api/clase/{indice}/reencuentro")
     def api_reencuentro(indice: int) -> dict[str, Any]:
         """Resumen de bienvenida al volver a una clase tras horas de pausa."""

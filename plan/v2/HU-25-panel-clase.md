@@ -101,11 +101,11 @@ resultados/checkpoints de esa clase (consulta, no contador duplicado).
 
 ## 6. Definición de Hecho
 
-- [ ] Recorrido manual: entrar, cumplir un objetivo, ver el tachado en
+- [x] Recorrido manual: entrar, cumplir un objetivo, ver el tachado en
       vivo, recargar la página y verificar que persiste, repasar desde el
       panel, terminar y presentar la evaluación desde el panel.
-- [ ] Pruebas de abajo + suite + ruff/mypy en verde.
-- [ ] Captura nueva del panel para el reporte (bot Playwright).
+- [x] Pruebas de abajo + suite + ruff/mypy en verde.
+- [x] Captura nueva del panel para el reporte (bot Playwright).
 
 ## 7. Pruebas
 

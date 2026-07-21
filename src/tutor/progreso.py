@@ -74,12 +74,33 @@ class Progreso:
     # mini-quices, por clase (clave: str(indice de clase)).
     objetivos_cumplidos: dict[str, list[int]] = field(default_factory=dict)
     fallados_intermedios: dict[str, list[str]] = field(default_factory=dict)
+    # Resultado del mini-quiz por objetivo (HU-25): clase → objetivo →
+    # {"aciertos": int, "total": int, "repaso": bool}.
+    resultados_intermedios: dict[str, dict[str, dict[str, Any]]] = field(
+        default_factory=dict
+    )
 
-    def cumplir_objetivo(self, clase: int, objetivo: int) -> None:
-        """Marca un objetivo del guion v2 como cumplido (idempotente)."""
+    def cumplir_objetivo(
+        self,
+        clase: int,
+        objetivo: int,
+        aciertos: int = 0,
+        total: int = 0,
+        repaso: bool = False,
+    ) -> None:
+        """Marca un objetivo del guion v2 como cumplido (idempotente).
+
+        Guarda además el resultado de su mini-quiz para el panel (HU-25).
+        """
         cumplidos = self.objetivos_cumplidos.setdefault(str(clase), [])
         if objetivo not in cumplidos:
             cumplidos.append(objetivo)
+        if total:
+            self.resultados_intermedios.setdefault(str(clase), {})[str(objetivo)] = {
+                "aciertos": aciertos,
+                "total": total,
+                "repaso": repaso,
+            }
 
     def anotar_fallado_intermedio(self, clase: int, concepto: str) -> None:
         """Anota un concepto fallado en un mini-quiz (para la evaluación)."""
@@ -204,6 +225,7 @@ def guardar_progreso(progreso: Progreso, ruta: Path) -> None:
         "cola_repaso": progreso.cola_repaso,
         "objetivos_cumplidos": progreso.objetivos_cumplidos,
         "fallados_intermedios": progreso.fallados_intermedios,
+        "resultados_intermedios": progreso.resultados_intermedios,
         "vistas": {str(unidad): fecha for unidad, fecha in progreso.vistas.items()},
         "resultados": [
             {
@@ -256,6 +278,17 @@ def _parsear(datos: Any) -> Progreso:
         fallados_intermedios={
             str(clase): [str(c) for c in conceptos]
             for clase, conceptos in datos.get("fallados_intermedios", {}).items()
+        },
+        resultados_intermedios={
+            str(clase): {
+                str(objetivo): {
+                    "aciertos": int(r["aciertos"]),
+                    "total": int(r["total"]),
+                    "repaso": bool(r["repaso"]),
+                }
+                for objetivo, r in resultados.items()
+            }
+            for clase, resultados in datos.get("resultados_intermedios", {}).items()
         },
     )
 

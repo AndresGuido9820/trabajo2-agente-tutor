@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  Badge, Box, Button, Card, Group, Paper, Radio, Stack, Text, Textarea, Title,
+  ActionIcon, Badge, Box, Button, Card, Group, Paper, Progress, Radio, Stack,
+  Text, Textarea, Title, Tooltip,
 } from '@mantine/core'
 import { api, apiStream, guardarBorrador, leerBorrador } from './api.js'
 import { avisar, avisarError } from './App.jsx'
@@ -24,7 +25,13 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
   const [modo, setModo] = useState('estudio')        // estudio | conversatorio
   const [avance, setAvance] = useState(null)         // {paso, total, objetivo?, objetivos_total?}
   const [finPendiente, setFinPendiente] = useState(false)  // fin-clase espera al mini-quiz (HU-24)
+  const [panel, setPanel] = useState(null)           // {objetivos, progreso_pct, evaluacion_lista} (HU-25)
+  const [panelAbierto, setPanelAbierto] = useState(() => window.innerWidth >= 900)
   const inicio = useRef(false)
+
+  const cargarPanel = async () => {
+    try { setPanel(await api(`/api/clase/${indice}/panel`)) } catch { /* sin panel */ }
+  }
 
   const agregar = (m) => setMensajes((prev) => [...prev, m])
 
@@ -50,6 +57,7 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
           agregar({ rol: 'tutor', texto: r.texto })
         }
       } catch (e) { setEspera(null); avisarError(e) }
+      cargarPanel()
       if (destacar) {
         // Llegamos desde el buscador (HU-37): scroll y resaltado 2 s.
         setTimeout(() => {
@@ -95,6 +103,7 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
           await refrescar()
           agregar({ rol: 'fin-clase' })
         }
+        cargarPanel()
       }
       guardarBorrador(`u${indice}`, '')  // envío exitoso: borrador fuera
     } catch (e) {
@@ -207,6 +216,7 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
         setFinPendiente(false)
         agregar({ rol: 'fin-clase' })
       }
+      cargarPanel()  // el panel marca el objetivo en vivo (HU-25)
       return true
     } catch (e) { avisarError(e); return false }
   }
@@ -223,8 +233,11 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
 
   const coronada = unidad.completada || unidad.estado === 'aprobada'
 
+  const hayPanel = panel && panel.objetivos.length > 0
+
   return (
-    <Box style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+    <Box style={{ display: 'flex', flexDirection: 'row', height: '100vh' }}>
+    <Box style={{ display: 'flex', flexDirection: 'column', height: '100vh', flex: 1, minWidth: 0 }}>
       <Group px="lg" py="sm" style={{ borderBottom: '1px solid var(--mantine-color-default-border)' }}>
         <Title order={5}>Clase {indice + 1}: {unidad.titulo}</Title>
         <Text size="xs" c="dimmed" truncate style={{ flex: 1 }}>
@@ -234,6 +247,12 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
           <Badge variant="light" color="teal">objetivo {avance.objetivo}/{avance.objetivos_total}</Badge>
         )}
         {avance && <Badge variant="light">paso {avance.paso}/{avance.total}</Badge>}
+        {hayPanel && (
+          <Tooltip label={panelAbierto ? 'Ocultar panel' : 'Ver objetivos de la clase'}>
+            <ActionIcon variant="subtle" color="gray" aria-label="Mostrar u ocultar el panel de objetivos"
+              onClick={() => setPanelAbierto(!panelAbierto)}>≡</ActionIcon>
+          </Tooltip>
+        )}
       </Group>
 
       <ZonaChat dep={mensajes.length + (espera !== null ? 1 : 0)}>
@@ -313,6 +332,63 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
           </Group>
         </Box>
       </Box>
+    </Box>
+    {hayPanel && panelAbierto && (
+      <PanelClase panel={panel} onEvaluar={evaluar} onDemo={demo}
+        onRepasar={(texto) => enviar(`Quiero repasar este objetivo: ${texto}`)} />
+    )}
+    </Box>
+  )
+}
+
+/** Panel lateral de la clase: objetivos en vivo + progreso + CTAs (HU-25). */
+function PanelClase({ panel, onEvaluar, onDemo, onRepasar }) {
+  const iconos = { cumplido: '●', en_curso: '◐', pendiente: '○' }
+  return (
+    <Box w={330} p="md" style={{
+      borderLeft: '1px solid var(--mantine-color-default-border)',
+      height: '100vh', overflowY: 'auto', flexShrink: 0,
+    }}>
+      <Text size="xs" fw={700} c="dimmed" tt="uppercase" mb="xs">Objetivos de la clase</Text>
+      <Stack gap={8} mb="lg">
+        {panel.objetivos.map((o, k) => (
+          <Group key={k} gap={8} wrap="nowrap" align="flex-start">
+            <Text c={o.estado === 'cumplido' ? 'teal' : o.estado === 'en_curso' ? 'indigo' : 'dimmed'}>
+              {iconos[o.estado]}
+            </Text>
+            <Box style={{ minWidth: 0, flex: 1 }}>
+              <Text size="sm" td={o.estado === 'cumplido' ? 'line-through' : undefined}
+                c={o.estado === 'cumplido' ? 'dimmed' : undefined}>
+                {o.texto}
+              </Text>
+              {o.quiz && (
+                <Group gap={6}>
+                  <Badge size="xs" variant="light" color={o.repaso ? 'orange' : 'teal'}>
+                    {o.repaso ? '↻' : '✓'} {o.quiz}
+                  </Badge>
+                  <Button size="compact-xs" variant="subtle"
+                    onClick={() => onRepasar(o.texto)}>repasar</Button>
+                </Group>
+              )}
+            </Box>
+          </Group>
+        ))}
+      </Stack>
+
+      <Text size="xs" fw={700} c="dimmed" tt="uppercase" mb="xs">Progreso</Text>
+      <Progress value={panel.progreso_pct} size="lg" radius="xl" color="teal" mb={4}
+        aria-label={`Progreso de la clase: ${panel.progreso_pct} por ciento`} />
+      <Text size="xs" c="dimmed" mb="lg">{panel.progreso_pct} % de la clase</Text>
+
+      <Stack gap="xs">
+        <Tooltip disabled={panel.evaluacion_lista}
+          label={`Cumple los ${panel.objetivos.length} objetivos para presentar`}>
+          <Button fullWidth disabled={!panel.evaluacion_lista} onClick={onEvaluar}>
+            🎯 Evaluación final
+          </Button>
+        </Tooltip>
+        <Button fullWidth variant="default" onClick={onDemo}>✨ Demo interactiva</Button>
+      </Stack>
     </Box>
   )
 }
