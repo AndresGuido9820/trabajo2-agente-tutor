@@ -1,69 +1,100 @@
-# Tutor de Programación con LLMs — Trabajo 02
+# Profe Bit — Tutor de Programación con LLMs (Trabajo 02)
 
-Agente interactivo (CLI) que enseña fundamentos de programación adaptándose al
-perfil del estudiante: evalúa sus conocimientos previos y objetivos, genera un
-curso personalizado con un LLM (OpenAI GPT), crea evaluaciones y lleva el
-progreso.
+[![CI](https://github.com/AndresGuido9820/trabajo2-agente-tutor/actions/workflows/ci.yml/badge.svg)](https://github.com/AndresGuido9820/trabajo2-agente-tutor/actions/workflows/ci.yml)
 
-Curso: *Normalización: aplicaciones de LLMs y Agentes para la enseñanza de la
-programación básica* — Prof. Juan David Ospina Arango.
+Agente tutor interactivo que enseña fundamentos de programación. El
+estudiante **pide su curso conversando** ("hazme un curso de Python para
+analizar mis ventas; sé Excel"): el asesor pregunta lo que falta, propone un
+temario y lo crea al confirmar. Cada **clase es una conversación** con el
+tutor (método socrático), con evaluación que desbloquea la siguiente,
+conversatorio de dudas al reprobar, código ejecutable en el navegador
+(Pyodide), demos interactivas generadas por el LLM y puntos/racha.
 
-## Estructura del repositorio
+Curso: *Normalización: aplicaciones de LLMs y Agentes para la enseñanza de
+la programación básica* — Prof. Juan David Ospina Arango.
 
-| Ruta | Contenido |
-|---|---|
-| `SPEC.md` | Especificación: requisitos, criterios de evaluación del entregable y pruebas de aceptación |
-| `RULES.md` | Reglas de trabajo, calidad de código, linters y convenciones |
-| `docs/INVESTIGACION.md` | Investigación previa (antes de la primera línea de código) |
-| `docs/HALLAZGOS.md` | Bitácora de hallazgos durante el desarrollo |
-| `docs/TESTING.md` | Estrategia de pruebas: qué se testea, cómo y cuándo |
-| `plan/HU-*.md` | Historias de usuario, cada una con sus tareas y criterios |
-| `src/tutor/` | Código fuente del agente |
-| `tests/` | Pruebas automatizadas (pytest) |
+## Cómo correrlo
 
-## Configuración
-
-Requisitos: Python ≥ 3.12 y [uv](https://docs.astral.sh/uv/).
+Requisitos: Python ≥ 3.12 y [uv](https://docs.astral.sh/uv/). (No necesitas
+Node: el frontend ya viene compilado.)
 
 ```bash
-# 1. Clonar e instalar dependencias
-git clone <repo>
+git clone https://github.com/AndresGuido9820/trabajo2-agente-tutor
 cd trabajo2-agente-tutor
 uv sync
 
-# 2. Configurar la API key (nunca se versiona)
-cp .env.example .env
-# editar .env y poner OPENAI_API_KEY=sk-...
+cp .env.example .env          # y pon tu OPENAI_API_KEY=sk-...
 
-# 3a. Ejecutar el tutor en la terminal
-uv run tutor
-
-# 3b. …o en el navegador (interfaz web simple)
-uv run tutor-web        # abre http://127.0.0.1:8017 (UI React ya compilada)
+uv run tutor-web              # abre http://127.0.0.1:8017 (UI web, React)
+uv run tutor                  # alternativa: CLI en la terminal
 ```
 
-## Comandos de desarrollo
+## Qué hace (recorrido)
+
+1. **Mis cursos**: menú con todos tus cursos y su progreso; "＋ Nuevo curso".
+2. **Diseño conversacional**: describes qué quieres aprender; el asesor
+   resume, pregunta tu nivel/experiencia, propone un temario y crea el curso
+   cuando confirmas. El diseño queda **estructurado en la base de datos**
+   (clase → título, objetivo, subtemas, prompt/guion) y como documento
+   `curso.md` visible, descargable y **editable** (editor estructurado).
+3. **Clases como conversaciones**: el tutor da la lección paso a paso
+   (PRIMM: predices antes de que te explique); decide con criterio si tu
+   mensaje avanza el paso o es una duda que responde sin avanzar. Los
+   bloques de código traen **▶ Pruébalo** (Python en tu navegador vía
+   Pyodide) y **🔍 Paso a paso** (Python Tutor). El botón **✨** genera una
+   demo interactiva del tema (mini-artefacto HTML aislado en sandbox).
+4. **Evaluación y progresión**: quiz de comprensión dentro del chat; con
+   70+ apruebas (+30 ⭐) y desbloqueas la siguiente clase; si no, el tutor
+   abre un **conversatorio socrático** sobre tus dudas y reintentas con
+   **preguntas nuevas**. Puntos y racha diaria persistentes.
+
+## Arquitectura
+
+```
+frontend/  (React + Mantine, Vite)  →  build en src/tutor/static/dist
+src/tutor/
+  web.py       API FastAPI (multi-curso; sirve el front)
+  agente.py    Orquestador: lecciones, quizzes, candados, chats, artefactos
+  curso.py     Temario/guiones/guías + persistencia del diseño
+  evaluacion.py  Quiz: generación LLM + calificación local determinista
+  prompts.py   TODOS los prompts, versionados (PRIMM, misconceptions, socrático)
+  llm.py       Cliente OpenAI: reintentos con backoff, JSON validado
+  db.py        SQLite por curso: curso, clases (con su prompt), perfil,
+               progreso, chat; migraciones automáticas
+  ui.py, __main__.py   CLI equivalente
+```
+
+- **Datos**: `data/cursos/<id>/tutor.db` (una BD por curso) + `curso.md`.
+- **Seguridad**: la API key solo vive en `.env` (gitignoreado); las
+  respuestas correctas de quizzes/checkpoints nunca viajan al navegador;
+  las demos corren en `iframe sandbox` sin red.
+- **Decisiones y fuentes**: `docs/INVESTIGACION*.md` (pedagogía, OSS, UX) y
+  `docs/HALLAZGOS.md` (bitácora). Plan por HU en `plan/`.
+
+## Desarrollo
 
 ```bash
-uv run pytest            # pruebas
-uv run ruff check .      # linter
-uv run ruff format .     # formateo
-uv run mypy src          # tipos
+uv run pytest              # 174 pruebas (LLM siempre con dobles)
+uv run ruff format --check . && uv run ruff check .
+uv run mypy src            # estricto
+
+# Frontend (solo si vas a tocar la UI)
+cd frontend && npm install && npm run dev    # proxy a :8017
+npm run build                                 # regenera static/dist
+
+# Manuales (cuestan tokens):
+uv run python scripts/humo_llm.py             # humo del cliente LLM
+uv run python scripts/exportar_curso.py datos-excel   # cursos de muestra
+uv run python scripts/capturas_playwright.py  # bot que captura la app
 ```
 
-## Estado del proyecto
+CI en GitHub Actions: lint + tipos + pruebas + build del frontend en cada
+push (`.github/workflows/ci.yml`).
 
-El avance se rastrea por HU en `plan/` (checkboxes por tarea). Los hallazgos y
-decisiones se registran en `docs/HALLAZGOS.md`.
+## Entregables del curso
 
-## Frontend (React + Mantine)
-
-El build compilado está versionado en `src/tutor/static/dist` (no necesitas
-npm para usar la app). Para desarrollarlo:
-
-```bash
-cd frontend
-npm install
-npm run dev      # dev server con proxy a :8017
-npm run build    # regenera src/tutor/static/dist
-```
+- `entregables/REPORTE.md` — reporte técnico (con capturas del recorrido).
+- `entregables/GUION-VIDEO.md` — guion del video de demostración.
+- `entregables/cursos-muestra/` — 2 cursos generados (perfiles y lenguajes
+  distintos).
+- `SPEC.md` — requisitos, criterios de la rúbrica y pruebas de aceptación.
