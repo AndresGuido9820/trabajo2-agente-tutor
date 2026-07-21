@@ -6,8 +6,8 @@
 <title>Profe Bit — Tutor de programación</title>
 <style>
   :root{
-    --bg:#0b0e14; --bg-grad:radial-gradient(1100px 480px at 50% -10%, #131b2c 0%, #0b0e14 60%);
-    --card:#12161f; --card2:#181d29; --linea:rgba(255,255,255,.07); --linea-fuerte:rgba(255,255,255,.15);
+    --bg:#0b0e14; --lateral:#0e1219; --card:#141926; --card2:#1a2130;
+    --linea:rgba(255,255,255,.07); --linea-fuerte:rgba(255,255,255,.15);
     --tx:#e8ecf3; --tx2:#98a2b3; --tx3:#667085;
     --acc:#7aa2ff; --acc-fondo:#16233f; --ok:#4ade80; --ok-fondo:#122619;
     --err:#f87171; --err-fondo:#2a1516; --warn:#fbbf24; --fuego:#fb923c;
@@ -18,64 +18,68 @@
   }
   *{box-sizing:border-box;margin:0}
   @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
-  body{background:var(--bg);background-image:var(--bg-grad);background-attachment:fixed;
-       color:var(--tx);height:100vh;font-size:15px;line-height:1.6;overflow:hidden;
-       -webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
+  body{background:var(--bg);color:var(--tx);height:100vh;font-size:15px;line-height:1.6;
+       overflow:hidden;-webkit-font-smoothing:antialiased;display:flex}
   h1,h2,h3{letter-spacing:-.015em;line-height:1.3}
   :focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:6px}
   button{background:var(--card2);color:var(--tx);border:1px solid var(--linea-fuerte);
          border-radius:var(--r-sm);padding:7px 13px;cursor:pointer;font-size:13px;
          font-weight:500;font-family:inherit;transition:all var(--t1)}
-  button:hover:not(:disabled){border-color:var(--acc);transform:translateY(-1px)}
+  button:hover:not(:disabled){border-color:var(--acc)}
   button.primario{background:linear-gradient(180deg,#82a8ff,#5c8aff);border-color:transparent;
       color:#0a1020;font-weight:600;box-shadow:0 2px 8px -2px rgba(92,138,255,.5)}
   button.sutil{background:transparent;border-color:transparent;color:var(--acc)}
-  button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+  button:disabled{opacity:.45;cursor:not-allowed}
 
-  header{padding:12px 22px;display:flex;gap:14px;align-items:center;
-         border-bottom:1px solid var(--linea);background:rgba(11,14,20,.85);
-         backdrop-filter:blur(8px);flex:none}
-  .marca{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;cursor:pointer}
-  .marca .logo{width:26px;height:26px;border-radius:8px;
+  /* ===== barra lateral (estilo ChatGPT/Claude) ===== */
+  #lateral{width:280px;min-width:280px;background:var(--lateral);border-right:1px solid var(--linea);
+      display:flex;flex-direction:column;height:100vh}
+  #lateral .marca{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;
+      padding:16px 16px 10px}
+  #lateral .marca .logo{width:26px;height:26px;border-radius:8px;
       background:linear-gradient(135deg,#4ade80,#5c8aff);display:grid;place-items:center;
       color:#0a1020;font-size:13px;font-weight:800}
-  #progreso-curso{flex:1;min-width:140px;max-width:300px;display:none}
-  #progreso-curso .texto{font-size:11px;color:var(--tx2);margin-bottom:4px}
-  .chip-stat{background:var(--card);border:1px solid var(--linea);border-radius:var(--r-pill);
-             padding:4px 12px;font-weight:600;font-size:12.5px;cursor:help;display:none}
-  #racha{color:var(--fuego)} #puntos{color:var(--warn)}
+  #lateral .progreso{padding:0 16px 12px;border-bottom:1px solid var(--linea)}
+  #lateral .progreso .texto{font-size:11px;color:var(--tx2);margin-bottom:5px}
   .barra{height:5px;background:var(--card2);border-radius:var(--r-pill);overflow:hidden}
   .barra > div{height:100%;background:linear-gradient(90deg,#4ade80,#5c8aff);
       transition:width 400ms cubic-bezier(0,0,0,1)}
+  #convos{flex:1;overflow-y:auto;padding:10px 8px}
+  .seccion-lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;
+      color:var(--tx3);font-weight:700;margin:8px 10px 6px}
+  .convo{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:10px;
+      cursor:pointer;transition:background var(--t1);border:1px solid transparent}
+  .convo:hover:not(.bloq){background:var(--card)}
+  .convo.activa{background:var(--card);border-color:var(--linea-fuerte)}
+  .convo.bloq{opacity:.4;cursor:not-allowed}
+  .convo .icono{flex:none;width:24px;height:24px;border-radius:50%;
+      border:1.5px solid var(--linea-fuerte);display:grid;place-items:center;
+      font-size:11px;font-weight:700;color:var(--tx2)}
+  .convo .icono.hecha{background:var(--ok);border-color:var(--ok);color:#0a1020}
+  .convo .icono.actual{border-color:var(--acc);color:var(--acc)}
+  .convo .datos{min-width:0;flex:1}
+  .convo .titulo{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;
+      text-overflow:ellipsis}
+  .convo.coronada .titulo{text-decoration:line-through;color:var(--tx3)}
+  .convo .sub{font-size:11px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .convo .punto{flex:none;width:7px;height:7px;border-radius:50%;background:var(--acc)}
+  #lateral .pie{border-top:1px solid var(--linea);padding:12px 16px;display:flex;
+      gap:8px;align-items:center;justify-content:space-between}
+  .chip-stat{background:var(--card);border:1px solid var(--linea);border-radius:var(--r-pill);
+      padding:3px 10px;font-weight:600;font-size:12px;cursor:help}
+  #racha{color:var(--fuego)} #puntos{color:var(--warn)}
 
-  main{flex:1;display:flex;flex-direction:column;min-height:0}
-  #chat{flex:1;overflow-y:auto;padding:26px 24px;scroll-behavior:smooth}
-  #chat .interior{max-width:760px;margin:0 auto}
+  /* ===== zona principal ===== */
+  #principal{flex:1;display:flex;flex-direction:column;min-width:0;height:100vh;
+      background:radial-gradient(1100px 480px at 50% -10%, #131b2c 0%, #0b0e14 60%)}
+  #cabecera{padding:13px 24px;border-bottom:1px solid var(--linea);
+      background:rgba(11,14,20,.85);backdrop-filter:blur(8px);min-height:52px;
+      display:flex;align-items:center;gap:12px}
+  #cabecera b{font-size:14.5px}
+  #cabecera .sub{font-size:12px;color:var(--tx3)}
+  #chat{flex:1;overflow-y:auto;padding:24px;scroll-behavior:smooth}
+  #chat .interior{max-width:740px;margin:0 auto}
 
-  /* ---- menú de clases ---- */
-  .menu-cabecera{margin-bottom:18px}
-  .menu-cabecera h2{font-size:24px;margin-bottom:4px}
-  .clase{background:var(--card);border:1px solid var(--linea);border-radius:var(--r);
-      padding:16px 18px;margin-bottom:10px;box-shadow:var(--sombra);
-      display:flex;gap:14px;align-items:flex-start;transition:all var(--t1)}
-  .clase:hover:not(.bloq){border-color:var(--linea-fuerte)}
-  .clase.siguiente{border-color:rgba(74,222,128,.4)}
-  .clase.bloq{opacity:.45}
-  .num{flex:none;width:30px;height:30px;border-radius:50%;border:2px solid var(--linea-fuerte);
-       display:grid;place-items:center;font-size:13px;font-weight:700;color:var(--tx2);margin-top:2px}
-  .num.hecha{background:var(--ok);border-color:var(--ok);color:#0a1020}
-  .num.actual{border-color:var(--acc);color:var(--acc)}
-  .clase .cuerpo{flex:1;min-width:0}
-  .clase b{font-size:15px;font-weight:600;display:block;line-height:1.35}
-  .clase ul{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:4px 14px}
-  .clase ul li{font-size:12px;color:var(--tx2);position:relative;padding-left:12px}
-  .clase ul li::before{content:"·";position:absolute;left:2px;color:var(--tx3)}
-  .clase.coronada b, .clase.coronada ul li{text-decoration:line-through;color:var(--tx3)}
-  .clase .meta{font-size:11.5px;color:var(--tx3);margin-top:6px}
-  .clase .cta{flex:none;display:flex;flex-direction:column;gap:6px;align-items:stretch}
-  .clase .cta button{font-size:12px;white-space:nowrap}
-
-  /* ---- chat de clase ---- */
   .msg{max-width:88%;padding:13px 17px;border-radius:16px;margin-bottom:12px;
        animation:aparecer 240ms cubic-bezier(0,0,0,1)}
   .msg.tutor{background:var(--card);border:1px solid var(--linea);margin-right:auto;
@@ -113,12 +117,11 @@
   .runner .salida.err{color:var(--err)}
 
   #composer{flex:none;border-top:1px solid var(--linea);padding:12px 24px 16px;
-      background:rgba(11,14,20,.85);backdrop-filter:blur(8px);display:none}
-  #composer .interior{max-width:760px;margin:0 auto}
+      background:rgba(11,14,20,.85);backdrop-filter:blur(8px)}
+  #composer .interior{max-width:740px;margin:0 auto}
   #contexto{font-size:11.5px;color:var(--tx3);margin-bottom:8px;display:flex;
       gap:10px;align-items:center;flex-wrap:wrap}
   #contexto .avance{color:var(--acc)}
-  #contexto a{color:var(--acc);text-decoration:none}
   .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
   .chips button{font-size:11.5px;padding:4px 11px;border-radius:var(--r-pill);color:var(--tx2)}
   .caja-input{display:flex;gap:8px;background:var(--card);border:1px solid var(--linea-fuerte);
@@ -129,7 +132,7 @@
       max-height:120px;min-height:38px}
   .caja-input textarea:focus{outline:none}
 
-  .hero-chat{text-align:center;padding:48px 20px 24px}
+  .hero-chat{text-align:center;padding:42px 20px 20px}
   .hero-chat .logo-xl{width:52px;height:52px;border-radius:15px;margin:0 auto 16px;
       background:linear-gradient(135deg,#4ade80,#5c8aff);display:grid;place-items:center;
       font-size:24px;font-weight:800;color:#0a1020;box-shadow:0 8px 32px -8px rgba(92,138,255,.5)}
@@ -163,19 +166,27 @@
   .spin{display:inline-block;width:13px;height:13px;border:2px solid var(--tx3);
       border-top-color:var(--acc);border-radius:50%;animation:g .8s linear infinite;vertical-align:-2px}
   @keyframes g{to{transform:rotate(360deg)}}
+  @media(max-width:760px){#lateral{display:none}}
 </style>
 </head>
 <body>
-<header>
-  <span class="marca" id="ir-menu" title="Ir al menú de clases"><span class="logo">Pb</span> Profe Bit</span>
-  <div id="progreso-curso">
+<aside id="lateral">
+  <div class="marca"><span class="logo">Pb</span> Profe Bit</div>
+  <div class="progreso" id="progreso-curso" style="display:none">
     <div class="texto" id="progreso-texto"></div>
     <div class="barra"><div id="progreso-barra" style="width:0%"></div></div>
   </div>
-  <span class="chip-stat" id="racha" title="Días seguidos estudiando."></span>
-  <span class="chip-stat" id="puntos" title="Puntos por avanzar y aprobar clases."></span>
-</header>
-<main>
+  <div id="convos"></div>
+  <div class="pie">
+    <button class="sutil" id="b-plan" style="padding:3px 6px;font-size:12px">📄 Plan .md</button>
+    <div style="display:flex;gap:6px">
+      <span class="chip-stat" id="racha" title="Días seguidos estudiando." style="display:none"></span>
+      <span class="chip-stat" id="puntos" title="Puntos por avanzar y aprobar clases." style="display:none"></span>
+    </div>
+  </div>
+</aside>
+<main id="principal">
+  <div id="cabecera"><b id="cab-titulo">Profe Bit</b><span class="sub" id="cab-sub"></span></div>
   <div id="chat"><div class="interior" id="mensajes"></div></div>
   <div id="composer"><div class="interior">
     <div id="contexto"></div>
@@ -200,10 +211,10 @@
 <script>
 "use strict";
 const $ = (s) => document.querySelector(s);
-let vista = "menu";              // menu | creacion | clase
-let modo = "estudio";            // estudio | quiz | conversatorio  (dentro de clase)
-let claseActual = null;
+let canalActivo = null;          // "creacion" | número de clase
+let modo = "estudio";            // estudio | quiz | conversatorio
 let estadoCurso = null;
+let conversaciones = {};         // canal -> nº de mensajes
 let lenguajeCurso = "";
 let quizActual = null;
 let planMd = "";
@@ -269,8 +280,6 @@ function reemplazarEspera(espera, texto){
 }
 function ponerContexto(texto, chips){
   $("#contexto").innerHTML = texto || "";
-  const enlace = $("#ctx-menu");
-  if(enlace) enlace.onclick = (e) => { e.preventDefault(); verMenu(); };
   const zona = $("#sugerencias");
   zona.innerHTML = "";
   (chips || []).forEach(([etiqueta, accion]) => {
@@ -281,124 +290,80 @@ function ponerContexto(texto, chips){
   });
 }
 
-/* ===== estado ===== */
-async function cargarEstado(){
-  let e;
-  try{ e = await api("/api/estado"); }
-  catch(err){ mostrarError(err.message); return null; }
-  estadoCurso = e;
-  if(!e.perfil) return e;
-  lenguajeCurso = e.lenguaje;
-  $("#puntos").style.display = "inline-block"; $("#puntos").textContent = `⭐ ${e.puntos}`;
-  $("#racha").style.display = "inline-block"; $("#racha").textContent = `🔥 ${e.racha}`;
-  const aprob = e.unidades.filter(u => u.estado === "aprobada").length;
-  $("#progreso-curso").style.display = "block";
-  $("#progreso-texto").textContent = `${aprob} de ${e.unidades.length} clases aprobadas · ${e.lenguaje}`;
-  $("#progreso-barra").style.width = `${Math.round(100 * aprob / e.unidades.length)}%`;
+/* ===== estado + barra lateral ===== */
+async function refrescar(){
+  try{
+    estadoCurso = await api("/api/estado");
+    conversaciones = (await api("/api/conversaciones")).canales || {};
+  }catch(err){ mostrarError(err.message); return null; }
+  const e = estadoCurso;
+  if(e.perfil){
+    lenguajeCurso = e.lenguaje;
+    $("#puntos").style.display = "inline-block"; $("#puntos").textContent = `⭐ ${e.puntos}`;
+    $("#racha").style.display = "inline-block"; $("#racha").textContent = `🔥 ${e.racha}`;
+    const aprob = e.unidades.filter(u => u.estado === "aprobada").length;
+    $("#progreso-curso").style.display = "block";
+    $("#progreso-texto").textContent = `${aprob}/${e.unidades.length} clases · ${e.lenguaje}`;
+    $("#progreso-barra").style.width = `${Math.round(100 * aprob / e.unidades.length)}%`;
+  }
+  pintarLateral();
   return e;
 }
 
-/* ===== vista: menú de clases ===== */
-async function verMenu(){
-  vista = "menu";
-  claseActual = null;
-  $("#composer").style.display = "none";
-  const e = estadoCurso && estadoCurso.perfil ? estadoCurso : await cargarEstado();
-  if(!e || !e.perfil){ verCreacion(); return; }
-  const cont = $("#mensajes");
-  cont.innerHTML = `<div class="menu-cabecera">
-    <h2>Tus clases</h2>
-    <p class="dim" style="font-size:13px">Cada clase es una conversación con tu tutor.
-    Aprueba la evaluación (70+) para desbloquear la siguiente.
-    <a href="#" id="ver-plan" style="color:var(--acc)">📄 Ver el plan del curso (.md)</a></p></div>`;
-  $("#ver-plan").onclick = (ev) => { ev.preventDefault(); abrirPlan(); };
+function pintarLateral(){
+  const cont = $("#convos");
+  cont.innerHTML = "";
+  const e = estadoCurso;
+
+  // Conversación de diseño del curso (arriba, como un chat más)
+  const seccion1 = document.createElement("div");
+  seccion1.className = "seccion-lbl";
+  seccion1.textContent = "Curso";
+  cont.appendChild(seccion1);
+  cont.appendChild(itemConvo({
+    id: "creacion", icono: "🎨", titulo: "Diseño del curso",
+    sub: e && e.perfil ? "Curso creado" : "Cuéntame qué quieres aprender",
+    conChat: !!conversaciones["creacion"], bloqueada: false,
+  }));
+
+  if(!e || !e.perfil) return;
+  const seccion2 = document.createElement("div");
+  seccion2.className = "seccion-lbl";
+  seccion2.textContent = "Clases";
+  cont.appendChild(seccion2);
   const siguiente = e.unidades.find(u => u.estado !== "aprobada" && u.estado !== "bloqueada");
   e.unidades.forEach(u => {
     const coronada = u.completada || u.estado === "aprobada";
-    const bloqueada = u.estado === "bloqueada";
-    const esSiguiente = siguiente && u.indice === siguiente.indice;
-    const div = document.createElement("div");
-    div.className = "clase" + (coronada ? " coronada" : "") + (bloqueada ? " bloq" : "")
-      + (esSiguiente ? " siguiente" : "");
-    const numCl = coronada ? "hecha" : (esSiguiente ? "actual" : "");
-    const meta = u.estado === "aprobada" ? `✓ Aprobada con ${u.mejor_nota}/100`
-      : bloqueada ? "🔒 Se desbloquea aprobando la clase anterior"
-      : u.completada ? "Clase completada — te falta la evaluación"
-      : u.estado === "evaluada" ? `Último intento: ${u.mejor_nota}/100 — reintenta cuando quieras`
-      : u.estado === "vista" ? "Conversación en curso" : "";
-    div.innerHTML = `<span class="num ${numCl}">${coronada ? "✓" : u.indice + 1}</span>
-      <div class="cuerpo"><b>${u.titulo}</b>
-        <ul>${(u.conceptos || []).map(c => `<li>${c}</li>`).join("")}</ul>
-        ${meta ? `<div class="meta">${meta}</div>` : ""}</div>
-      <div class="cta"></div>`;
-    const cta = div.querySelector(".cta");
-    if(!bloqueada){
-      const b = document.createElement("button");
-      b.textContent = u.estado === "aprobada" ? "↩ Repasar"
-        : (u.estado === "vista" || u.completada) ? "Continuar →" : "Entrar a la clase →";
-      if(esSiguiente) b.className = "primario";
-      b.onclick = () => entrarClase(u.indice);
-      cta.appendChild(b);
-      if(u.completada && u.estado !== "aprobada"){
-        const be = document.createElement("button");
-        be.textContent = "🎯 Evaluarme";
-        be.onclick = () => { entrarClase(u.indice, true); };
-        cta.appendChild(be);
-      }
-    }
-    cont.appendChild(div);
+    const sub = u.estado === "aprobada" ? `✓ Aprobada · ${u.mejor_nota}/100`
+      : u.estado === "bloqueada" ? "🔒 Aprueba la anterior"
+      : u.completada ? "Completada — falta evaluación"
+      : conversaciones[`u${u.indice}`] ? "Conversación en curso"
+      : "Sin empezar";
+    cont.appendChild(itemConvo({
+      id: u.indice, numero: u.indice + 1, titulo: u.titulo, sub,
+      coronada, bloqueada: u.estado === "bloqueada",
+      esSiguiente: siguiente && u.indice === siguiente.indice,
+      conChat: !!conversaciones[`u${u.indice}`],
+    }));
   });
-  $("#chat").scrollTop = 0;
-}
-$("#ir-menu").onclick = () => { if(vista !== "creacion") verMenu(); };
-
-async function abrirPlan(){
-  if(!planMd){
-    try{ planMd = (await api("/api/plan")).md; }
-    catch(e){ mostrarError(e.message); return; }
-  }
-  $("#m-cuerpo").innerHTML = md(planMd);
-  $("#modal").style.display = "grid";
-  $("#m-descargar").onclick = () => {
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([planMd], {type:"text/markdown"}));
-    a.download = "mi-curso.md"; a.click();
-  };
-}
-$("#m-cerrar").onclick = () => $("#modal").style.display = "none";
-
-/* ===== vista: creación (su propia conversación) ===== */
-async function verCreacion(){
-  vista = "creacion";
-  $("#composer").style.display = "block";
-  $("#mensajes").innerHTML = `<div class="hero-chat">
-    <div class="logo-xl">Pb</div>
-    <h2>¿Qué quieres aprender?</h2>
-    <p class="sub">Cuéntamelo con tus palabras. Te haré un par de preguntas, te propondré
-    un plan y cuando digas “ya, dale” creo tu curso.</p></div>`;
-  await pintarHistorial("creacion");
-  ponerContexto("Diseñando tu curso", [
-    ["Quiero analizar datos con Python; sé Excel", () => enviar("Hazme un curso de Python para análisis de datos; manejo bien Excel")],
-    ["Nunca he programado, quiero hacer webs", () => enviar("Quiero aprender a hacer páginas web desde cero, nunca he programado")],
-  ]);
-  $("#entrada").focus();
 }
 
-async function turnoCreacion(mensaje){
-  const espera = burbujaEspera();
-  try{
-    const r = await api("/api/creacion", {mensaje});
-    reemplazarEspera(espera, r.mensaje);
-    if(!r.listo) return;
-    const gen = burbuja("tutor dim", '<span class="spin"></span> Diseñando tu curso y guardando el plan (~1 min)…');
-    await cargarEstado();
-    gen.remove();
-    toast("Curso creado · plan en curso.md 📄");
-    verMenu();
-  }catch(err){ espera.remove(); mostrarError(err.message); }
+function itemConvo(o){
+  const d = document.createElement("div");
+  d.className = "convo" + (o.bloqueada ? " bloq" : "") + (o.coronada ? " coronada" : "")
+    + (canalActivo === o.id ? " activa" : "");
+  const iconoCl = o.coronada ? "hecha" : (o.esSiguiente ? "actual" : "");
+  const icono = o.icono || (o.coronada ? "✓" : o.numero);
+  d.innerHTML = `<span class="icono ${iconoCl}">${icono}</span>
+    <div class="datos"><div class="titulo">${o.numero ? `Clase ${o.numero}: ` : ""}${o.titulo}</div>
+    <div class="sub">${o.sub}</div></div>
+    ${o.conChat && canalActivo !== o.id ? '<span class="punto" title="Tiene conversación"></span>' : ""}`;
+  if(!o.bloqueada) d.onclick = () => abrirConversacion(o.id);
+  else d.onclick = () => toast("🔒 Aprueba la clase anterior para desbloquear esta.");
+  return d;
 }
 
-/* ===== vista: clase (una conversación por clase) ===== */
+/* ===== abrir conversaciones ===== */
 async function pintarHistorial(canal){
   try{
     const h = await api(`/api/historial/${canal}`);
@@ -412,28 +377,49 @@ async function pintarHistorial(canal){
   }catch(e){ return false; }
 }
 
-async function entrarClase(indice, directoAQuiz){
-  vista = "clase";
+async function abrirConversacion(id){
+  canalActivo = id;
   modo = "estudio";
-  claseActual = indice;
-  const u = estadoCurso.unidades[indice];
-  $("#composer").style.display = "block";
+  quizActual = null;
+  pintarLateral();
   $("#mensajes").innerHTML = "";
-  burbuja("sistema", `— Clase ${indice + 1}: ${u.titulo} —`);
-  const hubo = await pintarHistorial(`u${indice}`);
+  if(id === "creacion"){ await abrirCreacion(); return; }
+  const u = estadoCurso.unidades[id];
+  $("#cab-titulo").textContent = `Clase ${id + 1}: ${u.titulo}`;
+  $("#cab-sub").textContent = (u.conceptos || []).join(" · ");
+  const hubo = await pintarHistorial(`u${id}`);
   ponerContextoClase(u);
-  if(directoAQuiz){ iniciarQuiz(indice); return; }
   if(!hubo){
-    // Primera vez en esta clase: el tutor abre la conversación
     const espera = burbujaEspera();
     espera.innerHTML = '<span class="spin"></span> Preparando tu clase (primera vez: ~1 min)…';
     try{
-      const r = await api("/api/estudio", {unidad: indice});
+      const r = await api("/api/estudio", {unidad: id});
       reemplazarEspera(espera, r.texto);
       ponerContextoClase(u, r);
     }catch(e){ espera.remove(); mostrarError(e.message); }
+  }
+  $("#entrada").focus();
+}
+
+async function abrirCreacion(){
+  $("#cab-titulo").textContent = "Diseño del curso";
+  $("#cab-sub").textContent = estadoCurso && estadoCurso.perfil
+    ? "Tu curso ya está creado" : "";
+  const hubo = await pintarHistorial("creacion");
+  if(!hubo){
+    $("#mensajes").innerHTML = `<div class="hero-chat">
+      <div class="logo-xl">Pb</div>
+      <h2>¿Qué quieres aprender?</h2>
+      <p class="sub">Cuéntamelo con tus palabras. Te haré un par de preguntas, te propondré
+      un plan y cuando digas “ya, dale” creo tu curso.</p></div>`;
+  }
+  if(estadoCurso && estadoCurso.perfil){
+    ponerContexto("Tu curso ya está creado — entra a una clase en la barra de la izquierda 👈");
   }else{
-    burbuja("sistema", "— continúas donde ibas: responde para seguir —");
+    ponerContexto("Diseñando tu curso", [
+      ["Quiero analizar datos con Python; sé Excel", () => enviar("Hazme un curso de Python para análisis de datos; manejo bien Excel")],
+      ["Nunca he programado, quiero hacer webs", () => enviar("Quiero aprender a hacer páginas web desde cero, nunca he programado")],
+    ]);
   }
   $("#entrada").focus();
 }
@@ -441,21 +427,36 @@ async function entrarClase(indice, directoAQuiz){
 function ponerContextoClase(u, r){
   const avance = r ? ` · paso ${r.paso}/${r.total}` : "";
   const chips = [];
-  if(u.completada || u.estado === "aprobada")
-    chips.push(["🎯 Presentar la evaluación", () => iniciarQuiz(claseActual)]);
-  if(u.completada || u.estado === "aprobada")
+  if(u.completada || u.estado === "aprobada"){
+    chips.push(["🎯 Presentar la evaluación", () => iniciarQuiz(canalActivo)]);
     chips.push(["↩ Repasar desde el inicio", () => reiniciarClase()]);
+  }
   ponerContexto(
-    `<a href="#" id="ctx-menu">← Menú</a>
-     <span class="avance">Clase ${claseActual + 1}${avance}</span>
+    `<span class="avance">Clase ${canalActivo + 1}${avance}</span>
      <span>Responde para avanzar — pregunta lo que quieras</span>`, chips);
 }
 
+/* ===== creación ===== */
+async function turnoCreacion(mensaje){
+  const espera = burbujaEspera();
+  try{
+    const r = await api("/api/creacion", {mensaje});
+    reemplazarEspera(espera, r.mensaje);
+    if(!r.listo) return;
+    const gen = burbuja("tutor dim", '<span class="spin"></span> Diseñando tu curso y guardando el plan (~1 min)…');
+    await refrescar();
+    gen.remove();
+    toast("Curso creado 🎉 — tus clases están a la izquierda");
+    burbujaTutor("**¡Listo!** Tus clases quedaron en la barra de la izquierda 👈 y el plan en `curso.md` (📄 abajo). Entra a la **Clase 1** cuando quieras.");
+  }catch(err){ espera.remove(); mostrarError(err.message); }
+}
+
+/* ===== estudio ===== */
 async function reiniciarClase(){
   burbuja("yo", "Quiero repasar esta clase desde el inicio");
   const espera = burbujaEspera();
   try{
-    const r = await api("/api/estudio", {unidad: claseActual});
+    const r = await api("/api/estudio", {unidad: canalActivo});
     reemplazarEspera(espera, r.texto);
   }catch(e){ espera.remove(); mostrarError(e.message); }
 }
@@ -463,26 +464,24 @@ async function reiniciarClase(){
 async function turnoEstudio(mensaje){
   const espera = burbujaEspera();
   try{
-    const r = await api("/api/estudio", {mensaje, unidad: claseActual});
+    const r = await api("/api/estudio", {mensaje, unidad: canalActivo});
     reemplazarEspera(espera, r.texto);
-    const u = estadoCurso.unidades[claseActual];
+    const u = estadoCurso.unidades[canalActivo];
     ponerContextoClase(u, r);
     if(r.terminada){
-      await cargarEstado();
+      await refrescar();
       const card = burbuja("tutor ancha celebra",
         `<div class="quien">Profe Bit</div><div class="prosa">
-        <p>🎉 <b>¡Clase ${r.unidad + 1} completada!</b> Quedó tachada en tu menú.</p></div>
+        <p>🎉 <b>¡Clase ${r.unidad + 1} completada!</b> Quedó tachada en tu lista.</p></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
           <button class="primario" id="c-evaluar">🎯 Presentar la evaluación</button>
-          <button id="c-menu">🏠 Volver al menú</button>
         </div>`);
       card.querySelector("#c-evaluar").onclick = () => iniciarQuiz(r.unidad);
-      card.querySelector("#c-menu").onclick = () => verMenu();
     }
   }catch(err){ espera.remove(); mostrarError(err.message); }
 }
 
-/* ===== evaluación dentro de la clase ===== */
+/* ===== evaluación ===== */
 async function iniciarQuiz(indice){
   modo = "quiz";
   burbuja("yo", "Quiero presentar la evaluación");
@@ -508,8 +507,7 @@ async function iniciarQuiz(indice){
     card.querySelector("#q-zona").appendChild(f);
   });
   card.querySelector("#q-calificar").onclick = () => calificarQuiz(card);
-  ponerContexto(`<a href="#" id="ctx-menu">← Menú</a>
-    <span class="avance">Evaluación en curso</span><span>Responde y pulsa Calificar</span>`);
+  ponerContexto(`<span class="avance">Evaluación en curso</span><span>Responde y pulsa Calificar</span>`);
   $("#chat").scrollTop = $("#chat").scrollHeight;
 }
 
@@ -529,7 +527,6 @@ async function calificarQuiz(card){
   try{ r = await api(`/api/quiz/${q.indice}/calificar`, {respuestas}); }
   catch(e){ mostrarError(e.message); return; }
   card.querySelector("#q-calificar").remove();
-  $("#puntos").textContent = `⭐ ${r.puntos_totales}`;
   let html = r.aprobado
     ? `<div class="quien">Resultado</div><h3 class="ok">🎉 Aprobada · ${r.nota}/100</h3>
        <p class="dim">Desbloqueaste la siguiente clase (+30 ⭐).</p>`
@@ -542,26 +539,24 @@ async function calificarQuiz(card){
       <div class="dim prosa" style="font-size:12.5px;margin-top:4px">${md(d.explicacion)}</div></div>`;
   });
   const res = burbuja("tutor ancha" + (r.aprobado ? " celebra" : ""), html);
-  await cargarEstado();
+  await refrescar();
   if(r.aprobado){
     toast(`+30 ⭐ · Clase ${q.indice + 1} aprobada`);
     const sig = q.indice + 1;
     const hay = estadoCurso && sig < estadoCurso.unidades.length;
     const botones = document.createElement("div");
     botones.style.cssText = "display:flex;gap:8px;margin-top:8px";
-    botones.innerHTML = (hay ? `<button class="primario" id="r-seguir">Ir a la clase ${sig + 1} →</button>` :
-      `<p class="ok"><b>🏆 ¡Terminaste el curso completo!</b></p>`) +
-      `<button id="r-menu">🏠 Menú</button>`;
+    botones.innerHTML = hay
+      ? `<button class="primario" id="r-seguir">Ir a la clase ${sig + 1} →</button>`
+      : `<p class="ok"><b>🏆 ¡Terminaste el curso completo!</b></p>`;
     res.appendChild(botones);
-    if(hay) botones.querySelector("#r-seguir").onclick = () => entrarClase(sig);
-    botones.querySelector("#r-menu").onclick = () => verMenu();
+    if(hay) botones.querySelector("#r-seguir").onclick = () => abrirConversacion(sig);
     modo = "estudio";
   }else{
     modo = "conversatorio";
     const falladas = r.detalle.map((d, i) => !d.acierto ? i + 1 : null).filter(Boolean);
     ponerContexto(
-      `<a href="#" id="ctx-menu">← Menú</a>
-       <span class="avance">Conversatorio de dudas</span><span>Cuando estés al día, reintenta</span>`,
+      `<span class="avance">Conversatorio de dudas</span><span>Cuando estés al día, reintenta</span>`,
       [...falladas.slice(0, 2).map(n => [`Explícame la pregunta ${n}`,
           () => enviar(`Explícame en qué me equivoqué en la pregunta ${n}`)]),
        ["Ya estoy listo: reintentar 🎯", () => iniciarQuiz(q.indice)]]
@@ -578,19 +573,35 @@ async function calificarQuiz(card){
 async function turnoConversatorio(mensaje){
   const espera = burbujaEspera();
   try{
-    const r = await api(`/api/conversatorio/${claseActual}`, {mensaje});
+    const r = await api(`/api/conversatorio/${canalActivo}`, {mensaje});
     reemplazarEspera(espera, r.texto);
   }catch(e){ espera.remove(); mostrarError(e.message); }
 }
 
-/* ===== demo ✨ ===== */
+/* ===== plan y demo ===== */
+$("#b-plan").onclick = async () => {
+  if(!estadoCurso || !estadoCurso.perfil){ toast("Primero crea tu curso 😊"); return; }
+  if(!planMd){
+    try{ planMd = (await api("/api/plan")).md; }
+    catch(e){ mostrarError(e.message); return; }
+  }
+  $("#m-cuerpo").innerHTML = md(planMd);
+  $("#modal").style.display = "grid";
+  $("#m-descargar").onclick = () => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([planMd], {type:"text/markdown"}));
+    a.download = "mi-curso.md"; a.click();
+  };
+};
+$("#m-cerrar").onclick = () => $("#modal").style.display = "none";
+
 $("#b-demo").onclick = async () => {
-  if(vista !== "clase"){ toast("Entra a una clase para pedir demos ✨"); return; }
+  if(canalActivo === "creacion" || canalActivo === null){ toast("Entra a una clase para pedir demos ✨"); return; }
   burbuja("yo", "✨ Muéstrame una demo interactiva de esto");
   const espera = burbujaEspera();
   espera.innerHTML = '<span class="spin"></span> Creando tu demo interactiva (vale la pena: ~1-2 min)…';
   try{
-    const r = await api("/api/artefacto", {unidad: claseActual});
+    const r = await api("/api/artefacto", {unidad: canalActivo});
     espera.remove();
     const card = burbuja("tutor ancha", `<div class="quien">✨ Demo interactiva — juega con ella</div>`);
     const f = document.createElement("iframe");
@@ -671,7 +682,13 @@ function enviar(textoDirecto){
   if(!textoDirecto) area.value = "";
   area.style.height = "auto";
   burbuja("yo", md(texto));
-  if(vista === "creacion") turnoCreacion(texto);
+  if(canalActivo === "creacion"){
+    if(estadoCurso && estadoCurso.perfil){
+      burbujaTutor("Tu curso ya está creado 😊 Entra a una clase en la barra de la izquierda para seguir aprendiendo.");
+      return;
+    }
+    turnoCreacion(texto);
+  }
   else if(modo === "conversatorio") turnoConversatorio(texto);
   else turnoEstudio(texto);
 }
@@ -687,9 +704,10 @@ area.addEventListener("input", () => {
 
 /* ===== arranque ===== */
 (async () => {
-  const e = await cargarEstado();
-  if(!e || !e.perfil){ verCreacion(); return; }
-  verMenu();
+  const e = await refrescar();
+  if(!e || !e.perfil){ abrirConversacion("creacion"); return; }
+  // Abre la última clase activa (como un chat reciente en ChatGPT)
+  abrirConversacion(e.unidad_actual ?? 0);
 })();
 </script>
 </body>
