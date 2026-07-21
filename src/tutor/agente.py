@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from enum import Enum
 from pathlib import Path
+from typing import Any
 
 from tutor import db
 from tutor.config import (
@@ -397,6 +398,79 @@ class Agente:
         self.curso.artefactos[clave] = html
         guardar_curso(self.curso, self._dir / ARCHIVO_CURSO)
         return html
+
+    def estadisticas(self) -> dict[str, Any]:
+        """Métricas de aprendizaje para la vista "Mi progreso" (HU-31).
+
+        Todo se agrega desde datos ya persistidos (resultados, chat,
+        puntos); no escribe nada. Aproximaciones documentadas:
+        - Aciertos por concepto: conceptos de la unidad evaluados menos los
+          fallados en ese intento (el quiz no persiste sus preguntas).
+        - Puntos por día: +30 el día del primer intento aprobado de cada
+          unidad (los checkpoints no guardan fecha).
+        - Tiempo estimado: nº de mensajes x 40 s.
+        - Conceptos agrupados por minúsculas exactas (sin fuzzy).
+        """
+        unidades = self.curso.temario.unidades
+        resultados = self.progreso.resultados
+
+        notas: dict[str, list[int]] = {}
+        for r in resultados:
+            notas.setdefault(str(r.unidad), []).append(r.nota)
+
+        conteo: dict[str, dict[str, Any]] = {}
+        for r in resultados:
+            de_unidad = (
+                {c.lower() for c in unidades[r.unidad].conceptos}
+                if 0 <= r.unidad < len(unidades)
+                else set()
+            )
+            fallados = {c.lower() for c in r.conceptos_fallados}
+            for c in de_unidad | fallados:
+                fila = conteo.setdefault(c, {"c": c, "ok": 0, "mal": 0, "clase": None})
+                if c in fallados:
+                    fila["mal"] += 1
+                    fila["clase"] = r.unidad
+                elif c in de_unidad:
+                    fila["ok"] += 1
+        dominados = [f for f in conteo.values() if f["mal"] == 0 and f["ok"] >= 2]
+        repasar = [f for f in conteo.values() if f["mal"] >= 1]
+        for fila in dominados:
+            fila.pop("clase")
+
+        puntos_por_dia: dict[str, int] = {}
+        aprobadas_vistas: set[int] = set()
+        for r in resultados:
+            if r.nota >= NOTA_APROBATORIA and r.unidad not in aprobadas_vistas:
+                aprobadas_vistas.add(r.unidad)
+                fecha = r.fecha[:10]
+                puntos_por_dia[fecha] = (
+                    puntos_por_dia.get(fecha, 0) + PUNTOS_QUIZ_APROBADO
+                )
+
+        mensajes_por_dia = db.actividad_chat(self._dir / ARCHIVO_DB)
+        total_mensajes = sum(mensajes_por_dia.values())
+        actividad = [
+            {"fecha": f, "mensajes": n, "puntos": puntos_por_dia.get(f, 0)}
+            for f, n in mensajes_por_dia.items()
+        ]
+
+        return {
+            "actividad": actividad,
+            "notas": notas,
+            "conceptos": {
+                "dominados": sorted(dominados, key=lambda f: -f["ok"]),
+                "repasar": sorted(repasar, key=lambda f: -f["mal"]),
+            },
+            "totales": {
+                "aprobadas": len(aprobadas_vistas),
+                "total": len(unidades),
+                "puntos": self.progreso.puntos,
+                "racha": self.progreso.racha,
+                "mejor_racha": self.progreso.mejor_racha,
+                "minutos_estimados": total_mensajes * 40 // 60,
+            },
+        }
 
     def reencuentro(self, indice: int) -> str:
         """Resumen de bienvenida al volver a una clase (HU-30).

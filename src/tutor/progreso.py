@@ -60,6 +60,7 @@ class Progreso:
     resultados: list[Resultado] = field(default_factory=list)
     puntos: int = 0
     racha: int = 0
+    mejor_racha: int = 0
     ultima_sesion: str = ""  # fecha ISO AAAA-MM-DD de la última sesión
     completadas: list[int] = field(default_factory=list)  # lecciones terminadas
 
@@ -84,6 +85,7 @@ class Progreso:
             return
         ayer = (date.fromisoformat(hoy) - timedelta(days=1)).isoformat()
         self.racha = self.racha + 1 if self.ultima_sesion == ayer else 1
+        self.mejor_racha = max(self.mejor_racha, self.racha)
         self.ultima_sesion = hoy
 
     def marcar_vista(self, unidad: int) -> None:
@@ -124,6 +126,7 @@ def guardar_progreso(progreso: Progreso, ruta: Path) -> None:
         "version": VERSION_ESQUEMA,
         "puntos": progreso.puntos,
         "racha": progreso.racha,
+        "mejor_racha": progreso.mejor_racha,
         "ultima_sesion": progreso.ultima_sesion,
         "completadas": progreso.completadas,
         "vistas": {str(unidad): fecha for unidad, fecha in progreso.vistas.items()},
@@ -159,6 +162,7 @@ def _parsear(datos: Any) -> Progreso:
         resultados=resultados,
         puntos=int(datos.get("puntos", 0)),
         racha=int(datos.get("racha", 0)),
+        mejor_racha=int(datos.get("mejor_racha", datos.get("racha", 0))),
         ultima_sesion=str(datos.get("ultima_sesion", "")),
         completadas=[int(u) for u in datos.get("completadas", [])],
     )

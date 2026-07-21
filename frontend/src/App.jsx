@@ -9,6 +9,7 @@ import MisCursos from './MisCursos.jsx'
 import Clase from './Clase.jsx'
 import Diseno from './Diseno.jsx'
 import CreacionChat from './CreacionChat.jsx'
+import Estadisticas from './Estadisticas.jsx'
 
 export function avisar(mensaje, color = 'teal') {
   notifications.show({ message: mensaje, color, withBorder: true })
@@ -94,6 +95,8 @@ export default function App({ escala, cambiarEscala }) {
                 <Text size="xs" c="dimmed" fw={700} tt="uppercase" px="xs" mt="xs">Curso</Text>
                 <NavItem icono="📄" etiqueta="Diseño del curso" sub="Documento estructurado — editable"
                   activa={vista === 'diseno'} onClick={() => setVista('diseno')} />
+                <NavItem icono="📈" etiqueta="Mi progreso" sub="Actividad, notas y conceptos"
+                  activa={vista === 'stats'} onClick={() => setVista('stats')} />
                 <Text size="xs" c="dimmed" fw={700} tt="uppercase" px="xs" mt="xs">Clases</Text>
                 {estado.unidades.map((u) => (
                   <NavClase key={u.indice} u={u} convos={convos}
@@ -127,6 +130,7 @@ export default function App({ escala, cambiarEscala }) {
           }} />
         )}
         {vista === 'diseno' && estado?.perfil && <Diseno onGuardado={refrescar} />}
+        {vista === 'stats' && estado?.perfil && <Estadisticas irAClase={abrirClase} />}
         {vista === 'clase' && estado?.perfil && (
           <Clase key={`${estado.curso_id}-${claseActiva}`} indice={claseActiva}
             unidad={estado.unidades[claseActiva]} lenguaje={estado.lenguaje}
