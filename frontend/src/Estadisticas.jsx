@@ -26,12 +26,12 @@ export default function Estadisticas({ irAClase }) {
   return (
     <Box p="lg" style={{ overflowY: 'auto', flex: 1 }}>
       <Box maw={860} mx="auto">
-        <Title order={3} mb="md">📈 Mi progreso</Title>
+        <Title order={3} mb="md">Mi progreso</Title>
 
         <SimpleGrid cols={{ base: 2, sm: 4 }} mb="md">
           <Tarjeta valor={`${totales.aprobadas}/${totales.total}`} etiqueta="clases aprobadas" />
-          <Tarjeta valor={`⭐ ${totales.puntos}`} etiqueta="puntos" />
-          <Tarjeta valor={`🔥 ${totales.racha}`} etiqueta={`racha (mejor: ${totales.mejor_racha})`} />
+          <Tarjeta valor={`${totales.puntos}`} etiqueta="puntos" />
+          <Tarjeta valor={`${totales.racha}`} etiqueta={`racha (mejor: ${totales.mejor_racha})`} />
           <Tarjeta valor={`~${totales.minutos_estimados} min`} etiqueta="tiempo estudiando" />
         </SimpleGrid>
 
@@ -43,7 +43,7 @@ export default function Estadisticas({ irAClase }) {
             <Group align="flex-end" gap={6} h={120}>
               {actividad.map((d) => (
                 <Tooltip key={d.fecha}
-                  label={`${d.fecha}: ${d.mensajes} mensajes${d.puntos ? ` · +${d.puntos} ⭐` : ''}`}>
+                  label={`${d.fecha}: ${d.mensajes} mensajes${d.puntos ? ` · +${d.puntos} pts` : ''}`}>
                   <Stack gap={2} align="center" style={{ flex: 1, height: '100%', justifyContent: 'flex-end' }}>
                     <Box w="100%" maw={44}
                       style={{
@@ -88,7 +88,7 @@ export default function Estadisticas({ irAClase }) {
 
         <SimpleGrid cols={{ base: 1, sm: 2 }}>
           <Card withBorder radius="md" p="md">
-            <Text fw={700} mb="xs">💪 Conceptos dominados</Text>
+            <Text fw={650} mb="xs">Conceptos dominados</Text>
             {conceptos.dominados.length === 0 ? (
               <Text size="sm" c="dimmed">Aprueba evaluaciones para ver tus fortalezas aquí.</Text>
             ) : (
@@ -100,9 +100,9 @@ export default function Estadisticas({ irAClase }) {
             )}
           </Card>
           <Card withBorder radius="md" p="md">
-            <Text fw={700} mb="xs">📌 Para repasar</Text>
+            <Text fw={650} mb="xs">Para repasar</Text>
             {conceptos.repasar.length === 0 ? (
-              <Text size="sm" c="dimmed">Nada pendiente: no has fallado conceptos. 🎉</Text>
+              <Text size="sm" c="dimmed">Nada pendiente: no has fallado conceptos.</Text>
             ) : (
               <Stack gap={6}>
                 {conceptos.repasar.map((f) => (
@@ -123,7 +123,7 @@ export default function Estadisticas({ irAClase }) {
 
         {uso.length > 0 && (
           <Card withBorder radius="md" p="md" mt="md">
-            <Text fw={700} mb="xs">🤖 Uso del modelo (local)</Text>
+            <Text fw={650} mb="xs">Uso del modelo (local)</Text>
             <Stack gap={4}>
               {uso.slice(-6).map((f, i) => (
                 <Text size="sm" c="dimmed" key={i}>

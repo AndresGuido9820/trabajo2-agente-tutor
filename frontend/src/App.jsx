@@ -5,6 +5,10 @@ import {
 } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { Spotlight, spotlight } from '@mantine/spotlight'
+import {
+  IconArrowLeft, IconChartLine, IconDeviceDesktop, IconFileDescription,
+  IconFlame, IconMoon, IconPlus, IconRepeat, IconSearch, IconStar, IconSun,
+} from '@tabler/icons-react'
 import '@mantine/spotlight/styles.css'
 import { api } from './api.js'
 import MisCursos from './MisCursos.jsx'
@@ -88,13 +92,13 @@ export default function App({ escala, cambiarEscala }) {
     >
       <AppShell.Navbar p="sm" style={{ gap: 8 }}>
         <Group gap="xs" px="xs" py={6}>
-          <ThemeIcon size={30} radius="md" variant="gradient" gradient={{ from: 'teal', to: 'indigo' }}>
-            <Text fw={900} size="sm">Pb</Text>
+          <ThemeIcon size={30} radius="md" variant="filled" color="indigo">
+            <Text fw={800} size="sm" ff="monospace">P</Text>
           </ThemeIcon>
-          <Text fw={700} style={{ flex: 1 }}>Profe Bit</Text>
+          <Text fw={650} style={{ flex: 1 }} lts="-0.01em">Profe Bit</Text>
           <Tooltip label="Buscar en todo (⌘K)">
             <ActionIcon variant="subtle" color="gray" aria-label="Buscar"
-              onClick={() => spotlight.open()}>🔎</ActionIcon>
+              onClick={() => spotlight.open()}><IconSearch size={17} stroke={1.8} /></ActionIcon>
           </Tooltip>
         </Group>
 
@@ -110,17 +114,17 @@ export default function App({ escala, cambiarEscala }) {
 
         <ScrollArea style={{ flex: 1 }}>
           <Stack gap={4}>
-            <NavItem etiqueta="← Mis cursos" sub="Todos tus cursos"
+            <NavItem icono={<IconArrowLeft size={16} stroke={1.8} />} etiqueta="Mis cursos" sub="Todos tus cursos"
               onClick={async () => { await refrescar(); setVista('cursos') }} />
             {conCurso && (
               <>
                 <Text size="xs" c="dimmed" fw={700} tt="uppercase" px="xs" mt="xs">Curso</Text>
-                <NavItem icono="📄" etiqueta="Diseño del curso" sub="Documento estructurado — editable"
+                <NavItem icono={<IconFileDescription size={16} stroke={1.8} />} etiqueta="Diseño del curso" sub="Documento estructurado — editable"
                   activa={vista === 'diseno'} onClick={() => setVista('diseno')} />
-                <NavItem icono="📈" etiqueta="Mi progreso" sub="Actividad, notas y conceptos"
+                <NavItem icono={<IconChartLine size={16} stroke={1.8} />} etiqueta="Mi progreso" sub="Actividad, notas y conceptos"
                   activa={vista === 'stats'} onClick={() => setVista('stats')} />
-                <NavItem icono="🔁" etiqueta="Repaso del día"
-                  sub={repaso?.pendientes ? `${repaso.pendientes} para repasar` : 'Al día ✅'}
+                <NavItem icono={<IconRepeat size={16} stroke={1.8} />} etiqueta="Repaso del día"
+                  sub={repaso?.pendientes ? `${repaso.pendientes} para repasar` : 'Al día'}
                   activa={vista === 'repaso'} onClick={() => setVista('repaso')} />
                 <Text size="xs" c="dimmed" fw={700} tt="uppercase" px="xs" mt="xs">Clases</Text>
                 {estado.unidades.map((u) => (
@@ -138,8 +142,12 @@ export default function App({ escala, cambiarEscala }) {
           <Preferencias escala={escala} cambiarEscala={cambiarEscala} />
           {conCurso && (
             <Group gap={6}>
-              <Tooltip label="Días seguidos estudiando"><Badge variant="light" color="orange">🔥 {estado.racha}</Badge></Tooltip>
-              <Tooltip label="Puntos por checkpoints y clases aprobadas"><Badge variant="light" color="yellow">⭐ {estado.puntos}</Badge></Tooltip>
+              <Tooltip label="Días seguidos estudiando">
+                <Badge variant="light" color="orange" leftSection={<IconFlame size={12} />}>{estado.racha}</Badge>
+              </Tooltip>
+              <Tooltip label="Puntos por checkpoints y clases aprobadas">
+                <Badge variant="light" color="yellow" leftSection={<IconStar size={12} />}>{estado.puntos}</Badge>
+              </Tooltip>
             </Group>
           )}
         </Group>
@@ -151,7 +159,7 @@ export default function App({ escala, cambiarEscala }) {
         {vista === 'creacion' && (
           <CreacionChat onCreado={async () => {
             const e = await refrescar()
-            avisar('¡Tu curso está listo! 🎉')
+            avisar('¡Tu curso está listo!')
             if (e?.perfil) { setClaseActiva(0); setVista('clase') }
           }} />
         )}
@@ -207,10 +215,10 @@ function Buscador({ irA, nuevoCurso, verProgreso, verCursos }) {
     {
       group: 'Acciones',
       actions: [
-        { id: 'a-cursos', label: '← Mis cursos', onClick: verCursos },
-        { id: 'a-nuevo', label: '✨ Nuevo curso', onClick: nuevoCurso },
+        { id: 'a-cursos', label: 'Mis cursos', onClick: verCursos },
+        { id: 'a-nuevo', label: 'Nuevo curso', onClick: nuevoCurso },
         ...(verProgreso
-          ? [{ id: 'a-stats', label: '📈 Mi progreso', onClick: verProgreso }]
+          ? [{ id: 'a-stats', label: 'Mi progreso', onClick: verProgreso }]
           : []),
       ],
     },
@@ -264,7 +272,11 @@ function BarraConexion() {
 function Preferencias({ escala, cambiarEscala }) {
   const { colorScheme, setColorScheme } = useMantineColorScheme()
   const siguiente = { dark: 'light', light: 'auto', auto: 'dark' }
-  const icono = { dark: '🌙', light: '☀️', auto: '🌓' }[colorScheme] ?? '🌓'
+  const icono = {
+    dark: <IconMoon size={16} stroke={1.8} />,
+    light: <IconSun size={16} stroke={1.8} />,
+    auto: <IconDeviceDesktop size={16} stroke={1.8} />,
+  }[colorScheme] ?? <IconDeviceDesktop size={16} stroke={1.8} />
   const escalas = ['chico', 'normal', 'grande']
   const subir = () => {
     const i = escalas.indexOf(escala)
@@ -301,7 +313,7 @@ function NavItem({ icono, etiqueta, sub, activa, onClick }) {
       onClick={onClick} aria-current={activa ? 'page' : undefined}
       style={{ cursor: 'pointer', width: '100%', textAlign: 'left', border: activa ? undefined : 'none', background: activa ? 'var(--mantine-color-default-hover)' : 'transparent' }}>
       <Group gap="sm" wrap="nowrap">
-        {icono && <Text size="sm">{icono}</Text>}
+        {icono && <Box c="dimmed" style={{ display: 'flex' }}>{icono}</Box>}
         <Box style={{ minWidth: 0 }}>
           <Text size="sm" fw={600} truncate>{etiqueta}</Text>
           {sub && <Text size="xs" c="dimmed" truncate>{sub}</Text>}

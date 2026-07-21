@@ -3,6 +3,11 @@ import {
   ActionIcon, Badge, Box, Button, Card, Group, Paper, Progress, Radio, Stack,
   Text, Textarea, Title, Tooltip,
 } from '@mantine/core'
+import {
+  IconBulb, IconCircle, IconCircleCheckFilled, IconCircleHalf2,
+  IconPlayerPlay, IconRefresh, IconRotate, IconSparkles, IconTargetArrow,
+  IconTrophy,
+} from '@tabler/icons-react'
 import { api, apiStream, guardarBorrador, leerBorrador } from './api.js'
 import { avisar, avisarError } from './App.jsx'
 import { Escribiendo, Mensaje, ZonaChat } from './Chat.jsx'
@@ -192,7 +197,7 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
       await refrescar()
       agregar({ rol: 'resultado', r })
       if (r.aprobado) {
-        avisar(`+30 ⭐ · Clase ${indice + 1} aprobada`)
+        avisar(`+30 puntos · Clase ${indice + 1} aprobada`)
         setModo('estudio')
       } else {
         setModo('conversatorio')
@@ -214,7 +219,7 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
         agregar({ rol: 'quiz-mini', preguntas })  // mismo quiz, tras el repaso
         return true
       }
-      if (r.aciertos > 0) avisar(`+${5 * r.aciertos} ⭐ por tu mini-quiz`)
+      if (r.aciertos > 0) avisar(`+${5 * r.aciertos} puntos por tu mini-quiz`)
       if (finPendiente) {
         setFinPendiente(false)
         agregar({ rol: 'fin-clase' })
@@ -225,7 +230,7 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
   }
 
   const demo = async (regenerar = false) => {
-    if (!regenerar) agregar({ rol: 'yo', texto: '✨ Muéstrame una demo interactiva de esto' })
+    if (!regenerar) agregar({ rol: 'yo', texto: 'Muéstrame una demo interactiva de esto' })
     setEspera('Creando tu demo interactiva (vale la pena: ~1-2 min)…')
     try {
       // La demo ilustra el objetivo que la conversación está trabajando (HU-27).
@@ -280,7 +285,7 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
           )
           if (m.rol === 'quiz-mini') return (
             <QuizCard key={i} preguntas={m.preguntas} indice={indice}
-              titulo="⚡ MINI-QUIZ · CIERRE DE OBJETIVO"
+              titulo="MINI-QUIZ · CIERRE DE OBJETIVO"
               onCalificar={calificarMini(m.preguntas)} />
           )
           if (m.rol === 'resultado') return <ResultadoCard key={i} r={m.r} onSiguiente={haySiguiente ? () => irAClase(indice + 1) : null} onReintentar={evaluar} />
@@ -288,11 +293,12 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
             <Mensaje key={i} rol="tutor" ancho>
               <Group justify="space-between" mb="xs">
                 <Group gap={6}>
-                  <Text size="xs" c="dimmed" fw={700}>✨ DEMO INTERACTIVA — JUEGA CON ELLA</Text>
+                  <Text size="xs" c="dimmed" fw={700} lts="0.04em">DEMO INTERACTIVA — JUEGA CON ELLA</Text>
                   {m.plantilla && <Badge size="xs" variant="light">{m.plantilla}</Badge>}
                 </Group>
                 <Button size="compact-xs" variant="subtle" disabled={espera !== null}
-                  onClick={() => demo(true)}>🔄 Regenerar</Button>
+                  leftSection={<IconRefresh size={13} />}
+                  onClick={() => demo(true)}>Regenerar</Button>
               </Group>
               <iframe sandbox="allow-scripts" srcDoc={m.html}
                 title="Demo interactiva generada por el tutor"
@@ -301,9 +307,9 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
           )
           if (m.rol === 'fin-clase') return (
             <Mensaje key={i} rol="tutor" ancho>
-              <Text fw={700} mb="xs">🎉 ¡Clase completada! Quedó tachada en tu lista.</Text>
+              <Group gap={8} mb="xs"><IconTrophy size={18} color="var(--mantine-color-teal-6)" /><Text fw={650}>¡Clase completada! Quedó tachada en tu lista.</Text></Group>
               <Group gap="xs">
-                <Button size="xs" onClick={evaluar}>🎯 Presentar la evaluación</Button>
+                <Button size="xs" leftSection={<IconTargetArrow size={14} />} onClick={evaluar}>Presentar la evaluación</Button>
               </Group>
             </Mensaje>
           )
@@ -330,13 +336,13 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
           <Group gap="xs" mb="xs">
             {modo === 'conversatorio' && (
               <Button variant="default" size="compact-xs" radius="xl" onClick={evaluar}>
-                Ya estoy listo: reintentar 🎯
+                Ya estoy listo: reintentar
               </Button>
             )}
             {coronada && modo === 'estudio' && (
               <>
-                <Button variant="default" size="compact-xs" radius="xl" onClick={evaluar}>🎯 Evaluarme</Button>
-                <Button variant="default" size="compact-xs" radius="xl" onClick={repasar}>↩ Repasar desde el inicio</Button>
+                <Button variant="default" size="compact-xs" radius="xl" leftSection={<IconTargetArrow size={13} />} onClick={evaluar}>Evaluarme</Button>
+                <Button variant="default" size="compact-xs" radius="xl" leftSection={<IconRotate size={13} />} onClick={repasar}>Repasar desde el inicio</Button>
               </>
             )}
           </Group>
@@ -354,7 +360,7 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
             />
             <Button variant="default" radius="lg" onClick={() => demo()}
               title="Pídele una demo interactiva"
-              aria-label="Pedir una demo interactiva de esta clase">✨</Button>
+              aria-label="Pedir una demo interactiva de esta clase"><IconSparkles size={17} stroke={1.8} /></Button>
             <Button radius="lg" onClick={() => enviar()} loading={ocupado}>Enviar</Button>
           </Group>
         </Box>
@@ -382,7 +388,11 @@ function IlustracionClase({ indice }) {
 }
 
 function PanelClase({ panel, onEvaluar, onDemo, onRepasar, indiceClase }) {
-  const iconos = { cumplido: '●', en_curso: '◐', pendiente: '○' }
+  const iconos = {
+    cumplido: <IconCircleCheckFilled size={16} />,
+    en_curso: <IconCircleHalf2 size={16} />,
+    pendiente: <IconCircle size={16} stroke={1.6} />,
+  }
   return (
     <Box w={330} p="md" style={{
       borderLeft: '1px solid var(--mantine-color-default-border)',
@@ -393,9 +403,10 @@ function PanelClase({ panel, onEvaluar, onDemo, onRepasar, indiceClase }) {
       <Stack gap={8} mb="lg">
         {panel.objetivos.map((o, k) => (
           <Group key={k} gap={8} wrap="nowrap" align="flex-start">
-            <Text c={o.estado === 'cumplido' ? 'teal' : o.estado === 'en_curso' ? 'indigo' : 'dimmed'}>
+            <Box pt={2} c={o.estado === 'cumplido' ? 'teal' : o.estado === 'en_curso' ? 'indigo' : 'dimmed'}
+              style={{ display: 'flex' }}>
               {iconos[o.estado]}
-            </Text>
+            </Box>
             <Box style={{ minWidth: 0, flex: 1 }}>
               <Text size="sm" td={o.estado === 'cumplido' ? 'line-through' : undefined}
                 c={o.estado === 'cumplido' ? 'dimmed' : undefined}>
@@ -404,7 +415,7 @@ function PanelClase({ panel, onEvaluar, onDemo, onRepasar, indiceClase }) {
               {o.quiz && (
                 <Group gap={6}>
                   <Badge size="xs" variant="light" color={o.repaso ? 'orange' : 'teal'}>
-                    {o.repaso ? '↻' : '✓'} {o.quiz}
+                    {o.repaso ? 'repaso' : 'quiz'} {o.quiz}
                   </Badge>
                   <Button size="compact-xs" variant="subtle"
                     onClick={() => onRepasar(o.texto)}>repasar</Button>
@@ -424,10 +435,10 @@ function PanelClase({ panel, onEvaluar, onDemo, onRepasar, indiceClase }) {
         <Tooltip disabled={panel.evaluacion_lista}
           label={`Cumple los ${panel.objetivos.length} objetivos para presentar`}>
           <Button fullWidth disabled={!panel.evaluacion_lista} onClick={onEvaluar}>
-            🎯 Evaluación final
+            Evaluación final
           </Button>
         </Tooltip>
-        <Button fullWidth variant="default" onClick={onDemo}>✨ Demo interactiva</Button>
+        <Button fullWidth variant="default" leftSection={<IconSparkles size={15} />} onClick={onDemo}>Demo interactiva</Button>
       </Stack>
     </Box>
   )
@@ -449,7 +460,7 @@ export function QuizCard({ preguntas, onCalificar, indice, titulo }) {
 
   return (
     <Mensaje rol="tutor" ancho>
-      <Text size="xs" c="dimmed" fw={700} mb={4}>{titulo || `🎯 EVALUACIÓN · CLASE ${indice + 1}`}</Text>
+      <Text size="xs" c="dimmed" fw={700} mb={4}>{titulo || `EVALUACIÓN · CLASE ${indice + 1}`}</Text>
       <Text size="sm" c="dimmed" mb="md">Apruebas con 70+. Puedes reintentar con preguntas nuevas.</Text>
       <Stack gap="md">
         {preguntas.map((p, i) => (
@@ -487,8 +498,8 @@ function ResultadoCard({ r, onSiguiente, onReintentar }) {
     <Mensaje rol="tutor" ancho>
       {r.aprobado ? (
         <>
-          <Title order={4} c="teal.4">🎉 Aprobada · {r.nota}/100</Title>
-          <Text size="sm" c="dimmed" mb="md">Desbloqueaste la siguiente clase (+30 ⭐).</Text>
+          <Title order={4} c="teal.6">Aprobada · {r.nota}/100</Title>
+          <Text size="sm" c="dimmed" mb="md">Desbloqueaste la siguiente clase (+30 puntos).</Text>
         </>
       ) : (
         <>
@@ -499,7 +510,7 @@ function ResultadoCard({ r, onSiguiente, onReintentar }) {
       <Stack gap="xs">
         {r.detalle.map((d, i) => (
           <Card key={i} withBorder radius="md" p="sm">
-            <Text size="sm">{d.acierto ? '✅' : '❌'} <b>P{i + 1}</b> — elegiste: {d.elegida}</Text>
+            <Text size="sm"><Text span c={d.acierto ? 'teal.6' : 'red.6'} fw={700}>{d.acierto ? '✓' : '✗'}</Text> <b>P{i + 1}</b> — elegiste: {d.elegida}</Text>
             {!d.acierto && <Text size="sm">Correcta: <Text span c="teal.4">{d.correcta}</Text></Text>}
             <Text size="xs" c="dimmed" mt={4}>{d.explicacion}</Text>
           </Card>
@@ -521,7 +532,7 @@ function ResultadoCard({ r, onSiguiente, onReintentar }) {
       )}
       <Group gap="xs" mt="md">
         {r.aprobado && onSiguiente && <Button onClick={onSiguiente}>Ir a la siguiente clase →</Button>}
-        {r.aprobado && !onSiguiente && <Text fw={700} c="teal.4">🏆 ¡Terminaste el curso completo!</Text>}
+        {r.aprobado && !onSiguiente && <Text fw={650} c="teal.6">¡Terminaste el curso completo!</Text>}
         {!r.aprobado && <Button variant="default" onClick={onReintentar}>Reintentar (preguntas nuevas)</Button>}
       </Group>
     </Mensaje>

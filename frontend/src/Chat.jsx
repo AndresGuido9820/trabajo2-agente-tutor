@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react'
-import { Box, Group, Loader, Paper, Text } from '@mantine/core'
+import { Avatar, Box, Group, Loader, Paper, Text } from '@mantine/core'
 import Prosa from './Prosa.jsx'
 
-/** Burbuja de mensaje del chat. */
+/** Burbuja de mensaje del chat (estilo sobrio: el tutor sin burbuja). */
 export function Mensaje({ rol, children, lenguaje, ancho }) {
   if (rol === 'sistema') {
     return (
@@ -10,22 +10,32 @@ export function Mensaje({ rol, children, lenguaje, ancho }) {
     )
   }
   const esTutor = rol === 'tutor'
+  if (esTutor) {
+    return (
+      <Group align="flex-start" gap="sm" mb="md" wrap="nowrap"
+        w={ancho ? '100%' : undefined}>
+        <Avatar size={28} radius="md" color="indigo" variant="filled">
+          <Text size="xs" fw={800} ff="monospace">P</Text>
+        </Avatar>
+        <Box style={{ minWidth: 0, flex: 1 }} pt={2}>
+          {typeof children === 'string'
+            ? <Prosa lenguaje={lenguaje}>{children}</Prosa>
+            : (
+              <Paper withBorder radius="md" p="md">
+                {children}
+              </Paper>
+            )}
+        </Box>
+      </Group>
+    )
+  }
   return (
     <Paper
-      p="md" radius="lg" withBorder={esTutor} mb="sm"
-      maw={ancho ? '100%' : '86%'} w={ancho ? '100%' : undefined}
-      ml={esTutor ? 0 : 'auto'}
-      bg={esTutor ? 'var(--mantine-color-default-hover)' : 'var(--mantine-color-indigo-light)'}
-      style={{
-        borderBottomLeftRadius: esTutor ? 6 : undefined,
-        borderBottomRightRadius: esTutor ? undefined : 6,
-      }}
+      p="sm" px="md" radius="lg" mb="md"
+      maw={ancho ? '100%' : '78%'} w={ancho ? '100%' : undefined}
+      ml="auto" bg="var(--mantine-color-default-hover)"
+      style={{ borderBottomRightRadius: 6 }}
     >
-      {esTutor && (
-        <Text size="10px" fw={700} tt="uppercase" c="dimmed" mb={6} lts="0.06em">
-          Profe Bit
-        </Text>
-      )}
       {typeof children === 'string'
         ? <Prosa lenguaje={lenguaje}>{children}</Prosa>
         : children}

@@ -30,7 +30,7 @@ export default function Repaso({ refrescar }) {
     try {
       const r = await api('/api/repaso/calificar', { respuestas })
       setResultado(r)
-      avisar(`+${3 * r.aciertos} ⭐ por tu repaso`)
+      avisar(`+${3 * r.aciertos} puntos por tu repaso`)
       await refrescar?.()
       return true
     } catch (e) { avisarError(e); return false }
@@ -41,7 +41,7 @@ export default function Repaso({ refrescar }) {
   return (
     <Box p="lg" style={{ overflowY: 'auto', flex: 1 }}>
       <Box maw={760} mx="auto">
-        <Title order={3} mb="xs">🔁 Repaso del día</Title>
+        <Title order={3} mb="xs">Repaso del día</Title>
         <Text c="dimmed" size="sm" mb="md">
           Preguntas cortas sobre lo que te costó antes: repasar espaciado
           (1, 3 y 7 días) es la forma más eficaz de no olvidar.
@@ -49,7 +49,7 @@ export default function Repaso({ refrescar }) {
 
         {info.pendientes === 0 && !preguntas && (
           <Card withBorder radius="md" p="lg">
-            <Text fw={700}>Estás al día ✅</Text>
+            <Text fw={650}>Estás al día.</Text>
             <Text size="sm" c="dimmed">
               {info.proximo
                 ? `Tu próximo repaso vence el ${info.proximo}.`
@@ -69,13 +69,13 @@ export default function Repaso({ refrescar }) {
 
         {preguntas && !resultado && (
           <QuizCard preguntas={preguntas} onCalificar={calificar}
-            titulo="🔁 REPASO DEL DÍA" />
+            titulo="REPASO DEL DÍA" />
         )}
 
         {resultado && (
           <Card withBorder radius="md" p="lg" mt="md">
             <Title order={4} mb="xs">
-              {resultado.aciertos}/{resultado.total} — {resultado.aciertos === resultado.total ? '¡impecable! 🎉' : 'sin castigo: vuelven pronto'}
+              {resultado.aciertos}/{resultado.total} — {resultado.aciertos === resultado.total ? 'impecable' : 'sin castigo: vuelven pronto'}
             </Title>
             <Stack gap={6}>
               {resultado.cola.map((i, k) => (
@@ -85,7 +85,7 @@ export default function Repaso({ refrescar }) {
                 </Group>
               ))}
               {resultado.cola.length === 0 && (
-                <Text size="sm" c="dimmed">La cola quedó vacía: todo dominado. 💪</Text>
+                <Text size="sm" c="dimmed">La cola quedó vacía: todo dominado.</Text>
               )}
             </Stack>
           </Card>
