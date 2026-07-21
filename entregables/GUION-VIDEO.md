@@ -1,68 +1,64 @@
 # Guion del video de demostración (5-7 minutos)
 
-Requisitos del enunciado: todos los miembros hablan; el video muestra con un
-rótulo en pantalla quién está hablando; se demuestran cursos para perfiles
-distintos.
+Requisitos: todos los miembros hablan, con rótulo en pantalla de quién habla;
+se demuestran cursos para perfiles distintos.
 
-> Preparación previa a grabar: borrar `./data` para que el flujo arranque de
-> cero, tener `.env` configurado, terminal con fuente grande y tema legible.
-> Tener pre-generado el segundo curso en otra carpeta (`TUTOR_DATA_DIR`)
-> para no esperar generaciones largas en cámara.
+> Antes de grabar: borrar `./data` para arrancar de cero, `.env` configurado,
+> fuente grande. Tener un SEGUNDO curso pre-generado en otra carpeta
+> (`TUTOR_DATA_DIR=...` con perfil front/JavaScript) para comparar sin
+> esperas. Internet activo (Pyodide y Python Tutor).
 
-## Escena 1 — Introducción (0:00-0:45) · habla: _(nombre 1)_
+## Escena 1 — Qué es (0:00-0:40) · habla: _(nombre 1)_
 
-- Qué es: agente tutor de programación por CLI que personaliza un curso
-  completo con un LLM según el perfil del estudiante.
-- Qué se ve en el video: dos perfiles opuestos → dos cursos distintos.
-- Mencionar stack en una frase: Python + API de OpenAI, sin frameworks de
-  agentes, todo validado y testeado (87+ pruebas).
+- Un tutor de programación con LLM donde TODO pasa en una conversación:
+  pides tu curso hablando, estudias charlando y el plan vive al lado.
+- Stack en una frase: Python + FastAPI + API de OpenAI, sin frameworks de
+  agentes, 158 pruebas automatizadas.
 
-## Escena 2 — Perfil 1 en vivo: "nunca programé → front con JavaScript" (0:45-2:30) · habla: _(nombre 2)_
+## Escena 2 — Creación conversacional en vivo (0:40-2:00) · habla: _(nombre 2)_
 
-- `uv run tutor` → cuestionario. Mostrar una entrada inválida a propósito
-  (p. ej. opción "9") para enseñar la validación sin traceback.
-- Se genera el temario: señalar que las unidades progresan hacia "ver algo
-  en el navegador" temprano (personalización estructural).
-- Mostrar el menú: TODAS las unidades navegables aunque no estén generadas.
-- Entrar a la unidad 1: la lección es UNA CONVERSACIÓN (el momento estrella).
-  Mostrar: primero aparecen los objetivos y la ruta de pasos; el tutor abre
-  con el gancho y el "predice: ¿qué imprime esto?"; responder MAL a propósito
-  → el tutor corrige con amabilidad y avanza al siguiente paso. Explicar en
-  una frase el porqué (PRIMM conversado, `docs/INVESTIGACION-PEDAGOGIA.md`).
-- Guardrail socrático: en el paso del reto pedirle "dame la solución
-  completa" → da una pista, no la solución; responder "no sé" dos veces →
-  muestra un paso resuelto. Explicar: guardrails tipo Khanmigo.
+- `uv run tutor-web` → escribir: *"Hazme un curso de Python para analizar
+  las ventas de mi negocio; manejo bien Excel"*.
+- Mostrar que el asesor **NO crea de una**: resume lo que entendió, pregunta
+  el nivel, propone un temario → responder, ajustar si se quiere, y
+  confirmar con **"ya, dale"**.
+- Se crea el curso: el **plan aparece en el panel derecho** y quedó guardado
+  como `curso.md` → abrir la mini-ventana 📄 y el botón de descarga.
+- Señalar los títulos personalizados (analogías de Excel en todo el temario).
 
-## Escena 3 — Evaluación y progreso (2:30-4:00) · habla: _(nombre 3)_
+## Escena 3 — Estudiar charlando (2:00-3:40) · habla: _(nombre 3)_
 
-- `e 1`: responder el quiz en cámara fallando UNA pregunta a propósito.
-- Mostrar el resultado: nota, explicación por pregunta, conceptos a repasar.
-- `p`: tabla de progreso. Cerrar el tutor, volver a abrirlo → el progreso
-  persiste (unidad evaluada, mejor nota).
-- Decir: los conceptos fallados entran al prompt de las siguientes lecciones
-  (adaptación por desempeño).
+- El tutor arranca la lección en el mismo chat (método PRIMM): responde MAL
+  la predicción a propósito → corrige con amabilidad y avanza de paso.
+- Botón **▶ Pruébalo** en un bloque de código: se ejecuta EN el navegador
+  (Pyodide); mencionar 🔍 Paso a paso (Python Tutor).
+- Botón **✨ demo interactiva**: el tutor genera una mini-página interactiva
+  del concepto (tenerla ya cacheada de un ensayo previo para no esperar).
+- Al terminar la lección: **el objetivo se tacha en el panel** 🎉 y aparece
+  "Repasar en el chat".
 
-## Escena 4 — Perfil 2: "sé Excel → ciencia de datos con Python" (4:00-5:30) · habla: _(nombre 1 o 2)_
+## Escena 4 — Evaluación, candado y conversatorio (3:40-5:10) · habla: _(nombre 1)_
 
-- Cambiar a la carpeta del segundo curso (pre-generado) o usar `r` para
-  rehacer el perfil en vivo.
-- Comparar temarios lado a lado: mismo programa, curso totalmente distinto
-  (títulos con analogía Excel, pandas en la unidad 2, tabla dinámica →
-  agrupación).
-- Abrir una lección y mostrar una analogía Excel→Python concreta.
+- Presentar la evaluación **dentro del chat**; reprobar a propósito.
+- Mostrar: la unidad 2 sigue 🔒, y el tutor abre el **conversatorio
+  socrático** en el mismo hilo (pistas, no respuestas; chips "Explícame la
+  pregunta N").
+- Reintentar: señalar que las preguntas son **variantes nuevas** (no se
+  memoriza la letra). Aprobar → +30 ⭐, objetivo aprobado, unidad 2
+  desbloqueada, racha 🔥 y puntos en el header.
 
-## Escena 5 — Bajo el capó + cierre (5:30-6:30) · hablan: todos (una frase c/u)
+## Escena 5 — Otro perfil + bajo el capó (5:10-6:30) · hablan: todos (frases cortas)
 
-- _(nombre 2)_: ingeniería de prompts: banco de misconceptions para los
-  distractores y verificación forzada del quiz.
-- _(nombre 3)_: robustez: reintentos con backoff, JSON validado, calificación
-  local determinista, progreso con escritura atómica.
-- _(nombre 1)_: cierre: qué aprendimos sobre LLMs (la calidad pedagógica hay
-  que especificarla, no emerge sola) y despedida.
+- _(nombre 2)_: cambiar a la carpeta del curso front/JavaScript pre-generado:
+  mismo producto, curso totalmente distinto (DOM temprano, proyectos web).
+- _(nombre 3)_: ingeniería: prompts con PRIMM y banco de misconceptions,
+  guardrails socráticos tipo Khanmigo, verificación independiente de
+  quizzes, calificación local determinista, JSON validado con reintentos.
+- _(nombre 1)_: cierre: qué aprendimos de los LLMs (la calidad pedagógica se
+  especifica, no emerge; el sistema alrededor es el producto). Despedida.
 
 ## Checklist de edición
 
 - [ ] Rótulo con el nombre de quien habla en cada escena.
-- [ ] Duración final entre 5:00 y 7:00.
-- [ ] Audio parejo y terminal legible (mín. 16 pt).
-- [ ] Sin API keys visibles en pantalla (¡ojo con `.env` y el historial!).
+- [ ] Duración 5:00-7:00; audio parejo; terminal/navegador legibles.
+- [ ] Sin API keys en pantalla (¡ojo con `.env` y el historial del shell!).

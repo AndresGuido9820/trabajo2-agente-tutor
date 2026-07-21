@@ -1,6 +1,7 @@
 # Secretos y datos locales
 .env
 data/
+data-respaldo*/
 
 # Python
 __pycache__/

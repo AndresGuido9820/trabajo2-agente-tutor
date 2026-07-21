@@ -5,13 +5,17 @@ enseñanza de la programación básica.
 
 ## 1. Enfoque y arquitectura
 
-Construimos un agente de línea de comandos que enseña fundamentos de
-programación adaptándose al estudiante: un cuestionario inicial captura su
-nivel, experiencia previa, objetivo (ciencia de datos, front-end, back-end,
-automatización u otro) y lenguaje preferido; con ese perfil el agente genera
-un temario de 5 a 8 unidades, escribe cada lección bajo demanda cuando el
-estudiante entra a la unidad, produce quizzes de opción múltiple y lleva el
-progreso entre sesiones.
+Construimos un agente que enseña fundamentos de programación adaptándose al
+estudiante, con una experiencia **chat-total** en la web: pedir el curso es
+una conversación (el asesor resume lo que entendió, pregunta el nivel y la
+experiencia, propone un temario y solo crea el curso cuando el estudiante
+confirma), el plan queda guardado como `curso.md` visible en una
+mini-ventana, y el estudio ocurre en el mismo hilo — el tutor da la lección
+por pasos, los objetivos se van tachando en un panel lateral, cada unidad
+puede repasarse, y la evaluación y el conversatorio de dudas suceden dentro
+del chat. El agente genera temarios de 5 a 8 unidades, quizzes de opción
+múltiple con desbloqueo por nota, y lleva progreso, puntos y racha entre
+sesiones. También existe una CLI equivalente sobre el mismo núcleo.
 
 Tomamos tres decisiones de arquitectura tempranas que definieron el proyecto.
 Primero, **no usar frameworks de agentes** (LangChain o similares): nuestro
