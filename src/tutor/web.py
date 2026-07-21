@@ -111,27 +111,36 @@ class _Estado:
         self.quizzes: dict[int, Quiz] = {}
         # Conversación de creación del curso (HU-16), previa al agente.
         self.creacion: list[tuple[str, str]] = []
-        # Historial persistente del chat (HU-18).
+        # Historial persistente por conversación (HU-18): cada clase es un
+        # chat distinto; "creacion" es la conversación de diseño del curso.
         self._ruta_chat = configuracion.dir_datos / "chat.json"
-        self.chat: list[dict[str, str]] = self._cargar_chat()
+        self.chats: dict[str, list[dict[str, str]]] = self._cargar_chats()
 
-    def _cargar_chat(self) -> list[dict[str, str]]:
-        """Carga el historial del chat; corrupto → advertir y arrancar vacío."""
+    def _cargar_chats(self) -> dict[str, list[dict[str, str]]]:
+        """Carga los historiales; corrupto → advertir y arrancar vacío."""
         if not self._ruta_chat.exists():
-            return []
+            return {}
         try:
             datos = json.loads(self._ruta_chat.read_text("utf-8"))
-            return [{"rol": str(m["rol"]), "texto": str(m["texto"])} for m in datos]
+            if isinstance(datos, list):  # formato viejo: un solo hilo
+                datos = {"creacion": datos}
+            return {
+                str(canal): [
+                    {"rol": str(m["rol"]), "texto": str(m["texto"])} for m in lista
+                ]
+                for canal, lista in datos.items()
+            }
         except (json.JSONDecodeError, KeyError, TypeError) as error:
             logger.warning("Historial de chat corrupto (%s); arranca vacío.", error)
-            return []
+            return {}
 
-    def anotar(self, rol: str, texto: str) -> None:
-        """Agrega un mensaje al historial del chat y lo persiste."""
-        self.chat.append({"rol": rol, "texto": texto})
-        del self.chat[:-500]  # cota de tamaño
+    def anotar(self, canal: str, rol: str, texto: str) -> None:
+        """Agrega un mensaje al historial de una conversación y persiste."""
+        hilo = self.chats.setdefault(canal, [])
+        hilo.append({"rol": rol, "texto": texto})
+        del hilo[:-300]  # cota por conversación
         self._ruta_chat.parent.mkdir(parents=True, exist_ok=True)
-        self._ruta_chat.write_text(json.dumps(self.chat, ensure_ascii=False), "utf-8")
+        self._ruta_chat.write_text(json.dumps(self.chats, ensure_ascii=False), "utf-8")
 
 
 def crear_app(
@@ -229,8 +238,8 @@ def crear_app(
             )
         )
         estado.creacion.append((mensaje, turno["mensaje"]))
-        estado.anotar("yo", mensaje)
-        estado.anotar("tutor", turno["mensaje"])
+        estado.anotar("creacion", "yo", mensaje)
+        estado.anotar("creacion", "tutor", turno["mensaje"])
         if not turno["listo"]:
             return {"mensaje": turno["mensaje"], "listo": False}
 
@@ -260,15 +269,16 @@ def crear_app(
         """Turno del estudio en chat continuo; con `unidad` (re)inicia esa lección."""
         agente = _agente()
         r = dict(_con_llm(lambda: agente.turno_estudio(cuerpo.mensaje, cuerpo.unidad)))
+        canal = f"u{r['unidad']}"
         if cuerpo.mensaje:
-            estado.anotar("yo", cuerpo.mensaje)
-        estado.anotar("tutor", str(r["texto"]))
+            estado.anotar(canal, "yo", cuerpo.mensaje)
+        estado.anotar(canal, "tutor", str(r["texto"]))
         return r
 
-    @app.get("/api/historial")
-    def api_historial() -> dict[str, Any]:
-        """Historial persistente del chat (se pinta al recargar)."""
-        return {"mensajes": estado.chat}
+    @app.get("/api/historial/{canal}")
+    def api_historial(canal: str) -> dict[str, Any]:
+        """Historial de una conversación ('creacion' o 'u<indice>')."""
+        return {"mensajes": estado.chats.get(canal, [])}
 
     @app.post("/api/artefacto")
     def api_artefacto_unidad(cuerpo: CuerpoEstudio) -> dict[str, Any]:
@@ -452,8 +462,8 @@ def crear_app(
         agente = _agente()
         texto = _con_llm(lambda: agente.conversatorio(indice, cuerpo.mensaje))
         if cuerpo.mensaje:
-            estado.anotar("yo", cuerpo.mensaje)
-        estado.anotar("tutor", texto)
+            estado.anotar(f"u{indice}", "yo", cuerpo.mensaje)
+        estado.anotar(f"u{indice}", "tutor", texto)
         return {"texto": texto}
 
     @app.post("/api/quiz/{indice}")
@@ -488,8 +498,9 @@ def crear_app(
         except ValueError as error:
             raise HTTPException(400, str(error)) from error
         estado.anotar(
+            f"u{indice}",
             "sistema",
-            f"🎯 Evaluación de la unidad {indice + 1}: {resultado.nota}/100 — "
+            f"🎯 Evaluación: {resultado.nota}/100 — "
             + ("aprobada 🎉" if resultado.nota >= NOTA_APROBATORIA else "a reintentar"),
         )
         return {

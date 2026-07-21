@@ -59,8 +59,10 @@ class TestPerfilYEstado:
 
 class TestLeccionWeb:
     def test_flujo_leccion_conversacional_por_api(self, crear_cliente_web):
+        from .test_leccion import avanza
+
         web, _ = crear_cliente_web(
-            [temario_respuesta(), guion_respuesta(), "hola", "paso 2"]
+            [temario_respuesta(), guion_respuesta(), "hola", avanza("paso 2")]
         )
         r = web.post("/api/leccion/0/iniciar").json()
         assert r["texto"] == "hola"

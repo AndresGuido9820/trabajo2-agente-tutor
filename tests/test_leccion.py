@@ -25,6 +25,11 @@ def guion_respuesta():
     return json.dumps(guion_json())
 
 
+def avanza(mensaje, si=True):
+    """Respuesta del tutor en el contrato JSON de avance."""
+    return json.dumps({"avanza": si, "mensaje": mensaje})
+
+
 class TestValidarGuion:
     def test_acepta_guion_valido(self):
         guion = validar_guion(guion_json())
@@ -55,8 +60,10 @@ class TestLeccionConversada:
         return Agente(cliente=falso, dir_datos=tmp_path, perfil=perfil), falso
 
     def test_flujo_avanza_un_paso_por_respuesta_y_termina(self, tmp_path, perfil):
-        turnos = [f"tutor dice {i}" for i in range(5)]
-        agente, _ = self._agente(tmp_path, perfil, [guion_respuesta(), *turnos])
+        turnos = [avanza(f"tutor dice {i}") for i in range(1, 5)]
+        agente, _ = self._agente(
+            tmp_path, perfil, [guion_respuesta(), "tutor dice 0", *turnos]
+        )
         agente.iniciar_leccion(0)
 
         texto, terminada = agente.turno_leccion(0, None)
@@ -69,20 +76,34 @@ class TestLeccionConversada:
         texto, terminada = agente.turno_leccion(0, "última respuesta")
         assert texto == "tutor dice 4" and terminada
 
+    def test_saludo_o_duda_no_avanza_el_paso(self, tmp_path, perfil):
+        agente, _ = self._agente(
+            tmp_path,
+            perfil,
+            [guion_respuesta(), "paso 1", avanza("¡hola! seguimos…", False)],
+        )
+        agente.iniciar_leccion(0)
+        agente.turno_leccion(0, None)
+        texto, terminada = agente.turno_leccion(0, "hola jaja")
+        assert texto == "¡hola! seguimos…" and not terminada
+        assert agente.avance_leccion(0) == (1, 5)  # NO avanzó
+
     def test_turno_incluye_paso_historial_y_respuesta_en_prompt(self, tmp_path, perfil):
         agente, falso = self._agente(
-            tmp_path, perfil, [guion_respuesta(), "hola", "sigo"]
+            tmp_path, perfil, [guion_respuesta(), "hola", avanza("sigo")]
         )
         agente.iniciar_leccion(0)
         agente.turno_leccion(0, None)
         agente.turno_leccion(0, "creo que imprime 4")
 
         system, prompt = falso.llamadas[-1]
-        assert "MODO CONVERSACIÓN" in system.upper() or "CONVERSACIÓN" in system
-        assert "paso 2 de 5" in prompt
-        assert "haz el paso 1" in prompt  # instrucción del guion
+        assert "CONVERSACIÓN" in system
+        assert "paso 1 de 5" in prompt
+        assert "haz el paso 0" in prompt  # paso actual
+        assert "haz el paso 1" in prompt  # paso siguiente
         assert "creo que imprime 4" in prompt  # respuesta del estudiante
         assert "hola" in prompt  # historial del turno anterior
+        assert '"avanza"' in prompt  # contrato JSON
 
     def test_guion_se_cachea_y_persiste(self, tmp_path, perfil):
         agente, falso = self._agente(tmp_path, perfil, [guion_respuesta()])
@@ -104,8 +125,8 @@ class TestLeccionConversada:
         assert "pausada" in capsys.readouterr().out
 
     def test_bucle_leccion_completa(self, tmp_path, perfil, capsys):
-        turnos = [f"t{i}" for i in range(5)]
-        agente, _ = self._agente(tmp_path, perfil, [guion_respuesta(), *turnos])
+        turnos = [avanza(f"t{i}") for i in range(1, 5)]
+        agente, _ = self._agente(tmp_path, perfil, [guion_respuesta(), "t0", *turnos])
         completada = bucle_leccion(agente, 0, entrada=lambda _: "ok")
         assert completada is True
         assert "completada" in capsys.readouterr().out

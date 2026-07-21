@@ -81,11 +81,13 @@ class TestEstudioEnChat:
         return Agente(falso, tmp_path, perfil), falso
 
     def test_flujo_estudio_completa_y_permite_repasar(self, tmp_path, perfil):
-        turnos = [f"t{i}" for i in range(5)]
+        from .test_leccion import avanza
+
+        turnos = [avanza(f"t{i}") for i in range(1, 5)]
         agente, _ = self._agente(
             tmp_path,
             perfil,
-            [guion_respuesta(), *turnos, guion_respuesta(), "de nuevo"],
+            [guion_respuesta(), "t0", *turnos, guion_respuesta(), "de nuevo"],
         )
         r = agente.turno_estudio(None)  # arranca la unidad 0
         assert r["unidad"] == 0 and r["paso"] == 1 and not r["terminada"]
@@ -104,6 +106,16 @@ class TestEstudioEnChat:
         r = agente.turno_estudio(None, unidad=0)
         assert r["paso"] == 1 and not r["terminada"]
 
+    def test_mensaje_con_unidad_continua_sin_reiniciar(self, tmp_path, perfil):
+        from .test_leccion import avanza
+
+        agente, _ = self._agente(
+            tmp_path, perfil, [guion_respuesta(), "t0", avanza("t1")]
+        )
+        agente.turno_estudio(None, unidad=0)  # entra a la clase
+        r = agente.turno_estudio("respondo la predicción", unidad=0)
+        assert r["paso"] == 2  # continuó, no reinició
+
     def test_historial_persiste_y_se_sirve(self, tmp_path):
         web, _ = web_con(
             tmp_path,
@@ -115,11 +127,13 @@ class TestEstudioEnChat:
         )
         web.post("/api/creacion", json={"mensaje": "curso de datos"})
         web.post("/api/creacion", json={"mensaje": "ya dale"})
-        h = web.get("/api/historial").json()["mensajes"]
+        h = web.get("/api/historial/creacion").json()["mensajes"]
         assert h[0] == {"rol": "yo", "texto": "curso de datos"}
         assert h[1] == {"rol": "tutor", "texto": "¿tu nivel?"}
         assert len(h) == 4
         assert (tmp_path / "chat.json").exists()
+        # Cada clase es una conversación aparte
+        assert web.get("/api/historial/u0").json()["mensajes"] == []
 
     def test_estado_incluye_conceptos_para_el_temario(self, tmp_path):
         web, _ = web_con(
