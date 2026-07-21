@@ -405,6 +405,49 @@ cada HU en su rama `feature/*` con merge `--no-ff` a develop y compuertas
 FSRS) y el streaming cubre solo `/api/estudio` con fallback clásico en el
 front — alcance documentado en cada HU.
 
+## 2026-07-21 — Primera ola v2 (HU-24…28): la clase pasa a ser code-driven
+
+**Contexto:** ejecución de la primera ola del plan v2 (clases extensas,
+panel, evaluaciones robustas, artefactos v2, retos de código). La suite
+pasó de 229 a 289 pruebas; humo real por HU donde aplicaba.
+
+**Hallazgos:**
+
+- *Aplanar el guion v2 evitó bifurcar el motor de conversación* (HU-24):
+  en vez de un modelo paralelo, los pasos de todos los objetivos van en
+  UNA lista y las fronteras viven en `intermedios[fin_paso]`. Avance,
+  streaming (HU-35) y retro-compatibilidad v1 funcionaron sin tocarse; el
+  quiz intermedio se dispara detectando el cruce de frontera en
+  `_payload_estudio` (único lugar, compartido por clásico y stream).
+- *El humo real valida el prompt, no solo el código* (HU-24/28): el primer
+  intento del guion con retos falló 3 veces seguidas (seed sin indentar,
+  1 solo test, saltos de línea sin escapar en el JSON). Endurecer el
+  prompt (reglas del seed + ejemplo few-shot con `\n` explícito) lo llevó
+  a generar 3/3 retos válidos al primer intento.
+- *La nota ponderada cambia decisiones, no solo números* (HU-26): con
+  pesos 0.5/1.0/1.5, acertar todo menos las 2 preguntas de "aplicar" da
+  54 → reprobado. Saber definiciones ya no aprueba. La ventana de
+  no-repetición del banco tuvo un off-by-one que el test de reutilización
+  destapó (lo del intento 1 debe volver a ser elegible en el 3).
+- *Verificar artefactos con reglas locales es barato y suficiente*
+  (HU-27): doctype + sin recursos externos + `<script>` + un control
+  interactivo + ≤40 KB detectan el 100 % de los artefactos rotos que
+  vimos; la regeneración única con los errores en el prompt corrige el
+  resto. El prefetch en hilo quedó fuera (costo LLM silencioso, nota en
+  la HU).
+- *Bucles infinitos en Pyodide se cortan con `sys.settrace`* (HU-28): un
+  tracer que cuenta líneas ejecutadas y lanza `TimeoutError` tras 400k
+  pasos evita colgar la pestaña sin workers ni interrupt buffers.
+- *Trade-off documentado*: los tests de los retos viajan al navegador
+  (deben ejecutarse client-side); un estudiante avanzado puede verlos en
+  DevTools. Se acepta a conciencia — el objetivo es aprender, no vigilar.
+  Las respuestas de quizzes siguen sin viajar jamás.
+
+**Decisión/acción:** el CTA de evaluación final se habilita desde el panel
+(HU-25) solo con todos los objetivos cumplidos; la evaluación prioriza los
+conceptos fallados en los mini-quices y estos también alimentan la cola de
+repaso espaciado (HU-32): las tres olas quedaron conectadas.
+
 ## AAAA-MM-DD — Título corto
 
 **Contexto:** qué se estaba haciendo (HU-XX).

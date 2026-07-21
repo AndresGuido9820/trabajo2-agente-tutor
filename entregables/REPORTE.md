@@ -52,6 +52,24 @@ backend de ejecución) y visualizar línea a línea (Python Tutor); y el botón
 autocontenida que corre en un `iframe sandbox` sin red, al estilo de los
 Artifacts de Claude.
 
+**Segunda iteración (plan v2, 16 HUs).** Sobre esa base ejecutamos dos olas
+de mejoras. La clase pasó a estructurarse en **objetivos de aprendizaje**
+con secuencia PRIMM propia, **mini-quiz pre-generado** al cerrar cada uno y
+un **reto de código real** verificado con tests en el navegador (con pista
+socrática si el estudiante se traba); un panel lateral marca los objetivos
+en vivo y habilita la evaluación final solo al cumplirlos todos. La
+evaluación creció a 6+ preguntas con **niveles Bloom y nota ponderada**
+(fallar las de "aplicar" reprueba aunque se sepan las definiciones), con un
+**banco por clase** que garantiza cero repetición entre intentos. Lo
+fallado alimenta un **repaso espaciado** (1-3-7 días). En experiencia: el
+tutor **escribe en vivo** (SSE con parser incremental del JSON de
+decisión), tema claro/oscuro con contraste AA verificado por axe-core,
+buscador global ⌘K, estadísticas, exportación a .zip y reintento sin
+pérdida ante caídas de red. Un trade-off consciente: los tests de los retos
+viajan al navegador (deben ejecutarse client-side) y son inspeccionables —
+el objetivo es aprender, no vigilar; las respuestas de quizzes siguen sin
+viajar jamás.
+
 ## 2. Ingeniería de prompts
 
 Antes de fijar los prompts investigamos literatura de enseñanza de la
@@ -101,7 +119,7 @@ E2E que replica las peticiones exactas del navegador contra un servidor
 real, y luego un **bot Playwright** que recorre la app completa y captura
 las pantallas del anexo.
 
-**Probar sin gastar.** Las 174 pruebas corren contra dobles del LLM
+**Probar sin gastar.** Las 289 pruebas corren contra dobles del LLM
 inyectados (respuestas en cola, fallas simuladas del SDK); la API real solo
 se toca en scripts de humo y E2E manuales. CI en GitHub Actions corre
 formato, linter, mypy estricto, pytest y el build del frontend en cada push.

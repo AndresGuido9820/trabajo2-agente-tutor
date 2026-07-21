@@ -2,15 +2,16 @@
 
 Roadmap de la siguiente ola de mejoras sobre el producto entregado (v1).
 Cada mejora es una HU en esta carpeta, con criterios verificables y sus
-pruebas. Orden de implementación sugerido (dependencias primero):
+pruebas. Orden de implementación sugerido (dependencias primero).
+**Estado: las 16 HUs del plan v2 fueron ejecutadas el 2026-07-21.**
 
 | # | HU | Qué mejora | Depende de |
 |---|----|------------|------------|
-| 1 | [HU-24](HU-24-clases-extensas.md) | Clases más largas y con más hilo: guion por objetivos con quices intermedios | — |
-| 2 | [HU-25](HU-25-panel-clase.md) | Panel lateral por clase: objetivos que se marcan en vivo + progreso | HU-24 |
-| 3 | [HU-26](HU-26-evaluaciones-robustas.md) | Evaluaciones con más preguntas, dificultad mixta y banco por clase | HU-24 |
-| 4 | [HU-27](HU-27-mejores-artefactos.md) | Mejores artefactos: plantillas por concepto, verificación y regenerar | — |
-| 5 | [HU-28](HU-28-practica-con-codigo.md) | Práctica con código real: retos verificados con Pyodide | HU-24, HU-27 |
+| 1 | ✅ [HU-24](HU-24-clases-extensas.md) | Clases más largas y con más hilo: guion por objetivos con quices intermedios | — |
+| 2 | ✅ [HU-25](HU-25-panel-clase.md) | Panel lateral por clase: objetivos que se marcan en vivo + progreso | HU-24 |
+| 3 | ✅ [HU-26](HU-26-evaluaciones-robustas.md) | Evaluaciones con más preguntas, dificultad mixta y banco por clase | HU-24 |
+| 4 | ✅ [HU-27](HU-27-mejores-artefactos.md) | Mejores artefactos: plantillas por concepto, verificación y regenerar | — |
+| 5 | ✅ [HU-28](HU-28-practica-con-codigo.md) | Práctica con código real: retos verificados con Pyodide | HU-24, HU-27 |
 
 ## Segunda tanda (calidad de producto ×1000) — EJECUTADA 2026-07-21
 

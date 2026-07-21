@@ -37,16 +37,27 @@ uv run tutor                  # alternativa: CLI en la terminal
    cuando confirmas. El diseño queda **estructurado en la base de datos**
    (clase → título, objetivo, subtemas, prompt/guion) y como documento
    `curso.md` visible, descargable y **editable** (editor estructurado).
-3. **Clases como conversaciones**: el tutor da la lección paso a paso
-   (PRIMM: predices antes de que te explique); decide con criterio si tu
-   mensaje avanza el paso o es una duda que responde sin avanzar. Los
-   bloques de código traen **▶ Pruébalo** (Python en tu navegador vía
-   Pyodide) y **🔍 Paso a paso** (Python Tutor). El botón **✨** genera una
-   demo interactiva del tema (mini-artefacto HTML aislado en sandbox).
-4. **Evaluación y progresión**: quiz de comprensión dentro del chat; con
-   70+ apruebas (+30 ⭐) y desbloqueas la siguiente clase; si no, el tutor
-   abre un **conversatorio socrático** sobre tus dudas y reintentas con
-   **preguntas nuevas**. Puntos y racha diaria persistentes.
+3. **Clases como conversaciones extensas**: cada clase se estructura en
+   3-4 **objetivos de aprendizaje**, cada uno con su secuencia PRIMM
+   (predices antes de que te explique) y un **mini-quiz de 2 preguntas**
+   al cerrarlo (+5 ⭐ por acierto; si fallas ambas, el tutor repasa con
+   otro ejemplo y reintentas). El tutor **escribe en vivo** (SSE) y decide
+   con criterio si tu mensaje avanza el paso o es una duda. Un **panel
+   lateral** muestra los objetivos marcándose en tiempo real. Los bloques
+   de código traen **▶ Pruébalo** (Python en tu navegador vía Pyodide) y
+   al cerrar cada objetivo llega un **⌨️ reto de código real** con tests
+   automáticos estilo freeCodeCamp (+10 ⭐, pista socrática si te trabas).
+   El botón **✨** genera una demo interactiva del objetivo (plantilla
+   según el concepto, verificada antes de mostrarse, regenerable).
+4. **Evaluación y progresión**: evaluación final de 6+ preguntas con
+   **niveles Bloom** (recordar/comprender/aplicar) y **nota ponderada** —
+   saber definiciones no basta si no aplicas. Las preguntas salen de un
+   **banco por clase sin repetición entre intentos** y priorizan lo que
+   fallaste en los mini-quices. Con 70+ apruebas (+30 ⭐) y desbloqueas la
+   siguiente clase; si no, **conversatorio socrático** y reintento con
+   preguntas nuevas. Lo fallado entra al **🔁 Repaso del día** (repetición
+   espaciada 1-3-7). Puntos, racha y estadísticas (📈 Mi progreso)
+   persistentes; buscador global ⌘K; exportar el curso a .zip.
 
 ## Arquitectura
 
@@ -67,14 +78,16 @@ src/tutor/
 - **Datos**: `data/cursos/<id>/tutor.db` (una BD por curso) + `curso.md`.
 - **Seguridad**: la API key solo vive en `.env` (gitignoreado); las
   respuestas correctas de quizzes/checkpoints nunca viajan al navegador;
-  las demos corren en `iframe sandbox` sin red.
+  las demos corren en `iframe sandbox` sin red. Excepción consciente: los
+  tests de los retos de código sí viajan (se ejecutan en tu navegador con
+  Pyodide); el objetivo es aprender, no vigilar.
 - **Decisiones y fuentes**: `docs/INVESTIGACION*.md` (pedagogía, OSS, UX) y
   `docs/HALLAZGOS.md` (bitácora). Plan por HU en `plan/`.
 
 ## Desarrollo
 
 ```bash
-uv run pytest              # 214 pruebas (LLM siempre con dobles)
+uv run pytest              # 289 pruebas (LLM siempre con dobles)
 uv run ruff format --check . && uv run ruff check .
 uv run mypy src            # estricto
 
