@@ -46,7 +46,7 @@ class TestPanelDeClase:
         assert all(o["estado"] == "cumplido" for o in panel["objetivos"])
 
     def test_sobrevive_reinicio_del_servidor(self, tmp_path):
-        from tutor.agente import ARCHIVO_DB, Agente
+        from tutor.agente import Agente
 
         from .conftest import ClienteLLMFalso
 
