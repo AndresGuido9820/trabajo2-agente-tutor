@@ -9,6 +9,8 @@ __pycache__/
 .venv/
 *.egg-info/
 dist/
+!src/tutor/static/dist/
+!src/tutor/static/dist/**
 
 # Herramientas
 .pytest_cache/

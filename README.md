@@ -39,7 +39,7 @@ cp .env.example .env
 uv run tutor
 
 # 3b. …o en el navegador (interfaz web simple)
-uv run tutor-web        # abre http://127.0.0.1:8017
+uv run tutor-web        # abre http://127.0.0.1:8017 (UI React ya compilada)
 ```
 
 ## Comandos de desarrollo
@@ -55,3 +55,15 @@ uv run mypy src          # tipos
 
 El avance se rastrea por HU en `plan/` (checkboxes por tarea). Los hallazgos y
 decisiones se registran en `docs/HALLAZGOS.md`.
+
+## Frontend (React + Mantine)
+
+El build compilado está versionado en `src/tutor/static/dist` (no necesitas
+npm para usar la app). Para desarrollarlo:
+
+```bash
+cd frontend
+npm install
+npm run dev      # dev server con proxy a :8017
+npm run build    # regenera src/tutor/static/dist
+```
