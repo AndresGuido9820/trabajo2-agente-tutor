@@ -137,6 +137,8 @@ class Agente:
         self._charlas_guia: dict[int, list[tuple[str, str]]] = {}
         # Estudio en chat continuo (HU-16): unidad donde va la conversación.
         self.unidad_actual: int = 0
+        # Repaso del día en curso (HU-32): (quiz, ítems de la cola) o None.
+        self._repaso_activo: tuple[Quiz, list[dict[str, Any]]] | None = None
         # Racha diaria (HU-13): la sesión de hoy cuenta al abrir el agente.
         self.progreso.registrar_sesion(date.today().isoformat())
         self.guardar()
@@ -261,6 +263,10 @@ class Agente:
         self.progreso.registrar(resultado)
         if resultado.nota >= NOTA_APROBATORIA and not aprobada_antes:
             self.progreso.sumar_puntos(PUNTOS_QUIZ_APROBADO)
+        # Cada concepto fallado entra a la cola de repaso espaciado (HU-32).
+        hoy = date.today().isoformat()
+        for concepto in resultado.conceptos_fallados:
+            self.progreso.programar_repaso(concepto, quiz.unidad, hoy)
         self.guardar()
         return resultado, detalle
 
@@ -398,6 +404,96 @@ class Agente:
         self.curso.artefactos[clave] = html
         guardar_curso(self.curso, self._dir / ARCHIVO_CURSO)
         return html
+
+    def estado_repaso(self) -> dict[str, Any]:
+        """Cuántos ítems vencen hoy y cuándo es el próximo (HU-32)."""
+        self.progreso.purgar_repasos(len(self.curso.temario.unidades))
+        hoy = date.today().isoformat()
+        return {
+            "pendientes": len(self.progreso.repasos_vencidos(hoy)),
+            "proximo": self.progreso.proximo_repaso(),
+        }
+
+    def iniciar_repaso(self) -> Quiz:
+        """Arma el quiz del repaso del día sobre los conceptos vencidos.
+
+        Toma hasta 5 ítems (los más antiguos) y genera preguntas con esos
+        conceptos como material. El mapeo de vuelta a la cola es por el
+        campo ``concepto`` de cada pregunta.
+
+        Raises:
+            ErrorDatos: Si no hay ítems vencidos hoy.
+            ErrorLLM: Si la generación falla tras reintentos.
+        """
+        self.progreso.purgar_repasos(len(self.curso.temario.unidades))
+        hoy = date.today().isoformat()
+        items = self.progreso.repasos_vencidos(hoy)[:5]
+        if not items:
+            raise ErrorDatos("No hay nada para repasar hoy.")
+        unidades = self.curso.temario.unidades
+        material = "\n".join(
+            f"- {i['concepto']} (visto en la clase "
+            f"'{unidades[i['clase']].titulo}': {unidades[i['clase']].objetivo})"
+            for i in items
+        )
+        quiz = generar_quiz(
+            self._cliente,
+            titulo_unidad="Repaso del día",
+            conceptos=[str(i["concepto"]) for i in items],
+            leccion_md=(
+                "Conceptos que el estudiante falló antes y debe repasar:\n" + material
+            ),
+            unidad=-1,  # el repaso no pertenece a una unidad
+            system=system_tutor(self.perfil),
+        )
+        self._repaso_activo = (quiz, items)
+        return quiz
+
+    def calificar_repaso(self, respuestas: list[int]) -> dict[str, Any]:
+        """Califica el repaso localmente y reprograma la cola 1-3-7.
+
+        Un ítem cuenta como acertado si TODAS las preguntas de su concepto
+        se respondieron bien; +3 puntos por pregunta acertada.
+
+        Raises:
+            ErrorDatos: Si no hay un repaso iniciado.
+        """
+        if self._repaso_activo is None:
+            raise ErrorDatos("Inicia el repaso antes de calificarlo.")
+        quiz, items = self._repaso_activo
+        hoy = date.today().isoformat()
+        aciertos_por_concepto: dict[str, list[bool]] = {}
+        detalle = []
+        for pregunta, respuesta in zip(quiz.preguntas, respuestas, strict=True):
+            acierto = respuesta == pregunta.correcta
+            aciertos_por_concepto.setdefault(pregunta.concepto.lower(), []).append(
+                acierto
+            )
+            detalle.append(
+                {
+                    "acierto": acierto,
+                    "elegida": pregunta.opciones[respuesta],
+                    "correcta": pregunta.opciones[pregunta.correcta],
+                    "explicacion": pregunta.explicacion,
+                }
+            )
+        aciertos = sum(1 for d in detalle if d["acierto"])
+        self.progreso.sumar_puntos(3 * aciertos)
+        for item in items:
+            resultados = aciertos_por_concepto.get(str(item["concepto"]).lower())
+            if resultados is not None:
+                self.progreso.resolver_repaso(
+                    str(item["concepto"]), int(item["clase"]), all(resultados), hoy
+                )
+            # Sin pregunta para el ítem: sigue vencido, se repasa otro día.
+        self._repaso_activo = None
+        self.guardar()
+        return {
+            "aciertos": aciertos,
+            "total": len(detalle),
+            "detalle": detalle,
+            "cola": self.progreso.cola_repaso,
+        }
 
     def estadisticas(self) -> dict[str, Any]:
         """Métricas de aprendizaje para la vista "Mi progreso" (HU-31).

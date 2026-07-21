@@ -36,7 +36,7 @@ from tutor.curso import (
     plan_markdown,
     validar_temario,
 )
-from tutor.errores import ErrorBloqueada, ErrorConfiguracion, ErrorLLM
+from tutor.errores import ErrorBloqueada, ErrorConfiguracion, ErrorDatos, ErrorLLM
 from tutor.evaluacion import Quiz
 from tutor.exportar import paquete_zip
 from tutor.llm import ClienteLLM, ClienteOpenAI, pedir_json
@@ -586,6 +586,40 @@ def crear_app(
     def api_estadisticas() -> dict[str, Any]:
         """Métricas de aprendizaje del curso activo (vista Mi progreso)."""
         return _agente().estadisticas()
+
+    @app.get("/api/repaso")
+    def api_repaso() -> dict[str, Any]:
+        """Cuántos ítems de repaso vencen hoy y cuándo es el próximo."""
+        return _agente().estado_repaso()
+
+    @app.post("/api/repaso/iniciar")
+    def api_repaso_iniciar() -> dict[str, Any]:
+        """Genera el quiz del repaso del día (409 si no hay vencidos)."""
+        agente = _agente()
+
+        def operacion() -> dict[str, Any]:
+            try:
+                quiz = agente.iniciar_repaso()
+            except ErrorDatos as error:
+                raise HTTPException(409, str(error)) from error
+            return {
+                "preguntas": [
+                    {"enunciado": p.enunciado, "opciones": p.opciones}
+                    for p in quiz.preguntas
+                ]
+            }
+
+        return dict(_con_llm(operacion))
+
+    @app.post("/api/repaso/calificar")
+    def api_repaso_calificar(cuerpo: CuerpoRespuestas) -> dict[str, Any]:
+        """Califica el repaso localmente y reprograma la cola 1-3-7."""
+        try:
+            return _agente().calificar_repaso(cuerpo.respuestas)
+        except ErrorDatos as error:
+            raise HTTPException(409, str(error)) from error
+        except (IndexError, ValueError) as error:
+            raise HTTPException(400, f"Respuestas inválidas: {error}") from error
 
     @app.get("/api/uso")
     def api_uso() -> dict[str, Any]:

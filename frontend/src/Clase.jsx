@@ -239,7 +239,7 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
   )
 }
 
-function QuizCard({ preguntas, onCalificar, indice }) {
+export function QuizCard({ preguntas, onCalificar, indice, titulo }) {
   const [respuestas, setRespuestas] = useState(Array(preguntas.length).fill(null))
   const [error, setError] = useState('')
   const [listo, setListo] = useState(false)
@@ -255,7 +255,7 @@ function QuizCard({ preguntas, onCalificar, indice }) {
 
   return (
     <Mensaje rol="tutor" ancho>
-      <Text size="xs" c="dimmed" fw={700} mb={4}>🎯 EVALUACIÓN · CLASE {indice + 1}</Text>
+      <Text size="xs" c="dimmed" fw={700} mb={4}>{titulo || `🎯 EVALUACIÓN · CLASE ${indice + 1}`}</Text>
       <Text size="sm" c="dimmed" mb="md">Apruebas con 70+. Puedes reintentar con preguntas nuevas.</Text>
       <Stack gap="md">
         {preguntas.map((p, i) => (
