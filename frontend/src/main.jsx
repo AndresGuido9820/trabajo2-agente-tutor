@@ -6,6 +6,7 @@ import {
 import { Notifications } from '@mantine/notifications'
 import '@mantine/core/styles.css'
 import '@mantine/notifications/styles.css'
+import './global.css'
 import App from './App.jsx'
 
 // Preferencias locales (HU-36): tema y tamaño de texto persistidos.
@@ -26,6 +27,8 @@ function Raiz() {
   }
   const tema = createTheme({
     primaryColor: 'indigo',
+    // Tono 7 en claro: el 6 con texto blanco no alcanza AA (HU-38).
+    primaryShade: { light: 7, dark: 6 },
     defaultRadius: 'md',
     scale: ESCALAS[escala],
     respectReducedMotion: true,

@@ -26,14 +26,14 @@ que el tutor sea usable por cualquiera.
 
 ## Tareas
 
-- [ ] Auditoría con teclado de las 6 vistas (checklist en esta HU).
-- [ ] Cambios en componentes: botones reales, aria-labels, aria-live en
+- [x] Auditoría con teclado de las 6 vistas (checklist en esta HU).
+- [x] Cambios en componentes: botones reales, aria-labels, aria-live en
       `ZonaChat`, focus management (useRef + focus()).
-- [ ] `respectReducedMotion: true` en el tema.
-- [ ] Validación: axe-core vía Playwright (`npx playwright` +
+- [x] `respectReducedMotion: true` en el tema.
+- [x] Validación: axe-core vía Playwright (`npx playwright` +
       `@axe-core/playwright`) en las vistas principales → 0 violaciones
       serias/críticas; el script queda en `scripts/a11y_playwright.py`.
-- [ ] Documentar en README (sección accesibilidad).
+- [x] Documentar en README (sección accesibilidad).
 
 ## Casos borde
 

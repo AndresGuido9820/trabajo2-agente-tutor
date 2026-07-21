@@ -73,7 +73,8 @@ export default function Estadisticas({ irAClase }) {
                   <Group key={clase} gap="sm" wrap="nowrap">
                     <Text size="sm" w={70}>Clase {Number(clase) + 1}</Text>
                     <Progress value={mejor} size="lg" radius="xl" style={{ flex: 1 }}
-                      color={mejor >= 70 ? 'teal' : 'orange'} />
+                      color={mejor >= 70 ? 'teal' : 'orange'}
+                      aria-label={`Mejor nota de la clase ${Number(clase) + 1}: ${mejor} de 100`} />
                     <Text size="sm" fw={700} w={60} ta="right">{mejor}/100</Text>
                     <Text size="xs" c="dimmed" w={90}>
                       {intentos.length} intento{intentos.length > 1 ? 's' : ''}

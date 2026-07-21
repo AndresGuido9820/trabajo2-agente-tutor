@@ -74,7 +74,7 @@ src/tutor/
 ## Desarrollo
 
 ```bash
-uv run pytest              # 174 pruebas (LLM siempre con dobles)
+uv run pytest              # 214 pruebas (LLM siempre con dobles)
 uv run ruff format --check . && uv run ruff check .
 uv run mypy src            # estricto
 
@@ -86,10 +86,22 @@ npm run build                                 # regenera static/dist
 uv run python scripts/humo_llm.py             # humo del cliente LLM
 uv run python scripts/exportar_curso.py datos-excel   # cursos de muestra
 uv run python scripts/capturas_playwright.py  # bot que captura la app
+uv run python scripts/e2e_reintento.py        # caída del server + reintento
+uv run python scripts/a11y_playwright.py      # axe-core (no cuesta tokens)
 ```
 
 CI en GitHub Actions: lint + tipos + pruebas + build del frontend en cada
 push (`.github/workflows/ci.yml`).
+
+### Accesibilidad
+
+La app se opera completa con teclado (Tab/Enter/Espacio; `⌘K` abre el
+buscador, `Esc` cierra modales). El chat es una región `aria-live` que
+anuncia los mensajes del tutor; los botones-ícono llevan `aria-label`; los
+temas claro y oscuro pasan contraste AA (los colores de la variante
+"light" y el `dimmed` se ajustaron en `frontend/src/global.css`). La
+auditoría automática con axe-core (`scripts/a11y_playwright.py`) corre
+sobre Mis cursos, Clase y Mi progreso: 0 violaciones serias/críticas.
 
 ## Entregables del curso
 

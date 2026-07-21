@@ -101,7 +101,7 @@ export default function App({ escala, cambiarEscala }) {
               {aprobadas} de {total} clases · {estado.lenguaje}
             </Text>
             <Progress value={total ? (100 * aprobadas) / total : 0} size="sm" radius="xl"
-              color="teal" />
+              color="teal" aria-label={`Progreso del curso: ${aprobadas} de ${total} clases aprobadas`} />
           </Box>
         )}
 
@@ -288,9 +288,11 @@ function Preferencias({ escala, cambiarEscala }) {
 }
 
 function NavItem({ icono, etiqueta, sub, activa, onClick }) {
+  // component="button": navegable con Tab y activable con Enter/Espacio (HU-38)
   return (
-    <Card p="xs" radius="md" withBorder={!!activa} onClick={onClick}
-      style={{ cursor: 'pointer', background: activa ? 'var(--mantine-color-default-hover)' : 'transparent' }}>
+    <Card component="button" type="button" p="xs" radius="md" withBorder={!!activa}
+      onClick={onClick} aria-current={activa ? 'page' : undefined}
+      style={{ cursor: 'pointer', width: '100%', textAlign: 'left', border: activa ? undefined : 'none', background: activa ? 'var(--mantine-color-default-hover)' : 'transparent' }}>
       <Group gap="sm" wrap="nowrap">
         {icono && <Text size="sm">{icono}</Text>}
         <Box style={{ minWidth: 0 }}>
@@ -310,9 +312,12 @@ function NavClase({ u, convos, activa, onClick }) {
     : u.completada ? 'Completada — falta evaluación'
     : convos[`u${u.indice}`] ? 'Conversación en curso' : 'Sin empezar'
   return (
-    <Card p="xs" radius="md" withBorder={!!activa} onClick={onClick}
+    <Card component="button" type="button" p="xs" radius="md" withBorder={!!activa}
+      onClick={onClick} disabled={bloqueada}
+      aria-current={activa ? 'page' : undefined}
+      aria-label={`Clase ${u.indice + 1}: ${u.titulo}. ${sub}`}
       opacity={bloqueada ? 0.45 : 1}
-      style={{ cursor: bloqueada ? 'not-allowed' : 'pointer', background: activa ? 'var(--mantine-color-default-hover)' : 'transparent' }}>
+      style={{ cursor: bloqueada ? 'not-allowed' : 'pointer', width: '100%', textAlign: 'left', border: activa ? undefined : 'none', background: activa ? 'var(--mantine-color-default-hover)' : 'transparent' }}>
       <Group gap="sm" wrap="nowrap">
         <ThemeIcon size={26} radius="xl" variant={coronada ? 'filled' : 'outline'}
           color={coronada ? 'teal' : 'gray'}>

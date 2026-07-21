@@ -170,7 +170,8 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
           if (m.rol === 'demo') return (
             <Mensaje key={i} rol="tutor" ancho>
               <Text size="xs" c="dimmed" fw={700} mb="xs">✨ DEMO INTERACTIVA — JUEGA CON ELLA</Text>
-              <iframe sandbox="allow-scripts" srcDoc={m.html} title="demo"
+              <iframe sandbox="allow-scripts" srcDoc={m.html}
+                title="Demo interactiva generada por el tutor"
                 style={{ width: '100%', height: 460, border: '1px solid var(--mantine-color-default-border)', borderRadius: 12, background: '#0a0d13' }} />
             </Mensaje>
           )
@@ -227,7 +228,9 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar() } }}
               autoFocus
             />
-            <Button variant="default" radius="lg" onClick={demo} title="Pídele una demo interactiva">✨</Button>
+            <Button variant="default" radius="lg" onClick={demo}
+              title="Pídele una demo interactiva"
+              aria-label="Pedir una demo interactiva de esta clase">✨</Button>
             <Button radius="lg" onClick={() => enviar()} loading={ocupado}>Enviar</Button>
           </Group>
         </Box>

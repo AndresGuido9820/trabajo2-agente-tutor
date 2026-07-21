@@ -37,8 +37,9 @@ export default function MisCursos({ onEntrar, onNuevo }) {
         Cada curso se diseña conversando con tu tutor y se estudia clase por clase.
       </Text>
       <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-        <Card withBorder radius="lg" p="lg" style={{ borderStyle: 'dashed', cursor: 'pointer' }}
-          onClick={onNuevo}>
+        <Card component="button" type="button" withBorder radius="lg" p="lg"
+          style={{ borderStyle: 'dashed', cursor: 'pointer', textAlign: 'left', width: '100%' }}
+          onClick={onNuevo} aria-label="Crear un curso nuevo">
           <Group>
             <ThemeIcon size={38} radius="xl" variant="light" color="indigo">＋</ThemeIcon>
             <Box>
@@ -113,7 +114,8 @@ function TarjetaCurso({ c, onEntrar, onRenombrar, onArchivar, onBorrar }) {
       </Group>
       <Text fw={700} lineClamp={2} mb="sm">{c.nombre}</Text>
       {c.total > 0 && (
-        <Progress value={(100 * c.aprobadas) / c.total} size="sm" radius="xl" color="teal" mb="sm" />
+        <Progress value={(100 * c.aprobadas) / c.total} size="sm" radius="xl" color="teal" mb="sm"
+          aria-label={`Progreso: ${c.aprobadas} de ${c.total} clases aprobadas`} />
       )}
       <Button fullWidth variant="light" onClick={() => onEntrar(c.id)}>Entrar →</Button>
     </Card>
