@@ -137,6 +137,21 @@ class CuerpoQuizIntermedio(BaseModel):
     respuestas: list[int]
 
 
+class CuerpoRetoSuperado(BaseModel):
+    """Body del reto de código superado (plan/v2/HU-28)."""
+
+    unidad: int
+    objetivo: int
+
+
+class CuerpoPistaReto(BaseModel):
+    """Body de la pista socrática del reto (plan/v2/HU-28)."""
+
+    unidad: int
+    codigo: str
+    test_fallado: str
+
+
 class ClaseDiseno(BaseModel):
     """Una clase dentro de la edición estructurada del diseño (HU-20)."""
 
@@ -571,6 +586,38 @@ def crear_app(
         r = _con_llm(operacion)
         estado.anotar(f"u{cuerpo.unidad}", "tutor", str(r["texto"]))
         return dict(r)
+
+    @app.post("/api/estudio/reto-superado")
+    def api_reto_superado(cuerpo: CuerpoRetoSuperado) -> dict[str, Any]:
+        """Marca un reto de código como superado: +10 ⭐ una vez (HU-28)."""
+        agente = _agente()
+
+        def operacion() -> dict[str, Any]:
+            try:
+                return agente.reto_superado(cuerpo.unidad, cuerpo.objetivo)
+            except ErrorDatos as error:
+                raise HTTPException(409, str(error)) from error
+
+        r = _con_llm(operacion)
+        estado.anotar(f"u{cuerpo.unidad}", "tutor", str(r["texto"]))
+        return dict(r)
+
+    @app.post("/api/estudio/pista-reto")
+    def api_pista_reto(cuerpo: CuerpoPistaReto) -> dict[str, Any]:
+        """Pista socrática sobre el reto, con el código del estudiante."""
+        agente = _agente()
+
+        def operacion() -> str:
+            try:
+                return agente.pista_reto(
+                    cuerpo.unidad, cuerpo.codigo, cuerpo.test_fallado
+                )
+            except ErrorDatos as error:
+                raise HTTPException(409, str(error)) from error
+
+        texto = _con_llm(operacion)
+        estado.anotar(f"u{cuerpo.unidad}", "tutor", texto)
+        return {"texto": texto}
 
     @app.post("/api/estudio/stream")
     def api_estudio_stream(cuerpo: CuerpoEstudio) -> StreamingResponse:

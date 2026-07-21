@@ -388,7 +388,35 @@ sabrá hacer el estudiante"), en orden de dependencia. Cada objetivo lleva:
    - "explicacion" justifica la correcta y nombra el error del distractor
      más tentador. "concepto" es uno de: {", ".join(unidad.conceptos)}.
    - VERIFICA cada pregunta resolviéndola tú antes de escribir opciones.
-
+{
+        '''
+3. Un RETO DE CÓDIGO ("reto") que el estudiante resuelve en su navegador
+   al cerrar el objetivo (HU-28):
+   - "enunciado": ligado a la meta del estudiante, 1-2 frases.
+   - "seed": código Python inicial con el hueco por completar. REGLAS
+     ESTRICTAS del seed: es UN string JSON con los saltos de línea
+     escapados como \\n; DEBE parsear con ast.parse tal cual (el hueco va
+     como comentario "# tu código aquí" INDENTADO dentro de la función,
+     seguido de "return 0" o "pass" para que parsee).
+   - "tests": EXACTAMENTE 2 o 3 verificaciones (nunca 1). Cada una:
+     {"llamada": "f(2, 3)", "esperado": "6"} (se compara
+     repr(eval(llamada))) o {"llamada": "<script>", "stdout_contiene":
+     "texto"}. "esperado" es el repr EXACTO ("'hola'" con comillas si es
+     string).
+   OBLIGATORIO: resuelve tú el reto y ejecuta mentalmente cada test sobre
+   tu solución ANTES de emitirlos; si un test no cuadra, corrígelo.
+   Si el objetivo no se presta para código ejecutable, pon "reto": null.
+   Ejemplo de reto BIEN formado (fíjate en el \\n del seed):
+   {"enunciado": "Completa la función que calcula el ingreso.",
+    "seed": "def ingreso(precio, cantidad):\\n    # tu código aquí\\n    return 0\\n",
+    "tests": [{"llamada": "ingreso(25, 4)", "esperado": "100"},
+              {"llamada": "ingreso(10, 3)", "esperado": "30"}]}
+'''
+        if temario.lenguaje == "python"
+        else '''
+(Curso no-Python: pon "reto": null en todos los objetivos.)
+'''
+    }
 Responde ÚNICAMENTE este JSON:
 {{
   "version": 2,
@@ -396,6 +424,9 @@ Responde ÚNICAMENTE este JSON:
     {{
       "objetivo": "<qué sabrá hacer>",
       "pasos": [{{"tipo": "gancho", "instruccion": "<qué hacer>"}}],
+      "reto": {{"enunciado": "...", "seed": "...", "tests": [
+        {{"llamada": "...", "esperado": "..."}}
+      ]}},
       "quiz": [
         {{"enunciado": "...", "opciones": ["a","b","c","d"], "correcta": 1,
           "explicacion": "...", "concepto": "..."}}
@@ -752,6 +783,26 @@ Dale la bienvenida de vuelta en 3-6 frases:
 3. Cierra preguntando cómo quiere seguir (continuar / repaso corto).
 NO desarrolles contenido nuevo ni avances la lección: es solo el
 reencuentro. Solo tu mensaje, en Markdown."""
+
+
+def prompt_pista_reto(enunciado: str, codigo: str, test_fallado: str) -> str:
+    """Pista socrática para un reto de código fallado (HU-28).
+
+    Recibe el código del ESTUDIANTE y el test que falló; jamás la solución.
+    """
+    return f"""El estudiante está resolviendo este reto de código:
+"{enunciado}"
+
+Su código actual:
+```python
+{codigo}
+```
+
+El test que falló: {test_fallado}
+
+Dale UNA pista socrática en 2-4 frases: señala DÓNDE mirar (la línea, la
+operación, el caso) y hazle una pregunta que lo guíe. PROHIBIDO escribir
+la solución o el código corregido. Tono cálido, sin regañar."""
 
 
 def system_charla(perfil: PerfilEstudiante) -> str:

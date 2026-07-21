@@ -79,6 +79,16 @@ class Progreso:
     resultados_intermedios: dict[str, dict[str, dict[str, Any]]] = field(
         default_factory=dict
     )
+    # Retos de código superados (HU-28): clase → índices de objetivo.
+    retos_superados: dict[str, list[int]] = field(default_factory=dict)
+
+    def superar_reto(self, clase: int, objetivo: int) -> bool:
+        """Marca un reto como superado; ``False`` si ya lo estaba."""
+        superados = self.retos_superados.setdefault(str(clase), [])
+        if objetivo in superados:
+            return False
+        superados.append(objetivo)
+        return True
 
     def cumplir_objetivo(
         self,
@@ -226,6 +236,7 @@ def guardar_progreso(progreso: Progreso, ruta: Path) -> None:
         "objetivos_cumplidos": progreso.objetivos_cumplidos,
         "fallados_intermedios": progreso.fallados_intermedios,
         "resultados_intermedios": progreso.resultados_intermedios,
+        "retos_superados": progreso.retos_superados,
         "vistas": {str(unidad): fecha for unidad, fecha in progreso.vistas.items()},
         "resultados": [
             {
@@ -289,6 +300,10 @@ def _parsear(datos: Any) -> Progreso:
                 for objetivo, r in resultados.items()
             }
             for clase, resultados in datos.get("resultados_intermedios", {}).items()
+        },
+        retos_superados={
+            str(clase): [int(o) for o in objetivos]
+            for clase, objetivos in datos.get("retos_superados", {}).items()
         },
     )
 

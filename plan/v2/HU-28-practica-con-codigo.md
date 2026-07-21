@@ -123,11 +123,11 @@ guion v2 (columna `clases.guion`); superados en
 
 ## 7. Definición de Hecho
 
-- [ ] Humo real: 2 retos generados; uno resuelto bien (✓✓✓, puntos, el
+- [x] Humo real: 2 retos generados; uno resuelto bien (✓✓✓, puntos, el
       tutor celebra) y uno saboteado (✗ con mensaje claro + pista socrática
       útil que NO da la solución).
-- [ ] Bucle infinito probado a mano sin colgar la pestaña.
-- [ ] Pruebas de abajo + suite + ruff/mypy; HALLAZGOS + reporte
+- [x] Bucle infinito probado a mano sin colgar la pestaña.
+- [x] Pruebas de abajo + suite + ruff/mypy; HALLAZGOS + reporte
       actualizados (incluida la nota del trade-off §2).
 
 ## 8. Pruebas

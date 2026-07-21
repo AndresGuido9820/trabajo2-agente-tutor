@@ -7,6 +7,7 @@ se puede navegar por unidades cuyo contenido aún no existe).
 
 from __future__ import annotations
 
+import ast
 import json
 import logging
 import sqlite3
@@ -79,6 +80,20 @@ class QuizIntermedio:
 
 
 @dataclass(frozen=True)
+class RetoCodigo:
+    """Reto de código verificado en el navegador con Pyodide (HU-28).
+
+    ``tests``: cada uno con ``llamada`` + (``esperado`` o
+    ``stdout_contiene``); el harness JS los corre sobre el código del
+    estudiante. Viajan al navegador a conciencia (trade-off documentado).
+    """
+
+    enunciado: str
+    seed: str
+    tests: list[dict[str, str | None]]
+
+
+@dataclass(frozen=True)
 class GuionLeccion:
     """Objetivos + paso a paso que la conversación de la lección sigue.
 
@@ -86,11 +101,13 @@ class GuionLeccion:
     APLANADO (``pasos``) más las fronteras de cada objetivo
     (``intermedios``): así la maquinaria de avance/streaming de la
     conversación no cambia. ``intermedios`` vacío = guion v1.
+    ``retos`` (HU-28) es paralelo a ``objetivos``; ``None`` = sin reto.
     """
 
     objetivos: list[str]
     pasos: list[PasoLeccion]
     intermedios: list[QuizIntermedio] = field(default_factory=list)
+    retos: list[RetoCodigo | None] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -279,6 +296,44 @@ def _validar_pregunta_intermedia(crudo: Any) -> PreguntaIntermedia:
     )
 
 
+def validar_reto(crudo: Any) -> RetoCodigo:
+    """Valida un reto de código del guion v2 (HU-28).
+
+    Raises:
+        ValueError: Si el seed no parsea, faltan tests o están malformados.
+    """
+    enunciado = str(crudo["enunciado"]).strip()
+    seed = str(crudo["seed"])
+    if not enunciado:
+        raise ValueError("el reto no tiene enunciado")
+    try:
+        ast.parse(seed)
+    except SyntaxError as error:
+        raise ValueError(f"el seed del reto no es Python válido: {error}") from error
+    crudos = crudo["tests"]
+    if not isinstance(crudos, list) or not 2 <= len(crudos) <= 4:
+        raise ValueError("el reto lleva entre 2 y 4 tests")
+    tests: list[dict[str, str | None]] = []
+    for numero, t in enumerate(crudos):
+        llamada = str(t["llamada"]).strip()
+        esperado = t.get("esperado")
+        stdout = t.get("stdout_contiene")
+        if not llamada:
+            raise ValueError(f"el test {numero} no tiene 'llamada'")
+        if esperado is None and stdout is None:
+            raise ValueError(
+                f"el test {numero} necesita 'esperado' o 'stdout_contiene'"
+            )
+        tests.append(
+            {
+                "llamada": llamada,
+                "esperado": str(esperado) if esperado is not None else None,
+                "stdout_contiene": str(stdout) if stdout is not None else None,
+            }
+        )
+    return RetoCodigo(enunciado=enunciado, seed=seed, tests=tests)
+
+
 def validar_guion(datos: Any) -> GuionLeccion:
     """Convierte y valida el JSON crudo del guion (v1 plano o v2 por objetivos).
 
@@ -302,6 +357,7 @@ def validar_guion(datos: Any) -> GuionLeccion:
         objetivos: list[str] = []
         pasos: list[PasoLeccion] = []
         intermedios: list[QuizIntermedio] = []
+        retos: list[RetoCodigo | None] = []
         for crudo in crudos:
             objetivo = str(crudo["objetivo"]).strip()
             if not objetivo:
@@ -319,7 +375,10 @@ def validar_guion(datos: Any) -> GuionLeccion:
             intermedios.append(
                 QuizIntermedio(fin_paso=len(pasos) - 1, preguntas=preguntas)
             )
-        return GuionLeccion(objetivos=objetivos, pasos=pasos, intermedios=intermedios)
+            retos.append(validar_reto(crudo["reto"]) if crudo.get("reto") else None)
+        return GuionLeccion(
+            objetivos=objetivos, pasos=pasos, intermedios=intermedios, retos=retos
+        )
 
     objetivos = [str(o).strip() for o in datos["objetivos"]]
     if not objetivos or not all(objetivos):
@@ -463,7 +522,10 @@ def _guion_a_json(g: GuionLeccion) -> dict[str, Any]:
         }
     grupos = []
     inicio = 0
-    for objetivo, intermedio in zip(g.objetivos, g.intermedios, strict=True):
+    retos = g.retos or [None] * len(g.objetivos)
+    for objetivo, intermedio, reto in zip(
+        g.objetivos, g.intermedios, retos, strict=True
+    ):
         grupos.append(
             {
                 "objetivo": objetivo,
@@ -481,6 +543,13 @@ def _guion_a_json(g: GuionLeccion) -> dict[str, Any]:
                     }
                     for p in intermedio.preguntas
                 ],
+                "reto": {
+                    "enunciado": reto.enunciado,
+                    "seed": reto.seed,
+                    "tests": reto.tests,
+                }
+                if reto
+                else None,
             }
         )
         inicio = intermedio.fin_paso + 1

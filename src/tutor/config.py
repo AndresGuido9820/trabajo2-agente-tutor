@@ -55,6 +55,8 @@ PUNTOS_SEGUNDO_INTENTO = 5
 PUNTOS_QUIZ_APROBADO = 30
 # Mini-quiz al cerrar un objetivo del guion v2 (plan/v2/HU-24)
 PUNTOS_ACIERTO_INTERMEDIO = 5
+# Reto de código superado en el navegador (plan/v2/HU-28)
+PUNTOS_RETO = 10
 
 # Evaluaciones robustas (plan/v2/HU-26): niveles Bloom con peso en la nota,
 # tamaño mínimo del intento y ventana de no-repetición del banco.

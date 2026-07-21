@@ -7,6 +7,7 @@ import { api, apiStream, guardarBorrador, leerBorrador } from './api.js'
 import { avisar, avisarError } from './App.jsx'
 import { Escribiendo, Mensaje, ZonaChat } from './Chat.jsx'
 import Prosa from './Prosa.jsx'
+import RetoCard from './RetoCard.jsx'
 
 /** ¿El último mensaje es de hace más de `horas`? (HU-30, reencuentro). */
 function pausaLarga(ultimoEn, horas) {
@@ -96,6 +97,7 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
         setAvance({ paso: r.paso, total: r.total, objetivo: r.objetivo, objetivos_total: r.objetivos_total })
         // HU-24: al cerrar un objetivo llega su mini-quiz; el cierre de
         // clase espera a que se responda.
+        if (r.reto) agregar({ rol: 'reto', reto: r.reto })  // HU-28
         if (r.quiz_intermedio) {
           agregar({ rol: 'quiz-mini', preguntas: r.quiz_intermedio })
           if (r.terminada) { await refrescar(); setFinPendiente(true) }
@@ -270,6 +272,11 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
       <ZonaChat dep={mensajes.length + (espera !== null ? 1 : 0)}>
         {mensajes.map((m, i) => {
           if (m.rol === 'quiz') return <QuizCard key={i} preguntas={m.preguntas} onCalificar={calificar} indice={indice} />
+          if (m.rol === 'reto') return (
+            <RetoCard key={i} reto={m.reto} unidad={indice}
+              onSuperado={async (texto) => { agregar({ rol: 'tutor', texto }); await refrescar() }}
+              onMensaje={(texto) => agregar({ rol: 'tutor', texto })} />
+          )
           if (m.rol === 'quiz-mini') return (
             <QuizCard key={i} preguntas={m.preguntas} indice={indice}
               titulo="⚡ MINI-QUIZ · CIERRE DE OBJETIVO"
