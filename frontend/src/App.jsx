@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
-  AppShell, Badge, Box, Button, Card, Group, Progress, ScrollArea, Stack,
-  Text, ThemeIcon, Title, Tooltip,
+  ActionIcon, AppShell, Badge, Box, Button, Card, Group, Progress, ScrollArea,
+  Stack, Text, ThemeIcon, Title, Tooltip, useMantineColorScheme,
 } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { api } from './api.js'
@@ -17,7 +17,7 @@ export function avisarError(e) {
   notifications.show({ message: String(e.message || e), color: 'red', withBorder: true })
 }
 
-export default function App() {
+export default function App({ escala, cambiarEscala }) {
   // vista: cursos | creacion | diseno | clase
   const [vista, setVista] = useState('cursos')
   const [estado, setEstado] = useState(null)
@@ -105,12 +105,16 @@ export default function App() {
           </Stack>
         </ScrollArea>
 
-        {conCurso && (
-          <Group justify="space-between" px="xs" pt="xs" style={{ borderTop: '1px solid var(--mantine-color-dark-4)' }}>
-            <Tooltip label="Días seguidos estudiando"><Badge variant="light" color="orange">🔥 {estado.racha}</Badge></Tooltip>
-            <Tooltip label="Puntos por checkpoints y clases aprobadas"><Badge variant="light" color="yellow">⭐ {estado.puntos}</Badge></Tooltip>
-          </Group>
-        )}
+        <Group justify="space-between" px="xs" pt="xs"
+          style={{ borderTop: '1px solid var(--mantine-color-default-border)' }}>
+          <Preferencias escala={escala} cambiarEscala={cambiarEscala} />
+          {conCurso && (
+            <Group gap={6}>
+              <Tooltip label="Días seguidos estudiando"><Badge variant="light" color="orange">🔥 {estado.racha}</Badge></Tooltip>
+              <Tooltip label="Puntos por checkpoints y clases aprobadas"><Badge variant="light" color="yellow">⭐ {estado.puntos}</Badge></Tooltip>
+            </Group>
+          )}
+        </Group>
       </AppShell.Navbar>
 
       <AppShell.Main>
@@ -134,10 +138,43 @@ export default function App() {
   )
 }
 
+function Preferencias({ escala, cambiarEscala }) {
+  const { colorScheme, setColorScheme } = useMantineColorScheme()
+  const siguiente = { dark: 'light', light: 'auto', auto: 'dark' }
+  const icono = { dark: '🌙', light: '☀️', auto: '🌓' }[colorScheme] ?? '🌓'
+  const escalas = ['chico', 'normal', 'grande']
+  const subir = () => {
+    const i = escalas.indexOf(escala)
+    cambiarEscala(escalas[Math.min(i + 1, 2)])
+  }
+  const bajar = () => {
+    const i = escalas.indexOf(escala)
+    cambiarEscala(escalas[Math.max(i - 1, 0)])
+  }
+  return (
+    <Group gap={2}>
+      <Tooltip label={`Tema: ${colorScheme} (clic para cambiar)`}>
+        <ActionIcon variant="subtle" aria-label="Cambiar tema claro/oscuro"
+          onClick={() => setColorScheme(siguiente[colorScheme] ?? 'dark')}>
+          {icono}
+        </ActionIcon>
+      </Tooltip>
+      <Tooltip label="Texto más chico">
+        <ActionIcon variant="subtle" aria-label="Reducir tamaño de texto"
+          onClick={bajar} disabled={escala === 'chico'}>A−</ActionIcon>
+      </Tooltip>
+      <Tooltip label="Texto más grande">
+        <ActionIcon variant="subtle" aria-label="Aumentar tamaño de texto"
+          onClick={subir} disabled={escala === 'grande'}>A+</ActionIcon>
+      </Tooltip>
+    </Group>
+  )
+}
+
 function NavItem({ icono, etiqueta, sub, activa, onClick }) {
   return (
     <Card p="xs" radius="md" withBorder={!!activa} onClick={onClick}
-      style={{ cursor: 'pointer', background: activa ? 'var(--mantine-color-dark-6)' : 'transparent' }}>
+      style={{ cursor: 'pointer', background: activa ? 'var(--mantine-color-default-hover)' : 'transparent' }}>
       <Group gap="sm" wrap="nowrap">
         {icono && <Text size="sm">{icono}</Text>}
         <Box style={{ minWidth: 0 }}>
@@ -159,7 +196,7 @@ function NavClase({ u, convos, activa, onClick }) {
   return (
     <Card p="xs" radius="md" withBorder={!!activa} onClick={onClick}
       opacity={bloqueada ? 0.45 : 1}
-      style={{ cursor: bloqueada ? 'not-allowed' : 'pointer', background: activa ? 'var(--mantine-color-dark-6)' : 'transparent' }}>
+      style={{ cursor: bloqueada ? 'not-allowed' : 'pointer', background: activa ? 'var(--mantine-color-default-hover)' : 'transparent' }}>
       <Group gap="sm" wrap="nowrap">
         <ThemeIcon size={26} radius="xl" variant={coronada ? 'filled' : 'outline'}
           color={coronada ? 'teal' : 'gray'}>

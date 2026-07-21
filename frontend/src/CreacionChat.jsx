@@ -63,7 +63,7 @@ export default function CreacionChat({ onCreado }) {
         {ocupado && <Escribiendo texto={creando ? 'Diseñando tu curso y guardando el plan (~1 min)…' : undefined} />}
       </ZonaChat>
 
-      <Box p="md" style={{ borderTop: '1px solid var(--mantine-color-dark-4)' }}>
+      <Box p="md" style={{ borderTop: '1px solid var(--mantine-color-default-border)' }}>
         <Box maw={760} mx="auto">
           {mensajes.length === 0 && (
             <Group gap="xs" mb="xs">
