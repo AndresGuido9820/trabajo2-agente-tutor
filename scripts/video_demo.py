@@ -73,16 +73,19 @@ def esperar_respuesta(page: Page, n_antes: int) -> None:
 
 
 def turno(page: Page, texto: str) -> None:
+    """Envía un mensaje y espera la respuesta del tutor."""
     n = page.locator(".prosa").count()
     escribir(page, texto)
     esperar_respuesta(page, n)
 
 
 def pausa(segundos: float = 2.0) -> None:
+    """Respiro entre acciones (queda grabado: da ritmo al video)."""
     time.sleep(segundos)
 
 
 def recorrer(page: Page) -> None:
+    """El recorrido completo del demo, escena por escena."""
     # ---- Escena 1: Mis cursos, tema y archivados -------------------------
     marca("E1 · Mis cursos + tema claro/oscuro + archivados")
     page.goto(BASE)
@@ -260,6 +263,7 @@ def recorrer(page: Page) -> None:
 
 
 def main() -> int:
+    """Graba el recorrido y guarda video + marcas de tiempo."""
     DESTINO.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as pw:
         navegador = pw.chromium.launch()
