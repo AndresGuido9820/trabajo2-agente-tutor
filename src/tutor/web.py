@@ -172,8 +172,8 @@ def crear_app(
 
     @app.get("/")
     def raiz() -> FileResponse:
-        """Sirve la página única del front."""
-        return FileResponse(RUTA_INDEX)
+        """Sirve la página única del front (sin caché: siempre la última versión)."""
+        return FileResponse(RUTA_INDEX, headers={"Cache-Control": "no-store"})
 
     @app.get("/api/estado")
     def api_estado() -> dict[str, Any]:
