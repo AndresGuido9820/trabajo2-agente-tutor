@@ -4,7 +4,7 @@ import { Box, Button, Group, Textarea, Code } from '@mantine/core'
 
 // ---- Pyodide: Python en el navegador (estilo futurecoder) ----
 let pyodidePromesa = null
-function cargarPyodide() {
+export function cargarPyodide() {
   if (!pyodidePromesa) {
     pyodidePromesa = new Promise((res, rej) => {
       const s = document.createElement('script')

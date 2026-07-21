@@ -25,6 +25,7 @@ from tutor.config import (
     PUNTOS_ACIERTO_INTERMEDIO,
     PUNTOS_PRIMER_INTENTO,
     PUNTOS_QUIZ_APROBADO,
+    PUNTOS_RETO,
     PUNTOS_SEGUNDO_INTENTO,
 )
 from tutor.curso import (
@@ -55,6 +56,7 @@ from tutor.prompts import (
     prompt_artefacto,
     prompt_avance_leccion,
     prompt_charla,
+    prompt_pista_reto,
     prompt_reencuentro,
     prompt_turno_leccion,
     system_charla,
@@ -1169,7 +1171,8 @@ class Agente:
             "terminada": terminada,
         }
         if sesion.guion.intermedios:
-            payload["objetivo"] = sesion.objetivo_de_paso(sesion.paso) + 1
+            objetivo_actual = sesion.objetivo_de_paso(sesion.paso)
+            payload["objetivo"] = objetivo_actual + 1
             payload["objetivos_total"] = len(sesion.guion.objetivos)
             payload["quiz_intermedio"] = (
                 [
@@ -1179,7 +1182,74 @@ class Agente:
                 if pendiente is not None
                 else None
             )
+            # Reto de código (HU-28): se adjunta al llegar al último paso
+            # del objetivo, si existe y aún no fue superado.
+            payload["reto"] = None
+            retos = sesion.guion.retos
+            reto = retos[objetivo_actual] if retos else None
+            if (
+                reto is not None
+                and sesion.paso == sesion.guion.intermedios[objetivo_actual].fin_paso
+                and objetivo_actual
+                not in self.progreso.retos_superados.get(str(self.unidad_actual), [])
+            ):
+                payload["reto"] = {
+                    "objetivo": objetivo_actual,
+                    "enunciado": reto.enunciado,
+                    "seed": reto.seed,
+                    "tests": reto.tests,
+                }
         return payload
+
+    def reto_superado(self, unidad: int, objetivo: int) -> dict[str, Any]:
+        """Registra un reto superado: +10 ⭐ UNA vez y celebración (HU-28).
+
+        Raises:
+            ErrorDatos: Si el reto ya estaba superado (el front no repite
+                la celebración) o la clase no tiene ese reto.
+        """
+        guion = self.curso.guiones.get(unidad)
+        reto = (
+            guion.retos[objetivo]
+            if guion and guion.retos and 0 <= objetivo < len(guion.retos)
+            else None
+        )
+        if reto is None:
+            raise ErrorDatos("Esa clase no tiene un reto en ese objetivo.")
+        if not self.progreso.superar_reto(unidad, objetivo):
+            raise ErrorDatos("Ese reto ya estaba superado.")
+        self.progreso.sumar_puntos(PUNTOS_RETO)
+        self.guardar()
+        texto = self._cliente.generar(
+            system=system_tutor(self.perfil),
+            prompt=(
+                f"El estudiante acaba de superar el reto de código "
+                f'"{reto.enunciado}" con todos los tests en verde. Celebra en '
+                "2-3 frases CONCRETAS: qué sabe hacer ahora y cómo se conecta "
+                "con su meta. Sin genéricos tipo '¡bien hecho!'."
+            ),
+            carril="chat",
+        )
+        return {"puntos_totales": self.progreso.puntos, "texto": texto}
+
+    def pista_reto(self, unidad: int, codigo: str, test_fallado: str) -> str:
+        """Pista socrática sobre el reto activo, con el código del estudiante.
+
+        Raises:
+            ErrorDatos: Si la clase no tiene conversación activa.
+        """
+        sesion = self._lecciones_activas.get(unidad)
+        if sesion is None:
+            raise ErrorDatos("La clase no tiene una conversación activa.")
+        objetivo = sesion.objetivo_de_paso(sesion.paso)
+        retos = sesion.guion.retos
+        reto = retos[objetivo] if retos and objetivo < len(retos) else None
+        enunciado = reto.enunciado if reto is not None else "el reto de la clase"
+        return self._cliente.generar(
+            system=system_tutor(self.perfil),
+            prompt=prompt_pista_reto(enunciado, codigo, test_fallado),
+            carril="chat",
+        )
 
     def responder_quiz_intermedio(
         self, unidad: int, respuestas: list[int]
