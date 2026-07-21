@@ -72,6 +72,7 @@ def ahora() -> str:
 _COLUMNAS_NUEVAS = [
     ("curso", "nombre", "TEXT NOT NULL DEFAULT ''"),
     ("curso", "archivado", "INTEGER NOT NULL DEFAULT 0"),
+    ("clases", "banco_preguntas", "TEXT"),
 ]
 
 
@@ -261,6 +262,36 @@ def ultimo_mensaje_en(ruta: Path, canal: str) -> str | None:
             (canal,),
         ).fetchone()
     return str(fila[0]) if fila else None
+
+
+def leer_banco(ruta: Path, indice: int) -> list[dict[str, Any]]:
+    """Banco de preguntas de una clase (HU-26); vacío si no hay.
+
+    Cada ítem: ``{"pregunta": {...}, "intentos": [1, 3]}``.
+    """
+    if not ruta.exists():
+        return []
+    with abrir(ruta) as conexion:
+        fila = conexion.execute(
+            "SELECT banco_preguntas FROM clases WHERE indice = ?", (indice,)
+        ).fetchone()
+    if not fila or not fila[0]:
+        return []
+    try:
+        banco = json.loads(fila[0])
+        return banco if isinstance(banco, list) else []
+    except json.JSONDecodeError:
+        logger.warning("Banco de preguntas corrupto en la clase %d", indice)
+        return []
+
+
+def guardar_banco(ruta: Path, indice: int, banco: list[dict[str, Any]]) -> None:
+    """Persiste el banco de preguntas de una clase (HU-26)."""
+    with abrir(ruta) as conexion:
+        conexion.execute(
+            "UPDATE clases SET banco_preguntas = ? WHERE indice = ?",
+            (json.dumps(banco, ensure_ascii=False), indice),
+        )
 
 
 def actividad_chat(ruta: Path, dias: int = 14) -> dict[str, int]:

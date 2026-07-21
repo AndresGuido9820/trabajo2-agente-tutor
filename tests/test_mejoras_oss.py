@@ -70,7 +70,7 @@ class TestTheoryOfMind:
         )
         agente = Agente(falso, tmp_path, perfil)
         quiz = agente.quiz_de_unidad(0)
-        agente.calificar_quiz(quiz, [1, 1, 1, 1])  # reprueba con 0
+        agente.calificar_quiz(quiz, [1, 1, 1, 1, 1, 1])  # reprueba con 0
 
         agente.conversatorio(0, "")
         system, _ = falso.llamadas[-1]

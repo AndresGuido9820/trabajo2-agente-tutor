@@ -795,6 +795,13 @@ principiante; usa este banco de misconceptions documentadas:
 - "explicacion": justifica la correcta Y nombra el error de razonamiento \
 del distractor más tentador.
 - "concepto" debe ser exactamente uno de: {", ".join(conceptos)}.
+- "nivel" etiqueta la dificultad Bloom de la pregunta y pesa en la nota:
+  · "recordar": pide una definición o un hecho (peso 0.5).
+  · "comprender": predecir la salida de un código o explicar qué hace (1.0).
+  · "aplicar": elegir el código que resuelve un problema, o encontrar y \
+corregir el bug (1.5).
+  CUOTAS OBLIGATORIAS del quiz: máximo UNA pregunta "recordar"; al menos \
+DOS preguntas "aplicar"; el resto "comprender".
 
 Proceso de verificación OBLIGATORIO antes de emitir cada pregunta:
 1. Si es de código, traza el código línea a línea (estado de variables) y \
@@ -812,7 +819,8 @@ Ejemplo del formato de UNA pregunta (few-shot):
   "explicacion": "x = x + 1 evalúa la derecha (3 + 1) y guarda 4 en x. \
 Quien elige '3' está leyendo la asignación como una ecuación que no cambia \
 nada: error típico; la asignación REEMPLAZA el valor.",
-  "concepto": "variables"
+  "concepto": "variables",
+  "nivel": "comprender"
 }}
 
 Responde ÚNICAMENTE este JSON:

@@ -120,7 +120,7 @@ class TestProgresion:
     def test_quiz_aprobado_desbloquea_y_suma_puntos(self, tmp_path, perfil):
         agente, _ = agente_nuevo(tmp_path, perfil, ["# lección", quiz_respuesta()])
         quiz = agente.quiz_de_unidad(0)
-        resultado, _ = agente.calificar_quiz(quiz, [0, 0, 0, 0])  # 100
+        resultado, _ = agente.calificar_quiz(quiz, [0, 0, 0, 0, 0, 0])  # 100
         assert resultado.nota >= NOTA_APROBATORIA
         assert agente.desbloqueada(1)
         assert agente.progreso.puntos == PUNTOS_QUIZ_APROBADO
@@ -132,12 +132,12 @@ class TestProgresion:
             tmp_path, perfil, ["# lección", quiz_respuesta(), quiz_respuesta()]
         )
         quiz = agente.quiz_de_unidad(0)
-        agente.calificar_quiz(quiz, [1, 1, 1, 1])  # 0: reprobado
+        agente.calificar_quiz(quiz, [1, 1, 1, 1, 1, 1])  # 0: reprobado
         assert not agente.desbloqueada(1)
         assert agente.progreso.puntos == 0
 
         quiz2 = agente.quiz_de_unidad(0)
-        agente.calificar_quiz(quiz2, [0, 0, 0, 0])  # 100: aprueba
+        agente.calificar_quiz(quiz2, [0, 0, 0, 0, 0, 0])  # 100: aprueba
         assert agente.progreso.puntos == PUNTOS_QUIZ_APROBADO
 
 
@@ -152,7 +152,7 @@ class TestConversatorio:
         quiz = agente.quiz_de_unidad(0)  # usa la guía como material, sin lección
         _, prompt_quiz = falso.llamadas[-1]
         assert "contenido de la sección 0" in prompt_quiz
-        agente.calificar_quiz(quiz, [1, 1, 1, 1])  # reprueba: falla "variables"
+        agente.calificar_quiz(quiz, [1, 1, 1, 1, 1, 1])  # reprueba: falla "variables"
 
         respuesta = agente.conversatorio(0, "")
         assert respuesta == "hola, ¿qué pasó?"

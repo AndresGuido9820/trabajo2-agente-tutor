@@ -39,7 +39,7 @@ from tutor.curso import (
     validar_temario,
 )
 from tutor.errores import ErrorBloqueada, ErrorConfiguracion, ErrorDatos, ErrorLLM
-from tutor.evaluacion import Quiz
+from tutor.evaluacion import Quiz, resumenes
 from tutor.exportar import paquete_zip
 from tutor.llm import ClienteLLM, ClienteOpenAI, pedir_json
 from tutor.models import Nivel, Objetivo, PerfilEstudiante
@@ -923,7 +923,7 @@ def crear_app(
         estado.quizzes[indice] = quiz
         return {
             "preguntas": [
-                {"enunciado": p.enunciado, "opciones": p.opciones}
+                {"enunciado": p.enunciado, "opciones": p.opciones, "nivel": p.nivel}
                 for p in quiz.preguntas
             ]
         }
@@ -945,12 +945,15 @@ def crear_app(
             f"🎯 Evaluación: {resultado.nota}/100 — "
             + ("aprobada 🎉" if resultado.nota >= NOTA_APROBATORIA else "a reintentar"),
         )
+        agrupados = resumenes(detalle)
         return {
             "nota": resultado.nota,
             "aprobado": resultado.nota >= NOTA_APROBATORIA,
             "nota_aprobatoria": NOTA_APROBATORIA,
             "puntos_totales": agente.progreso.puntos,
             "conceptos_fallados": resultado.conceptos_fallados,
+            "resumen_conceptos": agrupados["conceptos"],
+            "resumen_niveles": agrupados["niveles"],
             "detalle": [
                 {
                     "acierto": r.acierto,

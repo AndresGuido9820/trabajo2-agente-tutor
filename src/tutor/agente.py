@@ -17,7 +17,9 @@ from typing import Any
 
 from tutor import db
 from tutor.config import (
+    INTENTOS_SIN_REPETIR,
     MAX_TURNOS_CHARLA,
+    MIN_PREGUNTAS_EVALUACION,
     NOTA_APROBATORIA,
     PUNTOS_ACIERTO_INTERMEDIO,
     PUNTOS_PRIMER_INTENTO,
@@ -36,7 +38,13 @@ from tutor.curso import (
     guardar_curso,
 )
 from tutor.errores import ErrorBloqueada, ErrorDatos, ErrorLLM
-from tutor.evaluacion import Quiz, Retroalimentacion, calificar, generar_quiz
+from tutor.evaluacion import (
+    Pregunta,
+    Quiz,
+    Retroalimentacion,
+    calificar,
+    generar_quiz,
+)
 from tutor.llm import ClienteLLM, ExtractorCampoJSON, extraer_json, pedir_json
 from tutor.models import PerfilEstudiante
 from tutor.perfil import cargar_perfil, guardar_perfil
@@ -251,36 +259,92 @@ class Agente:
         return leccion
 
     def quiz_de_unidad(self, indice: int) -> Quiz:
-        """Genera el quiz de la unidad (requiere abrir la lección primero).
+        """Arma la evaluación de la unidad desde el banco + generación (HU-26).
+
+        Tamaño: 2 x objetivos del guion v2 (mínimo 6). Se reutilizan
+        preguntas del banco que NO salieron en los últimos
+        ``INTENTOS_SIN_REPETIR`` intentos y cuyo concepto siga vigente; el
+        cupo restante se genera (variantes de las vetadas) y se suma al
+        banco. Dos intentos consecutivos jamás comparten un enunciado.
 
         Raises:
             ErrorBloqueada: Si falta aprobar la unidad anterior.
         """
         self._exigir_desbloqueada(indice)
-        if indice in self.curso.guias:
-            # La guía ya enseña la unidad: el quiz se basa en ella (evita
-            # generar además la lección Markdown: ~1 min menos de espera).
-            leccion = "\n\n".join(
-                f"### {s.objetivo}\n{s.contenido}"
-                for s in self.curso.guias[indice].secciones
-            )
-            self.progreso.marcar_vista(indice)
-            self.guardar()
-        else:
-            leccion = self.abrir_unidad(indice)
         unidad = self.curso.temario.unidades[indice]
-        quiz = generar_quiz(
-            self._cliente,
-            titulo_unidad=unidad.titulo,
-            conceptos=unidad.conceptos,
-            leccion_md=leccion,
-            unidad=indice,
-            system=system_tutor(self.perfil),
-            preguntas_previas=self._quizzes_previos.get(indice),
-            priorizar=self.progreso.fallados_intermedios.get(str(indice)),
+        guion = self.curso.guiones.get(indice)
+        numero = max(
+            MIN_PREGUNTAS_EVALUACION,
+            2 * len(guion.objetivos) if guion and guion.intermedios else 0,
         )
-        self._quizzes_previos[indice] = [p.enunciado for p in quiz.preguntas]
-        return quiz
+        ruta = self._dir / ARCHIVO_DB
+        banco = db.leer_banco(ruta, indice)
+        intento = self.progreso.intentos(indice) + 1
+        vigentes = {c.lower() for c in unidad.conceptos}
+        # Vetada = salió en la ventana de los últimos INTENTOS_SIN_REPETIR
+        # intentos (p. ej. con ventana 2, lo del intento 1 vuelve a ser
+        # elegible en el intento 3).
+        vetadas = [
+            b["pregunta"]["enunciado"]
+            for b in banco
+            if any(int(i) > intento - INTENTOS_SIN_REPETIR for i in b["intentos"])
+        ]
+        reusables = [
+            b
+            for b in banco
+            if b["pregunta"]["enunciado"] not in vetadas
+            and str(b["pregunta"]["concepto"]).lower() in vigentes
+        ][:numero]
+        preguntas = [Pregunta(**b["pregunta"]) for b in reusables]
+
+        faltan = numero - len(preguntas)
+        if faltan > 0:
+            if indice in self.curso.guias:
+                # La guía ya enseña la unidad: el quiz se basa en ella (evita
+                # generar además la lección Markdown: ~1 min menos de espera).
+                leccion = "\n\n".join(
+                    f"### {s.objetivo}\n{s.contenido}"
+                    for s in self.curso.guias[indice].secciones
+                )
+                self.progreso.marcar_vista(indice)
+                self.guardar()
+            else:
+                leccion = self.abrir_unidad(indice)
+            nuevas = generar_quiz(
+                self._cliente,
+                titulo_unidad=unidad.titulo,
+                conceptos=unidad.conceptos,
+                leccion_md=leccion,
+                unidad=indice,
+                system=system_tutor(self.perfil),
+                preguntas_previas=vetadas + [p.enunciado for p in preguntas],
+                priorizar=self.progreso.fallados_intermedios.get(str(indice)),
+                num_preguntas=faltan,
+            )
+            preguntas.extend(nuevas.preguntas)
+
+        # Registrar el intento en el banco (las nuevas entran aquí).
+        usados = {p.enunciado: p for p in preguntas}
+        for item in banco:
+            if item["pregunta"]["enunciado"] in usados:
+                item["intentos"].append(intento)
+                del usados[item["pregunta"]["enunciado"]]
+        for p in usados.values():
+            banco.append(
+                {
+                    "pregunta": {
+                        "enunciado": p.enunciado,
+                        "opciones": p.opciones,
+                        "correcta": p.correcta,
+                        "explicacion": p.explicacion,
+                        "concepto": p.concepto,
+                        "nivel": p.nivel,
+                    },
+                    "intentos": [intento],
+                }
+            )
+        db.guardar_banco(ruta, indice, banco)
+        return Quiz(unidad=indice, preguntas=preguntas)
 
     def calificar_quiz(
         self, quiz: Quiz, respuestas: list[int]

@@ -102,10 +102,10 @@ abajo: candados, puntos y estados usan la nota ponderada).
 
 ## 6. Definición de Hecho
 
-- [ ] Humo real: dos intentos seguidos de la misma clase sin ningún
+- [x] Humo real: dos intentos seguidos de la misma clase sin ningún
       enunciado repetido y con cuotas de nivel cumplidas.
-- [ ] La nota ponderada aparece igual en tarjeta, panel, barra lateral y BD.
-- [ ] Pruebas de abajo + suite + ruff/mypy en verde; HALLAZGOS actualizado.
+- [x] La nota ponderada aparece igual en tarjeta, panel, barra lateral y BD.
+- [x] Pruebas de abajo + suite + ruff/mypy en verde; HALLAZGOS actualizado.
 
 ## 7. Pruebas
 
