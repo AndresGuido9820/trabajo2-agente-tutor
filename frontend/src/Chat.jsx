@@ -15,7 +15,7 @@ export function Mensaje({ rol, children, lenguaje, ancho }) {
       p="md" radius="lg" withBorder={esTutor} mb="sm"
       maw={ancho ? '100%' : '86%'} w={ancho ? '100%' : undefined}
       ml={esTutor ? 0 : 'auto'}
-      bg={esTutor ? 'dark.6' : 'indigo.9'}
+      bg={esTutor ? 'var(--mantine-color-default-hover)' : 'var(--mantine-color-indigo-light)'}
       style={{
         borderBottomLeftRadius: esTutor ? 6 : undefined,
         borderBottomRightRadius: esTutor ? undefined : 6,

@@ -1,24 +1,49 @@
-import React from 'react'
+import React, { useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import { MantineProvider, createTheme } from '@mantine/core'
+import {
+  MantineProvider, createTheme, localStorageColorSchemeManager,
+} from '@mantine/core'
 import { Notifications } from '@mantine/notifications'
 import '@mantine/core/styles.css'
 import '@mantine/notifications/styles.css'
 import App from './App.jsx'
 
-const tema = createTheme({
-  primaryColor: 'indigo',
-  defaultRadius: 'md',
-  fontFamily:
-    'Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif',
-  headings: { fontWeight: '700' },
-})
+// Preferencias locales (HU-36): tema y tamaño de texto persistidos.
+const gestorEsquema = localStorageColorSchemeManager({ key: 'tutor-tema' })
+
+export const ESCALAS = { chico: 0.92, normal: 1, grande: 1.1 }
+
+function leerEscala() {
+  const guardada = localStorage.getItem('tutor-escala')
+  return guardada && ESCALAS[guardada] ? guardada : 'normal'
+}
+
+function Raiz() {
+  const [escala, setEscala] = useState(leerEscala)
+  const cambiarEscala = (nombre) => {
+    localStorage.setItem('tutor-escala', nombre)
+    setEscala(nombre)
+  }
+  const tema = createTheme({
+    primaryColor: 'indigo',
+    defaultRadius: 'md',
+    scale: ESCALAS[escala],
+    respectReducedMotion: true,
+    fontFamily:
+      'Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif',
+    headings: { fontWeight: '700' },
+  })
+  return (
+    <MantineProvider theme={tema} defaultColorScheme="auto"
+      colorSchemeManager={gestorEsquema}>
+      <Notifications position="bottom-center" />
+      <App escala={escala} cambiarEscala={cambiarEscala} />
+    </MantineProvider>
+  )
+}
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <MantineProvider theme={tema} defaultColorScheme="dark">
-      <Notifications position="bottom-center" />
-      <App />
-    </MantineProvider>
+    <Raiz />
   </React.StrictMode>,
 )

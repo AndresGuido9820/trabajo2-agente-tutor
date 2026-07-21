@@ -116,7 +116,7 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
 
   return (
     <Box style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-      <Group px="lg" py="sm" style={{ borderBottom: '1px solid var(--mantine-color-dark-4)' }}>
+      <Group px="lg" py="sm" style={{ borderBottom: '1px solid var(--mantine-color-default-border)' }}>
         <Title order={5}>Clase {indice + 1}: {unidad.titulo}</Title>
         <Text size="xs" c="dimmed" truncate style={{ flex: 1 }}>
           {(unidad.conceptos || []).join(' · ')}
@@ -132,7 +132,7 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
             <Mensaje key={i} rol="tutor" ancho>
               <Text size="xs" c="dimmed" fw={700} mb="xs">✨ DEMO INTERACTIVA — JUEGA CON ELLA</Text>
               <iframe sandbox="allow-scripts" srcDoc={m.html} title="demo"
-                style={{ width: '100%', height: 460, border: '1px solid var(--mantine-color-dark-4)', borderRadius: 12, background: '#0a0d13' }} />
+                style={{ width: '100%', height: 460, border: '1px solid var(--mantine-color-default-border)', borderRadius: 12, background: '#0a0d13' }} />
             </Mensaje>
           )
           if (m.rol === 'fin-clase') return (
@@ -148,7 +148,7 @@ export default function Clase({ indice, unidad, lenguaje, refrescar, irAClase, h
         {espera !== null && <Escribiendo texto={espera || undefined} />}
       </ZonaChat>
 
-      <Box p="md" style={{ borderTop: '1px solid var(--mantine-color-dark-4)' }}>
+      <Box p="md" style={{ borderTop: '1px solid var(--mantine-color-default-border)' }}>
         <Box maw={760} mx="auto">
           <Group gap="xs" mb="xs">
             {modo === 'conversatorio' && (

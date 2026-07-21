@@ -19,13 +19,13 @@ texto **para** estudiar cómodo en cualquier condición de luz.
 
 ## Tareas
 
-- [ ] `main.jsx`: `colorSchemeManager` de Mantine con localStorage +
+- [x] `main.jsx`: `colorSchemeManager` de Mantine con localStorage +
       script anti-flash en `index.html`.
-- [ ] Componente `Preferencias` (Menu con 🌓 y A−/A/A+).
-- [ ] Auditoría de colores fijos → `var(--mantine-color-*)` o
+- [x] Componente `Preferencias` (Menu con 🌓 y A−/A/A+).
+- [x] Auditoría de colores fijos → `var(--mantine-color-*)` o
       `light-dark()`; revisar Prosa/runner/quiz en ambos temas.
-- [ ] Captura Playwright en claro para el reporte (opcional).
-- [ ] Pruebas: unit front no hay harness — validación por bot Playwright:
+- [x] Captura Playwright en claro para el reporte (opcional).
+- [x] Pruebas: unit front no hay harness — validación por bot Playwright:
       alternar tema y verificar screenshot claro sin colores rotos
       (revisión visual manual documentada).
 
