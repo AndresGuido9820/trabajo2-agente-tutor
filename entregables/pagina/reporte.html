@@ -288,76 +288,56 @@ verificado por axe-core, buscador global ⌘K, estadísticas, exportación a
 consciente: los tests de los retos viajan al navegador (deben ejecutarse
 client-side) y son inspeccionables — el objetivo es aprender, no
 vigilar; las respuestas de quizzes siguen sin viajar jamás.</p>
-<h3 id="lo-que-se-puede-hacer-el-recorrido-de-punta-a-punta">Lo que se
-puede hacer: el recorrido de punta a punta</h3>
-<p>Antes de entrar en lo técnico, así se ve y se usa el sistema. Estas
-pantallas son de la app real —las genera
-<code>scripts/capturas_playwright.py</code> interactuando con el
-servidor y la API de OpenAI— y recorren todo lo que un estudiante puede
-hacer: pedir un curso con sus palabras, presentar el diagnóstico, vivir
-una clase (incluido equivocarse y preguntar libre), evaluarse y ver su
-progreso.</p>
-<p><strong>1. Mis cursos.</strong> El menú inicial, con todos los cursos
-y la tarjeta para crear uno nuevo. Cada persona tiene su propio espacio
-(multiusuario).</p>
-<p><img src="capturas/01-mis-cursos.png" alt="Mis cursos" /></p>
-<p><strong>2. Nuevo curso: se pide conversando.</strong> No hay
-formulario; le dices qué quieres aprender como se lo dirías a un
-profesor.</p>
-<p><img src="capturas/02-nuevo-curso.png" alt="Nuevo curso" /></p>
-<p><strong>3. El asesor no crea de una.</strong> Resume lo que entendió
-y pregunta tu nivel y tus objetivos antes de proponer nada.</p>
-<p><img src="capturas/03-asesor-pregunta.png"
-alt="El asesor pregunta" /></p>
-<p><strong>4. Propuesta de temario.</strong> Una lista de clases a tu
-medida, para que la ajustes o la confirmes. El curso solo se crea cuando
-dices que sí.</p>
-<p><img src="capturas/04-asesor-propone.png"
-alt="El asesor propone" /></p>
-<p><strong>5. La clase es una conversación.</strong> Confirmado el
-curso, arranca la clase 1 con el método PRIMM: te pide predecir qué hace
-un código antes de explicarlo.</p>
-<p><img src="capturas/05-clase-1-arranca.png"
-alt="Arranca la clase 1" /></p>
-<p><strong>6. Equivocarse es parte del método.</strong> Si predices mal,
-el tutor corrige con amabilidad, explica el porqué y sigue — no te
-regaña ni te da la respuesta de una.</p>
-<p><img src="capturas/06-tutor-corrige-y-avanza.png"
-alt="El tutor corrige" /></p>
-<p><strong>7. Puedes preguntar lo que quieras.</strong> Si interrumpes
-con una duda ("¿esto para qué me sirve en mi negocio?"), el tutor la
-responde y retoma el paso <strong>sin adelantar</strong> la lección.</p>
-<p><img src="capturas/07-duda-al-tutor.png" alt="Duda al tutor" /></p>
-<p><strong>8. Clase completada.</strong> Al cubrir todos los pasos, la
-clase queda tachada en la barra lateral, el tutor cierra con un recap y
-se habilita la evaluación; las siguientes clases están bloqueadas hasta
-aprobar.</p>
-<p><img src="capturas/08-clase-completada.png"
+<h3 id="lo-que-se-puede-hacer-el-recorrido-y-los-features">Lo que se
+puede hacer: el recorrido y los features</h3>
+<p>Antes de entrar en lo técnico, así se ve y se usa la versión actual
+del sistema. Estas pantallas son de la app real y recorren lo que un
+estudiante hace de punta a punta, resaltando los features que sumé en la
+segunda iteración: examen diagnóstico, clase por objetivos con panel en
+vivo, retos de código verificados en el navegador, mini-quices y demos
+interactivas.</p>
+<p><strong>1. Mis cursos (multiusuario).</strong> El menú inicial con
+todos los cursos y su progreso. Cada persona entra a su propio perfil,
+con sus cursos y datos aislados.</p>
+<p><img src="capturas-v2/01-mis-cursos.png" alt="Mis cursos" /></p>
+<p><strong>2. El curso se pide conversando.</strong> No hay formulario:
+describes qué quieres aprender como se lo dirías a un profesor, y el
+asesor entrevista, resume lo que entendió y propone un temario que solo
+se crea cuando confirmas.</p>
+<p><img src="capturas-v2/02-creacion-conversacional.png"
+alt="Creación conversacional" /></p>
+<p><strong>3. Examen diagnóstico (feature nuevo).</strong> Al confirmar,
+un examen corto —calibrado a tu nivel declarado— mide lo que de verdad
+sabes; el resultado entra al perfil y recién entonces se diseña el
+temario a tu medida.</p>
+<p><img src="capturas-v2/03-examen-diagnostico.png"
+alt="Examen diagnóstico" /></p>
+<p><strong>4. Clase por objetivos + reto de código (features
+nuevos).</strong> La clase se estructura en objetivos que un
+<strong>panel lateral</strong> va tachando en vivo (arriba, "OBJETIVO
+1/4 · PASO 7/28"), con barra de progreso, puntos y racha. Al cerrar cada
+objetivo llega un <strong>reto de código real</strong> con tests que
+corren en tu navegador (Pyodide); si fallas, la pista es socrática.</p>
+<p><img src="capturas-v2/04-reto-codigo.png"
+alt="Reto de código y panel de objetivos" /></p>
+<p><strong>5. Mini-quiz al cerrar cada objetivo (feature
+nuevo).</strong> Dos preguntas de predicción o encuentra-el-bug,
+pre-generadas dentro del guion (cero espera), cuyos distractores
+encarnan errores reales de principiante.</p>
+<p><img src="capturas-v2/05-mini-quiz.png" alt="Mini-quiz" /></p>
+<p><strong>6. Demos interactivas generadas por el LLM (feature
+nuevo).</strong> El botón de demo fabrica una mini-aplicación HTML del
+concepto en curso, que pasa un control de calidad y corre en un sandbox
+sin red. Al fondo se ve un objetivo ya tachado y su repaso agendado.</p>
+<p><img src="capturas-v2/06-demo-interactiva.png"
+alt="Demo interactiva" /></p>
+<p><strong>7. Clase completada y evaluación final.</strong> Con los
+objetivos al 100 % se desbloquea la evaluación final (banco por clase,
+niveles de Bloom y nota ponderada); aprobar abre la siguiente clase,
+reprobar abre un conversatorio socrático y reintento con preguntas
+nuevas.</p>
+<p><img src="capturas-v2/07-clase-completada.png"
 alt="Clase completada" /></p>
-<p><strong>9. Evaluación dentro del chat.</strong> Preguntas de
-comprensión (predicción o encuentra-el-bug) cuyos distractores encarnan
-errores reales de principiante.</p>
-<p><img src="capturas/09-evaluacion.png" alt="Evaluación" /></p>
-<p><strong>10. Si repruebas, hay red.</strong> Desglose por pregunta con
-la respuesta correcta y la explicación del error de razonamiento, botón
-de reintento con preguntas nuevas, y un conversatorio socrático que se
-abre para repasar lo que falló.</p>
-<p><img src="capturas/10-resultado.png" alt="Resultado" /></p>
-<p><strong>11. El diseño del curso es visible y editable.</strong> El
-documento generado queda persistido en la base de datos, con una copia
-<code>curso.md</code> descargable.</p>
-<p><img src="capturas/11-diseno-documento.png"
-alt="Diseño del curso" /></p>
-<p><strong>12. Edición estructurada.</strong> Puedes ajustar título,
-objetivo y subtemas de cada clase; los cambios pasan por las mismas
-validaciones que usa el LLM.</p>
-<p><img src="capturas/12-diseno-editor-estructurado.png"
-alt="Editor estructurado" /></p>
-<p><strong>13. Progreso que persiste.</strong> Cada curso muestra su
-barra de avance; además hay puntos, racha, estadísticas, repaso del día
-y buscador global.</p>
-<p><img src="capturas/13-mis-cursos-con-progreso.png"
-alt="Mis cursos con progreso" /></p>
 <h2 id="2-ingeniería-de-prompts">2. Ingeniería de prompts</h2>
 <p>Esta es la parte del proyecto en la que más tiempo invertí, y con
 razón: en un tutor, el prompt no es un accesorio, es el plan de
