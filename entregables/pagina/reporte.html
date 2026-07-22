@@ -126,7 +126,7 @@ tailwind.config = {
 <p>Trabajo 02 · Curso: Normalización: aplicaciones de LLMs y Agentes
 para la enseñanza de la programación básica.</p>
 <h2 id="enfoque-y-arquitectura">1. Enfoque y arquitectura</h2>
-<p>Construimos un agente tutor donde <strong>todo es una
+<p>Construí un agente tutor donde <strong>todo es una
 conversación</strong>. El estudiante pide su curso con sus palabras
 (“hazme un curso de Python para analizar las ventas de mi negocio;
 manejo bien Excel”); un asesor conversacional resume lo que entendió,
@@ -146,8 +146,8 @@ preguntas nuevas.</p>
 contenido, no un planificador: la orquestación propia
 (<code>agente.py</code>) resultó más simple, depurable y explicable que
 LangChain. <strong>Proveedor aislado</strong>: el código de negocio solo
-conoce la interfaz <code>ClienteLLM</code>; cuando cambiamos de
-Anthropic a OpenAI a mitad del proyecto, no se tocó una línea de lógica.
+conoce la interfaz <code>ClienteLLM</code>; cuando cambié de Anthropic a
+OpenAI a mitad del proyecto, no se tocó una línea de lógica.
 <strong>Salida estructurada por contrato</strong>: todo lo que el
 programa consume (perfil extraído de la conversación, temario, guiones,
 quizzes, la decisión de avanzar un paso) se pide como JSON con esquema
@@ -177,7 +177,7 @@ interactivas</strong> — el LLM escribe una mini-página HTML
 autocontenida que corre en un <code>iframe sandbox</code> sin red, al
 estilo de los Artifacts de Claude.</p>
 <p><strong>Segunda iteración (plan v2, 16 HUs).</strong> Sobre esa base
-ejecutamos dos olas de mejoras. La clase pasó a estructurarse en
+ejecuté dos olas de mejoras. La clase pasó a estructurarse en
 <strong>objetivos de aprendizaje</strong> con secuencia PRIMM propia,
 <strong>mini-quiz pre-generado</strong> al cerrar cada uno y un
 <strong>reto de código real</strong> verificado con tests en el
@@ -196,7 +196,7 @@ consciente: los tests de los retos viajan al navegador (deben ejecutarse
 client-side) y son inspeccionables — el objetivo es aprender, no
 vigilar; las respuestas de quizzes siguen sin viajar jamás.</p>
 <h2 id="ingeniería-de-prompts">2. Ingeniería de prompts</h2>
-<p>Antes de fijar los prompts investigamos literatura de enseñanza de la
+<p>Antes de fijar los prompts investigué literatura de enseñanza de la
 programación y tutores LLM
 (<code>docs/INVESTIGACION-PEDAGOGIA.md</code>, con fuentes). Tres
 hallazgos definieron el diseño:</p>
@@ -241,32 +241,38 @@ respuesta-vacía tratada como transitoria (los gpt-5 gastan razonamiento
 dentro de <code>max_completion_tokens</code>).</p>
 <p><strong>El front también necesita pruebas.</strong> Un bug de método
 HTTP (405) pasó inadvertido porque los tests del API no ejercitan el JS.
-Añadimos un bot E2E que replica las peticiones exactas del navegador
-contra un servidor real, y luego un <strong>bot Playwright</strong> que
-recorre la app completa y captura las pantallas del anexo.</p>
-<p><strong>Probar sin gastar.</strong> Las 289 pruebas corren contra
+Añadí una suite E2E que replica las peticiones exactas del navegador
+contra un servidor real, y luego pruebas de interfaz con
+<strong>Playwright</strong> que recorren la app completa de principio a
+fin y capturan las pantallas del anexo.</p>
+<p><strong>Probar sin gastar.</strong> Las 303 pruebas corren contra
 dobles del LLM inyectados (respuestas en cola, fallas simuladas del
 SDK); la API real solo se toca en scripts de humo y E2E manuales. CI en
 GitHub Actions corre formato, linter, mypy estricto, pytest y el build
 del frontend en cada push.</p>
 <h2 id="capacidades-y-limitaciones-de-los-llms-reflexión">4. Capacidades
 y limitaciones de los LLMs (reflexión)</h2>
-<p>Lo que más nos sorprendió fue la <strong>transferencia de
+<p>Lo que más me sorprendió fue la <strong>transferencia de
 dominio</strong>: con solo “manejo bien Excel”, el modelo produjo el
 mapa hoja→DataFrame, filtro→selección, tabla dinámica→agrupación en
 títulos, analogías y ejemplos. También su capacidad de <strong>generar
 software pequeño</strong>: las demos interactivas salen funcionales y
 fieles al tema. Pero la calidad pedagógica <strong>no emerge
 sola</strong>: la diferencia entre un tutor mediocre y uno bueno estuvo
-en cuánta ciencia del aprendizaje codificamos en los prompts. Y la
+en cuánta ciencia del aprendizaje codifiqué en los prompts. Y la
 fiabilidad tampoco: JSON que a veces no valida, quizzes cuya corrección
 no puede darse por sentada, latencias de minutos que exigen UX de espera
-honesta. La conclusión del equipo: el LLM es un generador excepcional de
-contenido personalizado; el <strong>producto</strong> es el sistema
-alrededor — validación, reintentos, calificación determinista,
-persistencia, candados y una interfaz que administra la espera.</p>
+honesta. Mi conclusión: el LLM es un generador excepcional de contenido
+personalizado; el <strong>producto</strong> es el sistema alrededor —
+validación, reintentos, calificación determinista, persistencia,
+candados y una interfaz que administra la espera.</p>
 <h2 id="contribución-individual">5. Contribución individual</h2>
+<p>Desarrollé este trabajo individualmente, de punta a punta:</p>
 <table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
 <thead>
 <tr>
 <th>Integrante</th>
@@ -275,22 +281,16 @@ persistencia, candados y una interfaz que administra la espera.</p>
 </thead>
 <tbody>
 <tr>
-<td><em>(nombre 1)</em></td>
-<td><em>(p. ej. cliente LLM, BD y pruebas)</em></td>
-</tr>
-<tr>
-<td><em>(nombre 2)</em></td>
-<td><em>(p. ej. investigación pedagógica y prompts)</em></td>
-</tr>
-<tr>
-<td><em>(nombre 3)</em></td>
-<td><em>(p. ej. frontend, E2E y video)</em></td>
+<td>Andrés Felipe Guido Montoya</td>
+<td>Arquitectura y backend (agente, prompts, evaluaciones, persistencia
+SQLite), frontend en React + Mantine, estrategia de pruebas (unitarias
+con dobles del LLM, E2E y accesibilidad), investigación pedagógica,
+video demo y documentación.</td>
 </tr>
 </tbody>
 </table>
-<h2
-id="anexo-recorrido-de-la-aplicación-capturas-del-bot-playwright">Anexo
-— Recorrido de la aplicación (capturas del bot Playwright)</h2>
+<h2 id="anexo-recorrido-de-la-aplicación-capturas">Anexo — Recorrido de
+la aplicación (capturas)</h2>
 <p>Capturas generadas automáticamente por
 <code>scripts/capturas_playwright.py</code> interactuando con la app
 real (servidor limpio + API de OpenAI).</p>
@@ -354,8 +354,8 @@ misconceptions documentadas.</p>
 <img src="capturas/09-evaluacion.png" alt="Evaluación" />
 <figcaption aria-hidden="true">Evaluación</figcaption>
 </figure>
-<p><strong>10. Resultado (ruta de reprobar)</strong> — el bot respondió
-al azar y sacó 1 de 4: desglose por pregunta con la correcta y la
+<p><strong>10. Resultado (ruta de reprobar)</strong> — respondí al azar
+a propósito y saqué 1 de 4: desglose por pregunta con la correcta y la
 explicación del error de razonamiento, botón de reintento (con preguntas
 nuevas) y el conversatorio socrático abriéndose automáticamente al
 final.</p>

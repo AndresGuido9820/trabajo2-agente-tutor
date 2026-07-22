@@ -5,7 +5,7 @@ enseñanza de la programación básica.
 
 ## 1. Enfoque y arquitectura
 
-Construimos un agente tutor donde **todo es una conversación**. El
+Construí un agente tutor donde **todo es una conversación**. El
 estudiante pide su curso con sus palabras ("hazme un curso de Python para
 analizar las ventas de mi negocio; manejo bien Excel"); un asesor
 conversacional resume lo que entendió, pregunta lo que falta (nivel,
@@ -24,7 +24,7 @@ Las decisiones de arquitectura que definieron el proyecto:
 evaluación → progresión) y el LLM es el motor de contenido, no un
 planificador: la orquestación propia (`agente.py`) resultó más simple,
 depurable y explicable que LangChain. **Proveedor aislado**: el código de
-negocio solo conoce la interfaz `ClienteLLM`; cuando cambiamos de Anthropic
+negocio solo conoce la interfaz `ClienteLLM`; cuando cambié de Anthropic
 a OpenAI a mitad del proyecto, no se tocó una línea de lógica. **Salida
 estructurada por contrato**: todo lo que el programa consume (perfil
 extraído de la conversación, temario, guiones, quizzes, la decisión de
@@ -52,7 +52,7 @@ backend de ejecución) y visualizar línea a línea (Python Tutor); y el botón
 autocontenida que corre en un `iframe sandbox` sin red, al estilo de los
 Artifacts de Claude.
 
-**Segunda iteración (plan v2, 16 HUs).** Sobre esa base ejecutamos dos olas
+**Segunda iteración (plan v2, 16 HUs).** Sobre esa base ejecuté dos olas
 de mejoras. La clase pasó a estructurarse en **objetivos de aprendizaje**
 con secuencia PRIMM propia, **mini-quiz pre-generado** al cerrar cada uno y
 un **reto de código real** verificado con tests en el navegador (con pista
@@ -72,7 +72,7 @@ viajar jamás.
 
 ## 2. Ingeniería de prompts
 
-Antes de fijar los prompts investigamos literatura de enseñanza de la
+Antes de fijar los prompts investigué literatura de enseñanza de la
 programación y tutores LLM (`docs/INVESTIGACION-PEDAGOGIA.md`, con fuentes).
 Tres hallazgos definieron el diseño:
 
@@ -114,41 +114,41 @@ timeout de 180 s y respuesta-vacía tratada como transitoria (los gpt-5
 gastan razonamiento dentro de `max_completion_tokens`).
 
 **El front también necesita pruebas.** Un bug de método HTTP (405) pasó
-inadvertido porque los tests del API no ejercitan el JS. Añadimos un bot
+inadvertido porque los tests del API no ejercitan el JS. Añadí una suite
 E2E que replica las peticiones exactas del navegador contra un servidor
-real, y luego un **bot Playwright** que recorre la app completa y captura
-las pantallas del anexo.
+real, y luego pruebas de interfaz con **Playwright** que recorren la app
+completa de principio a fin y capturan las pantallas del anexo.
 
-**Probar sin gastar.** Las 289 pruebas corren contra dobles del LLM
+**Probar sin gastar.** Las 303 pruebas corren contra dobles del LLM
 inyectados (respuestas en cola, fallas simuladas del SDK); la API real solo
 se toca en scripts de humo y E2E manuales. CI en GitHub Actions corre
 formato, linter, mypy estricto, pytest y el build del frontend en cada push.
 
 ## 4. Capacidades y limitaciones de los LLMs (reflexión)
 
-Lo que más nos sorprendió fue la **transferencia de dominio**: con solo
+Lo que más me sorprendió fue la **transferencia de dominio**: con solo
 "manejo bien Excel", el modelo produjo el mapa hoja→DataFrame,
 filtro→selección, tabla dinámica→agrupación en títulos, analogías y
 ejemplos. También su capacidad de **generar software pequeño**: las demos
 interactivas salen funcionales y fieles al tema. Pero la calidad pedagógica
 **no emerge sola**: la diferencia entre un tutor mediocre y uno bueno
-estuvo en cuánta ciencia del aprendizaje codificamos en los prompts. Y la
+estuvo en cuánta ciencia del aprendizaje codifiqué en los prompts. Y la
 fiabilidad tampoco: JSON que a veces no valida, quizzes cuya corrección no
 puede darse por sentada, latencias de minutos que exigen UX de espera
-honesta. La conclusión del equipo: el LLM es un generador excepcional de
+honesta. Mi conclusión: el LLM es un generador excepcional de
 contenido personalizado; el **producto** es el sistema alrededor —
 validación, reintentos, calificación determinista, persistencia, candados
 y una interfaz que administra la espera.
 
 ## 5. Contribución individual
 
+Desarrollé este trabajo individualmente, de punta a punta:
+
 | Integrante | Contribución |
 |---|---|
-| _(nombre 1)_ | _(p. ej. cliente LLM, BD y pruebas)_ |
-| _(nombre 2)_ | _(p. ej. investigación pedagógica y prompts)_ |
-| _(nombre 3)_ | _(p. ej. frontend, E2E y video)_ |
+| Andrés Felipe Guido Montoya | Arquitectura y backend (agente, prompts, evaluaciones, persistencia SQLite), frontend en React + Mantine, estrategia de pruebas (unitarias con dobles del LLM, E2E y accesibilidad), investigación pedagógica, video demo y documentación. |
 
-## Anexo — Recorrido de la aplicación (capturas del bot Playwright)
+## Anexo — Recorrido de la aplicación (capturas)
 
 Capturas generadas automáticamente por `scripts/capturas_playwright.py`
 interactuando con la app real (servidor limpio + API de OpenAI).
@@ -196,7 +196,7 @@ encuentra-el-bug) con distractores basados en misconceptions documentadas.
 
 ![Evaluación](capturas/09-evaluacion.png)
 
-**10. Resultado (ruta de reprobar)** — el bot respondió al azar y sacó 1 de
+**10. Resultado (ruta de reprobar)** — respondí al azar a propósito y saqué 1 de
 4: desglose por pregunta con la correcta y la explicación del error de
 razonamiento, botón de reintento (con preguntas nuevas) y el conversatorio
 socrático abriéndose automáticamente al final.

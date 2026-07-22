@@ -262,7 +262,7 @@ tailwind.config = {
       <span class="block text-label-caps font-label-caps text-primary uppercase tracking-wider mb-3 border-b border-primary pb-2 inline-block">03 &mdash; Ingeniería de prompts</span>
       <h2 class="text-headline-lg font-headline-lg text-on-surface mb-3">La pedagogía se especifica, no se asume</h2>
       <p class="text-body-md font-body-md text-on-surface-variant max-w-3xl mb-6">
-        Antes de fijar los prompts investigamos literatura de enseñanza de la programación y tutores LLM.
+        Antes de fijar los prompts investigué literatura de enseñanza de la programación y tutores LLM.
         Tres hallazgos definieron el diseño:
       </p>
     </div>
@@ -271,7 +271,7 @@ tailwind.config = {
         <p class="text-body-md font-body-md text-on-surface-variant"><strong class="text-on-surface">La estructura pedagógica hay que especificarla.</strong> Las clases siguen un guion PRIMM generado primero (predicción antes de explicación, worked examples con subgoal labels, estado de variables línea a línea, error típico, reto). Separar el plan de la ejecución evita que la conversación divague.</p>
       </div>
       <div class="bg-surface-container-low border-l-4 border-primary px-6 py-5 fade-up">
-        <p class="text-body-md font-body-md text-on-surface-variant"><strong class="text-on-surface">Los LLM no conocen los errores reales de los principiantes.</strong> Inyectamos un banco de misconceptions documentadas (leer <code class="font-label-caps text-sm">x = x + 1</code> como ecuación, <code class="font-label-caps text-sm">while</code> como interrupción instantánea…) y exigimos que cada distractor de quiz encarne una.</p>
+        <p class="text-body-md font-body-md text-on-surface-variant"><strong class="text-on-surface">Los LLM no conocen los errores reales de los principiantes.</strong> Inyecté un banco de misconceptions documentadas (leer <code class="font-label-caps text-sm">x = x + 1</code> como ecuación, <code class="font-label-caps text-sm">while</code> como interrupción instantánea…) y exigimos que cada distractor de quiz encarne una.</p>
       </div>
       <div class="bg-surface-container-low border-l-4 border-primary px-6 py-5 fade-up">
         <p class="text-body-md font-body-md text-on-surface-variant"><strong class="text-on-surface">El avance también es una decisión con contrato.</strong> Cada turno devuelve <code class="font-label-caps text-sm">{avanza, mensaje}</code>: si el mensaje atiende el paso, avanza; si es un saludo o una duda, responde sin avanzar — un «hola» no dispara media lección. El conversatorio aplica los guardrails de Khanmigo (pistas, no soluciones) y los reintentos exigen variantes (patrón PrairieLearn).</p>
@@ -694,7 +694,7 @@ uv run tutor               <span class="opacity-60"># alternativa: la misma lóg
           <li><code class="font-label-caps text-sm">pytest</code> — 303 pruebas con dobles del LLM</li>
           <li><code class="font-label-caps text-sm">ruff</code> — formato + linter estricto</li>
           <li><code class="font-label-caps text-sm">mypy</code> — tipos en modo estricto</li>
-          <li><code class="font-label-caps text-sm">playwright</code> — bots E2E, capturas, video y axe</li>
+          <li><code class="font-label-caps text-sm">playwright</code> — pruebas E2E, capturas y axe</li>
         </ul>
       </div>
       <div class="bg-surface-container-lowest border-2 border-outline-variant p-6 fade-up">
@@ -744,7 +744,7 @@ uv run python scripts/a11y_playwright.py       <span class="opacity-60"># audito
       </div>
       <div class="bg-surface-container-lowest border-2 border-outline-variant p-6 fade-up">
         <span class="text-label-caps font-label-caps text-tertiary uppercase tracking-wider">El front también necesita pruebas</span>
-        <p class="text-body-md font-body-md text-on-surface-variant mt-2">Un bug de método HTTP pasó inadvertido porque los tests del API no ejercitan el JS. Añadimos bots Playwright que recorren la app real: capturas, E2E de caída-y-reintento del servidor y auditoría de accesibilidad con axe-core.</p>
+        <p class="text-body-md font-body-md text-on-surface-variant mt-2">Un bug de método HTTP pasó inadvertido porque los tests del API no ejercitan el JS. Añadí pruebas de interfaz con Playwright que recorren la app real: capturas, E2E de caída-y-reintento del servidor y auditoría de accesibilidad con axe-core.</p>
       </div>
       <div class="bg-surface-container-lowest border-2 border-outline-variant p-6 fade-up">
         <span class="text-label-caps font-label-caps text-tertiary uppercase tracking-wider">El system prompt manda</span>
