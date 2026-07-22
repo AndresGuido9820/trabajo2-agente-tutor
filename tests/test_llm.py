@@ -10,8 +10,8 @@ from openai import (
 )
 
 from tutor.config import MAX_REINTENTOS_API, MAX_REINTENTOS_PARSEO
-from tutor.errores import ErrorLLM
-from tutor.llm import ClienteOpenAI, espera_backoff, extraer_json, pedir_json
+from tutor.nucleo.errores import ErrorLLM
+from tutor.proveedor.llm import ClienteOpenAI, espera_backoff, extraer_json, pedir_json
 
 from .conftest import ClienteLLMFalso, SDKFalso
 

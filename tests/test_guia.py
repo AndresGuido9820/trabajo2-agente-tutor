@@ -2,15 +2,15 @@ import json
 
 import pytest
 
-from tutor.agente import Agente, EstadoUnidad
 from tutor.config import (
     NOTA_APROBATORIA,
     PUNTOS_PRIMER_INTENTO,
     PUNTOS_QUIZ_APROBADO,
     PUNTOS_SEGUNDO_INTENTO,
 )
-from tutor.curso import validar_guia
-from tutor.errores import ErrorBloqueada
+from tutor.ensenanza.agente import Agente, EstadoUnidad
+from tutor.ensenanza.curso import validar_guia
+from tutor.nucleo.errores import ErrorBloqueada
 
 from .conftest import ClienteLLMFalso
 from .test_agente import quiz_respuesta, temario_respuesta

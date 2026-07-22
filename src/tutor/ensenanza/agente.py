@@ -15,7 +15,6 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-from tutor import db
 from tutor.config import (
     ARTEFACTO_MAX_KB,
     INTENTOS_SIN_REPETIR,
@@ -28,7 +27,7 @@ from tutor.config import (
     PUNTOS_RETO,
     PUNTOS_SEGUNDO_INTENTO,
 )
-from tutor.curso import (
+from tutor.ensenanza.curso import (
     Curso,
     Guia,
     GuionLeccion,
@@ -39,19 +38,21 @@ from tutor.curso import (
     generar_temario,
     guardar_curso,
 )
-from tutor.errores import ErrorBloqueada, ErrorDatos, ErrorLLM
-from tutor.evaluacion import (
+from tutor.ensenanza.evaluacion import (
     Pregunta,
     Quiz,
     Retroalimentacion,
     calificar,
     generar_quiz,
 )
-from tutor.llm import ClienteLLM, ExtractorCampoJSON, extraer_json, pedir_json
-from tutor.models import PerfilEstudiante
-from tutor.perfil import cargar_perfil, guardar_perfil
-from tutor.progreso import Progreso, Resultado, cargar_progreso, guardar_progreso
-from tutor.prompts import (
+from tutor.ensenanza.perfil import cargar_perfil, guardar_perfil
+from tutor.ensenanza.progreso import (
+    Progreso,
+    Resultado,
+    cargar_progreso,
+    guardar_progreso,
+)
+from tutor.ensenanza.prompts import (
     clasificar_plantilla,
     prompt_artefacto,
     prompt_avance_leccion,
@@ -64,6 +65,10 @@ from tutor.prompts import (
     system_leccion,
     system_tutor,
 )
+from tutor.nucleo.errores import ErrorBloqueada, ErrorDatos, ErrorLLM
+from tutor.nucleo.models import PerfilEstudiante
+from tutor.persistencia import db
+from tutor.proveedor.llm import ClienteLLM, ExtractorCampoJSON, extraer_json, pedir_json
 
 _PATRONES_PROHIBIDOS_ARTEFACTO = (
     ("https://", "recursos externos prohibidos (https://)"),

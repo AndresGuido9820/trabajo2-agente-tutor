@@ -1,6 +1,6 @@
 import pytest
 
-from tutor.progreso import (
+from tutor.ensenanza.progreso import (
     Progreso,
     Resultado,
     cargar_progreso,

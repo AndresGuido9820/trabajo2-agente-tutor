@@ -4,10 +4,16 @@ import json
 
 import pytest
 
-from tutor import db
-from tutor.agente import Agente
-from tutor.evaluacion import Pregunta, Quiz, calificar, resumenes, validar_quiz
-from tutor.models import Nivel, Objetivo, PerfilEstudiante
+from tutor.ensenanza.agente import Agente
+from tutor.ensenanza.evaluacion import (
+    Pregunta,
+    Quiz,
+    calificar,
+    resumenes,
+    validar_quiz,
+)
+from tutor.nucleo.models import Nivel, Objetivo, PerfilEstudiante
+from tutor.persistencia import db
 
 from .conftest import ClienteLLMFalso
 from .test_agente import quiz_respuesta, temario_respuesta

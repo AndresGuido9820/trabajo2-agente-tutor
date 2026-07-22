@@ -2,9 +2,9 @@ import json
 
 from fastapi.testclient import TestClient
 
-from tutor.agente import Agente
 from tutor.config import Configuracion
-from tutor.web import crear_app
+from tutor.ensenanza.agente import Agente
+from tutor.interfaces.web import crear_app
 
 from .conftest import ClienteLLMFalso
 from .test_agente import quiz_respuesta, temario_respuesta

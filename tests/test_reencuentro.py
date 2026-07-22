@@ -3,10 +3,10 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from tutor import db
 from tutor.config import HORAS_PARA_REENCUENTRO, Configuracion
-from tutor.prompts import prompt_reencuentro
-from tutor.web import crear_app
+from tutor.ensenanza.prompts import prompt_reencuentro
+from tutor.interfaces.web import crear_app
+from tutor.persistencia import db
 
 from .conftest import ClienteLLMFalso
 from .test_agente import temario_respuesta

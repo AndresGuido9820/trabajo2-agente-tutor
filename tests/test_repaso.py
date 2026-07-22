@@ -6,8 +6,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from tutor.config import Configuracion
-from tutor.progreso import Progreso, cargar_progreso, guardar_progreso
-from tutor.web import crear_app
+from tutor.ensenanza.progreso import Progreso, cargar_progreso, guardar_progreso
+from tutor.interfaces.web import crear_app
 
 from .conftest import ClienteLLMFalso
 from .test_agente import temario_respuesta

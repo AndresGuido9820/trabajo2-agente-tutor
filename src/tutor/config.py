@@ -12,7 +12,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from tutor.errores import ErrorConfiguracion
+from tutor.nucleo.errores import ErrorConfiguracion
 
 MODELO_POR_DEFECTO = "gpt-5-mini"
 DIR_DATOS_POR_DEFECTO = "./data"

@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from tutor.config import DIR_DATOS_POR_DEFECTO, MODELO_POR_DEFECTO, cargar_configuracion
-from tutor.errores import ErrorConfiguracion
+from tutor.nucleo.errores import ErrorConfiguracion
 
 
 def test_config_sin_api_key_lanza_error_configuracion():

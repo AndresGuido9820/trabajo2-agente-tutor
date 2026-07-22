@@ -5,12 +5,12 @@ from __future__ import annotations
 import logging
 import sys
 
-from tutor import ui
-from tutor.agente import ARCHIVO_PERFIL, Agente, perfil_o_none
 from tutor.config import cargar_configuracion
-from tutor.errores import ErrorTutor
-from tutor.llm import ClienteOpenAI
-from tutor.perfil import guardar_perfil, preguntar_perfil
+from tutor.ensenanza.agente import ARCHIVO_PERFIL, Agente, perfil_o_none
+from tutor.ensenanza.perfil import guardar_perfil, preguntar_perfil
+from tutor.interfaces import ui
+from tutor.nucleo.errores import ErrorTutor
+from tutor.proveedor.llm import ClienteOpenAI
 
 
 def _preparar_agente() -> Agente:

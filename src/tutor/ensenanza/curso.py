@@ -15,16 +15,17 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from tutor import db, prompts
 from tutor.config import (
     MAX_SECCIONES_GUIA,
     MAX_UNIDADES,
     MIN_SECCIONES_GUIA,
     MIN_UNIDADES,
 )
-from tutor.llm import ClienteLLM, pedir_json
-from tutor.models import PerfilEstudiante
-from tutor.progreso import Progreso
+from tutor.ensenanza import prompts
+from tutor.ensenanza.progreso import Progreso
+from tutor.nucleo.models import PerfilEstudiante
+from tutor.persistencia import db
+from tutor.proveedor.llm import ClienteLLM, pedir_json
 
 logger = logging.getLogger(__name__)
 

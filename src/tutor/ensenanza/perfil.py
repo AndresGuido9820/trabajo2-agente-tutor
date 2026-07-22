@@ -13,9 +13,9 @@ import sqlite3
 from collections.abc import Callable
 from pathlib import Path
 
-from tutor import db
-from tutor.errores import ErrorDatos
-from tutor.models import Nivel, Objetivo, PerfilEstudiante
+from tutor.nucleo.errores import ErrorDatos
+from tutor.nucleo.models import Nivel, Objetivo, PerfilEstudiante
+from tutor.persistencia import db
 
 logger = logging.getLogger(__name__)
 

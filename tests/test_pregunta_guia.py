@@ -1,6 +1,6 @@
 import pytest
 
-from tutor.agente import Agente
+from tutor.ensenanza.agente import Agente
 
 from .conftest import ClienteLLMFalso
 from .test_agente import temario_respuesta
@@ -79,7 +79,7 @@ class TestPreguntaGuiaWeb:
         from fastapi.testclient import TestClient
 
         from tutor.config import Configuracion
-        from tutor.web import crear_app
+        from tutor.interfaces.web import crear_app
 
         configuracion = Configuracion(
             api_key="sk-prueba", modelo="gpt-prueba", dir_datos=tmp_path

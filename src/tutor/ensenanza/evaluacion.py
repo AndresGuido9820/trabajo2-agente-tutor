@@ -12,10 +12,10 @@ import logging
 from dataclasses import dataclass
 from typing import Any
 
-from tutor import prompts
 from tutor.config import PESOS_NIVEL, PREGUNTAS_POR_QUIZ
-from tutor.llm import ClienteLLM, pedir_json
-from tutor.progreso import Resultado, crear_resultado
+from tutor.ensenanza import prompts
+from tutor.ensenanza.progreso import Resultado, crear_resultado
+from tutor.proveedor.llm import ClienteLLM, pedir_json
 
 logger = logging.getLogger(__name__)
 

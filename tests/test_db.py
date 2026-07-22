@@ -1,10 +1,10 @@
 import json
 import sqlite3
 
-from tutor import db
-from tutor.curso import cargar_curso, cargar_plan_md
-from tutor.perfil import cargar_perfil
-from tutor.progreso import cargar_progreso
+from tutor.ensenanza.curso import cargar_curso, cargar_plan_md
+from tutor.ensenanza.perfil import cargar_perfil
+from tutor.ensenanza.progreso import cargar_progreso
+from tutor.persistencia import db
 
 
 class TestBaseDatos:
@@ -21,14 +21,14 @@ class TestBaseDatos:
 
     def test_clases_guardan_prompt_y_metadata(self, tmp_path):
         """La tabla clases contiene el guion (prompt) y metadata por clase."""
-        from tutor.curso import Curso, guardar_curso, validar_guion
+        from tutor.ensenanza.curso import Curso, guardar_curso, validar_guion
 
         from .test_agente import temario_respuesta
         from .test_leccion import guion_json
 
         ruta = tmp_path / "tutor.db"
         temario_datos = json.loads(temario_respuesta())
-        from tutor.curso import validar_temario
+        from tutor.ensenanza.curso import validar_temario
 
         curso = Curso(temario=validar_temario(temario_datos))
         curso.guiones[0] = validar_guion(guion_json())
@@ -47,8 +47,8 @@ class TestBaseDatos:
         assert recargado is not None and recargado.guiones[0] == curso.guiones[0]
 
     def test_borrar_curso_no_toca_perfil_ni_chat(self, tmp_path):
-        from tutor.models import Nivel, Objetivo, PerfilEstudiante
-        from tutor.perfil import guardar_perfil
+        from tutor.ensenanza.perfil import guardar_perfil
+        from tutor.nucleo.models import Nivel, Objetivo, PerfilEstudiante
 
         ruta = tmp_path / "tutor.db"
         perfil = PerfilEstudiante(Nivel.BASICO, "", Objetivo.DATOS, "", "python")

@@ -1,7 +1,7 @@
-from tutor.agente import Agente
 from tutor.config import MAX_TURNOS_CHARLA
-from tutor.errores import ErrorLLM
-from tutor.ui import bucle_charla
+from tutor.ensenanza.agente import Agente
+from tutor.interfaces.ui import bucle_charla
+from tutor.nucleo.errores import ErrorLLM
 
 from .conftest import ClienteLLMFalso
 from .test_agente import temario_respuesta

@@ -3,12 +3,12 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from tutor import db
-from tutor.agente import Agente
 from tutor.config import Configuracion, cargar_configuracion
-from tutor.llm import ClienteOpenAI
-from tutor.models import Nivel, Objetivo, PerfilEstudiante
-from tutor.web import crear_app
+from tutor.ensenanza.agente import Agente
+from tutor.interfaces.web import crear_app
+from tutor.nucleo.models import Nivel, Objetivo, PerfilEstudiante
+from tutor.persistencia import db
+from tutor.proveedor.llm import ClienteOpenAI
 
 from .conftest import ClienteLLMFalso, SDKFalso
 from .test_agente import temario_respuesta

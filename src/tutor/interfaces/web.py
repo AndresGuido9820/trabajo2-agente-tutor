@@ -23,8 +23,6 @@ from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from tutor import db
-from tutor.agente import ARCHIVO_DB, ARCHIVO_PERFIL, Agente, perfil_o_none
 from tutor.config import (
     HORAS_PARA_REENCUENTRO,
     NOTA_APROBATORIA,
@@ -33,32 +31,39 @@ from tutor.config import (
     Configuracion,
     cargar_configuracion,
 )
-from tutor.curso import (
+from tutor.ensenanza.agente import ARCHIVO_DB, ARCHIVO_PERFIL, Agente, perfil_o_none
+from tutor.ensenanza.curso import (
     cargar_plan_md,
     guardar_curso,
     guardar_plan_md,
     plan_markdown,
     validar_temario,
 )
-from tutor.errores import ErrorBloqueada, ErrorConfiguracion, ErrorDatos, ErrorLLM
-from tutor.evaluacion import Quiz, resumenes, validar_quiz
-from tutor.exportar import paquete_zip
-from tutor.imagenes import ilustrar_unidad
-from tutor.llm import ClienteLLM, ClienteOpenAI, pedir_json
-from tutor.models import Nivel, Objetivo, PerfilEstudiante
-from tutor.perfil import guardar_perfil, validar_perfil_extraido
-from tutor.prompts import (
+from tutor.ensenanza.evaluacion import Quiz, resumenes, validar_quiz
+from tutor.ensenanza.perfil import guardar_perfil, validar_perfil_extraido
+from tutor.ensenanza.prompts import (
     prompt_creacion,
     prompt_diagnostico,
     prompt_extraer_perfil,
     system_creacion,
     system_tutor,
 )
+from tutor.nucleo.errores import (
+    ErrorBloqueada,
+    ErrorConfiguracion,
+    ErrorDatos,
+    ErrorLLM,
+)
+from tutor.nucleo.models import Nivel, Objetivo, PerfilEstudiante
+from tutor.persistencia import db
+from tutor.persistencia.exportar import paquete_zip
+from tutor.proveedor.imagenes import ilustrar_unidad
+from tutor.proveedor.llm import ClienteLLM, ClienteOpenAI, pedir_json
 
 logger = logging.getLogger(__name__)
 
-RUTA_INDEX = Path(__file__).parent / "static" / "index.html"
-RUTA_DIST = Path(__file__).parent / "static" / "dist"
+RUTA_INDEX = Path(__file__).parent.parent / "static" / "index.html"
+RUTA_DIST = Path(__file__).parent.parent / "static" / "dist"
 HOST = "127.0.0.1"
 PUERTO = 8017
 

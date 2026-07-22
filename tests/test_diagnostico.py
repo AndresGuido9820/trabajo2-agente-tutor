@@ -3,9 +3,9 @@
 from fastapi.testclient import TestClient
 
 from tutor.config import Configuracion
-from tutor.errores import ErrorLLM
-from tutor.perfil import cargar_perfil
-from tutor.web import crear_app
+from tutor.ensenanza.perfil import cargar_perfil
+from tutor.interfaces.web import crear_app
+from tutor.nucleo.errores import ErrorLLM
 
 from .conftest import ClienteLLMFalso
 from .test_agente import quiz_respuesta, temario_respuesta

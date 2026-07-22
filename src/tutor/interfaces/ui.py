@@ -14,11 +14,11 @@ from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.table import Table
 
-from tutor.agente import Agente, EstadoUnidad
-from tutor.errores import ErrorLLM
-from tutor.evaluacion import Retroalimentacion, validar_respuesta
-from tutor.perfil import FuncionEntrada
-from tutor.progreso import Resultado
+from tutor.ensenanza.agente import Agente, EstadoUnidad
+from tutor.ensenanza.evaluacion import Retroalimentacion, validar_respuesta
+from tutor.ensenanza.perfil import FuncionEntrada
+from tutor.ensenanza.progreso import Resultado
+from tutor.nucleo.errores import ErrorLLM
 
 consola = Console()
 

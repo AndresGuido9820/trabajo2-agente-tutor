@@ -1,7 +1,7 @@
 import json
 
-from tutor.agente import Agente, EstadoUnidad
-from tutor.ui import Accion, parsear_accion
+from tutor.ensenanza.agente import Agente, EstadoUnidad
+from tutor.interfaces.ui import Accion, parsear_accion
 
 from .conftest import ClienteLLMFalso
 

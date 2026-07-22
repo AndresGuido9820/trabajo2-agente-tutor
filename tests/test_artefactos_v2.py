@@ -2,10 +2,10 @@
 
 import pytest
 
-from tutor.agente import Agente, verificar_artefacto
-from tutor.errores import ErrorLLM
-from tutor.models import Nivel, Objetivo, PerfilEstudiante
-from tutor.prompts import clasificar_plantilla
+from tutor.ensenanza.agente import Agente, verificar_artefacto
+from tutor.ensenanza.prompts import clasificar_plantilla
+from tutor.nucleo.errores import ErrorLLM
+from tutor.nucleo.models import Nivel, Objetivo, PerfilEstudiante
 
 from .conftest import ClienteLLMFalso
 from .test_agente import temario_respuesta
