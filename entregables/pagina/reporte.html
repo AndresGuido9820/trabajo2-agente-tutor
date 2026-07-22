@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Reporte técnico &mdash; Profe Bit · UNAL 2026</title>
+<meta name="description" content="Agente tutor de fundamentos de programación: curso diseñado conversando, examen diagnóstico, clases por objetivos con retos de código y evaluaciones con niveles de Bloom. UNAL 2026."/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<style>
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
+  .fade-up{opacity:0;transform:translateY(20px);transition:opacity .55s ease,transform .55s ease;}
+  .fade-up.visible{opacity:1;transform:none;}
+  .lightbox{display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.85);
+    backdrop-filter:blur(8px);align-items:center;justify-content:center;cursor:zoom-out;}
+  .lightbox.open{display:flex;}
+  .lightbox img{max-width:92vw;max-height:90vh;border-radius:.25rem;}
+  details.prompt summary{cursor:pointer;list-style:none;}
+  details.prompt summary::-webkit-details-marker{display:none;}
+  details.prompt[open] summary .chev{transform:rotate(90deg);}
+  details.prompt pre{white-space:pre-wrap;word-break:break-word;}
+</style>
+<script>
+tailwind.config = {
+  darkMode:"class",
+  theme:{extend:{
+    colors:{
+      "background":"#f6f7fb","surface":"#f6f7fb",
+      "surface-container":"#e9ebf4","surface-container-low":"#eef0f7",
+      "surface-container-high":"#dfe2ee","surface-container-lowest":"#ffffff",
+      "surface-dim":"#c9cdde","surface-variant":"#dde0ee",
+      "on-background":"#131629","on-surface":"#131629",
+      "on-surface-variant":"#414766","inverse-on-surface":"#eef0f7",
+      "inverse-surface":"#1f2340","outline":"#6c74a0","outline-variant":"#bcc2dc",
+      "primary":"#34409e","on-primary":"#ffffff",
+      "primary-container":"#4353c4","on-primary-container":"#dde3ff",
+      "primary-fixed":"#bac8ff","primary-fixed-dim":"#91a7ff","inverse-primary":"#91a7ff",
+      "secondary":"#087f5b","on-secondary":"#ffffff",
+      "secondary-container":"#d3f9ee","on-secondary-container":"#054a36",
+      "tertiary":"#92400e","on-tertiary":"#ffffff",
+      "tertiary-container":"#b45309","on-tertiary-container":"#fef3c7",
+      "error":"#b91c1c","on-error":"#ffffff","error-container":"#fee2e2","on-error-container":"#7f1d1d"
+    },
+    borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},
+    spacing:{
+      "stack-lg":"48px","stack-md":"24px","gutter":"24px",
+      "margin-desktop":"64px","stack-sm":"8px","margin-mobile":"16px",
+      "unit":"4px","max-content-width":"1280px"
+    },
+    fontFamily:{
+      "body-lg":["Hanken Grotesk"],"body-md":["Hanken Grotesk"],
+      "headline-lg":["Libre Caslon Text"],"headline-md":["Libre Caslon Text"],
+      "display-lg":["Libre Caslon Text"],"display-lg-mobile":["Libre Caslon Text"],
+      "label-caps":["JetBrains Mono"],"caption":["Hanken Grotesk"]
+    },
+    fontSize:{
+      "body-lg":["18px",{"lineHeight":"1.7","fontWeight":"400"}],
+      "body-md":["16px",{"lineHeight":"1.5","fontWeight":"400"}],
+      "headline-lg":["32px",{"lineHeight":"1.2","fontWeight":"700"}],
+      "headline-md":["22px",{"lineHeight":"1.3","fontWeight":"600"}],
+      "display-lg":["58px",{"lineHeight":"1.1","letterSpacing":"-0.02em","fontWeight":"700"}],
+      "display-lg-mobile":["36px",{"lineHeight":"1.2","fontWeight":"700"}],
+      "label-caps":["11px",{"lineHeight":"1.0","letterSpacing":"0.1em","fontWeight":"500"}],
+      "caption":["14px",{"lineHeight":"1.4","fontWeight":"400"}]
+    }
+  }}
+}
+</script>
+<style>
+  .informe h2{font-family:"Libre Caslon Text",serif;font-size:32px;line-height:1.2;font-weight:700;
+    margin:56px 0 16px;color:#131629;border-bottom:1px solid #bcc2dc;padding-bottom:10px;}
+  .informe h3{font-family:"Libre Caslon Text",serif;font-size:22px;line-height:1.3;font-weight:600;
+    margin:32px 0 10px;color:#131629;}
+  .informe p{font-family:"Hanken Grotesk",sans-serif;font-size:17px;line-height:1.75;color:#414766;margin:0 0 16px;}
+  .informe strong{color:#131629;}
+  .informe ul,.informe ol{font-family:"Hanken Grotesk",sans-serif;font-size:17px;line-height:1.75;color:#414766;
+    margin:0 0 16px;padding-left:24px;}
+  .informe li{margin-bottom:6px;}
+  .informe code{font-family:"JetBrains Mono",monospace;font-size:.85em;background:#e9ebf4;
+    padding:1px 5px;border-radius:4px;color:#131629;}
+  .informe pre{background:#1f2340;color:#eef0f7;padding:20px;overflow-x:auto;border:2px solid #6c74a0;
+    font-family:"JetBrains Mono",monospace;font-size:13px;line-height:1.6;margin:0 0 16px;}
+  .informe pre code{background:none;color:inherit;padding:0;}
+  .informe img{width:100%;border:2px solid #bcc2dc;margin:8px 0 4px;cursor:zoom-in;}
+  .informe table{width:100%;border:2px solid #bcc2dc;border-collapse:collapse;margin:0 0 16px;
+    font-family:"Hanken Grotesk",sans-serif;font-size:16px;}
+  .informe th{background:#e9ebf4;text-align:left;padding:10px 14px;font-family:"JetBrains Mono",monospace;
+    font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#414766;}
+  .informe td{padding:10px 14px;border-top:1px solid #bcc2dc;color:#414766;}
+  .informe blockquote{border-left:4px solid #34409e;background:#eef0f7;margin:0 0 16px;padding:12px 20px;}
+  .informe blockquote p{margin:0;}
+  .informe em{color:#414766;}
+</style>
+</head>
+<body class="bg-background text-on-background antialiased flex flex-col min-h-screen">
+
+<header class="bg-surface border-b-4 border-primary sticky top-0 z-50 w-full">
+  <div class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop max-w-max-content-width mx-auto py-stack-md">
+    <a href="index.html" class="flex items-center gap-3">
+      <div class="bg-primary text-on-primary w-8 h-8 flex items-center justify-center rounded font-label-caps text-sm font-bold">P</div>
+      <div class="text-label-caps font-label-caps text-primary uppercase tracking-wider text-xs md:text-sm">Profe Bit &middot; Reporte técnico</div>
+    </a>
+    <nav class="hidden md:flex items-center gap-6">
+      <a class="text-on-surface-variant hover:text-primary transition-colors text-label-caps font-label-caps uppercase pb-1 tracking-wider" href="index.html">&larr; Volver al inicio</a>
+    </nav>
+    <div class="hidden md:flex items-center gap-3">
+      <a href="https://github.com/AndresGuido9820/trabajo2-agente-tutor"
+         class="flex bg-primary text-on-primary text-label-caps font-label-caps px-6 py-3 uppercase tracking-wider hover:opacity-90 transition-opacity items-center gap-2">
+        <span class="material-symbols-outlined text-base">code</span> Repositorio
+      </a>
+    </div>
+  </div>
+</header>
+
+<main class="flex-grow w-full max-w-4xl mx-auto px-margin-mobile md:px-8 mt-stack-lg pb-stack-lg">
+  <span class="block text-label-caps font-label-caps text-primary mb-6 uppercase tracking-wider border-b border-primary pb-2 inline-block">
+    Trabajo 02 &middot; LLMs y Agentes para la enseñanza de la programación &middot; UNAL &middot; Julio 2026
+  </span>
+  <h1 class="text-display-lg-mobile md:text-5xl font-display-lg text-on-surface mb-10" style="font-family:'Libre Caslon Text',serif;font-weight:700;line-height:1.15;">
+    Reporte técnico — Profe Bit: Tutor de Programación con LLMs
+  </h1>
+  <div class="informe">
+<p>Trabajo 02 · Curso: Normalización: aplicaciones de LLMs y Agentes
+para la enseñanza de la programación básica.</p>
+<h2 id="enfoque-y-arquitectura">1. Enfoque y arquitectura</h2>
+<p>Construimos un agente tutor donde <strong>todo es una
+conversación</strong>. El estudiante pide su curso con sus palabras
+(“hazme un curso de Python para analizar las ventas de mi negocio;
+manejo bien Excel”); un asesor conversacional resume lo que entendió,
+pregunta lo que falta (nivel, experiencia, lenguaje), propone un temario
+y solo crea el curso cuando el estudiante confirma. Desde ahí, la app
+funciona como un ChatGPT educativo: un menú de <strong>Mis
+cursos</strong>, y dentro de cada curso una barra lateral con el
+<strong>diseño del curso</strong> (documento estructurado) y <strong>una
+conversación por clase</strong>, cada una con su historial persistente.
+El tutor imparte la clase paso a paso, la evaluación ocurre dentro del
+mismo chat, aprobar con 70+ desbloquea la siguiente clase, y reprobar
+abre un conversatorio socrático de dudas antes de reintentar con
+preguntas nuevas.</p>
+<p>Las decisiones de arquitectura que definieron el proyecto:</p>
+<p><strong>Sin frameworks de agentes.</strong> El flujo es determinista
+(diseño → clase → evaluación → progresión) y el LLM es el motor de
+contenido, no un planificador: la orquestación propia
+(<code>agente.py</code>) resultó más simple, depurable y explicable que
+LangChain. <strong>Proveedor aislado</strong>: el código de negocio solo
+conoce la interfaz <code>ClienteLLM</code>; cuando cambiamos de
+Anthropic a OpenAI a mitad del proyecto, no se tocó una línea de lógica.
+<strong>Salida estructurada por contrato</strong>: todo lo que el
+programa consume (perfil extraído de la conversación, temario, guiones,
+quizzes, la decisión de avanzar un paso) se pide como JSON con esquema
+explícito y se valida antes de usarse; si no valida, se reintenta
+incluyendo el error en el prompt. <strong>Calificación local y
+determinista</strong>: el LLM genera preguntas, pero la nota es una
+comparación de índices — nunca depende de una segunda llamada que pueda
+alucinar.</p>
+<p><strong>El diseño del curso vive en una base de datos.</strong> Cada
+curso tiene su SQLite (<code>data/cursos/&lt;id&gt;/tutor.db</code>) con
+tablas <code>curso</code> (diseño, plan en Markdown, versión de
+prompts), <code>clases</code> (título, objetivo, subtemas y el
+<strong>guion/prompt</strong> con el que el tutor imparte esa clase, con
+metadata), <code>perfil</code>, <code>progreso</code> y
+<code>chat</code> por conversación. El documento <code>curso.md</code>
+es una vista generada; la edición manual es un <strong>editor
+estructurado</strong> que pasa por las mismas validaciones que el
+contenido generado — así el LLM siempre recibe el diseño limpio. Los
+formatos anteriores migran automáticamente.</p>
+<p><strong>Frontend en React + Mantine</strong> (Vite), servido
+compilado por el mismo FastAPI: burbujas de chat, quiz con radios dentro
+de la conversación, notificaciones, progreso y candados. Dos capacidades
+diferenciales: los bloques de código se pueden <strong>ejecutar en el
+navegador</strong> (Pyodide/WASM, sin backend de ejecución) y visualizar
+línea a línea (Python Tutor); y el botón ✨ genera <strong>demos
+interactivas</strong> — el LLM escribe una mini-página HTML
+autocontenida que corre en un <code>iframe sandbox</code> sin red, al
+estilo de los Artifacts de Claude.</p>
+<p><strong>Segunda iteración (plan v2, 16 HUs).</strong> Sobre esa base
+ejecutamos dos olas de mejoras. La clase pasó a estructurarse en
+<strong>objetivos de aprendizaje</strong> con secuencia PRIMM propia,
+<strong>mini-quiz pre-generado</strong> al cerrar cada uno y un
+<strong>reto de código real</strong> verificado con tests en el
+navegador (con pista socrática si el estudiante se traba); un panel
+lateral marca los objetivos en vivo y habilita la evaluación final solo
+al cumplirlos todos. La evaluación creció a 6+ preguntas con
+<strong>niveles Bloom y nota ponderada</strong> (fallar las de “aplicar”
+reprueba aunque se sepan las definiciones), con un <strong>banco por
+clase</strong> que garantiza cero repetición entre intentos. Lo fallado
+alimenta un <strong>repaso espaciado</strong> (1-3-7 días). En
+experiencia: el tutor <strong>escribe en vivo</strong> (SSE con parser
+incremental del JSON de decisión), tema claro/oscuro con contraste AA
+verificado por axe-core, buscador global ⌘K, estadísticas, exportación a
+.zip y reintento sin pérdida ante caídas de red. Un trade-off
+consciente: los tests de los retos viajan al navegador (deben ejecutarse
+client-side) y son inspeccionables — el objetivo es aprender, no
+vigilar; las respuestas de quizzes siguen sin viajar jamás.</p>
+<h2 id="ingeniería-de-prompts">2. Ingeniería de prompts</h2>
+<p>Antes de fijar los prompts investigamos literatura de enseñanza de la
+programación y tutores LLM
+(<code>docs/INVESTIGACION-PEDAGOGIA.md</code>, con fuentes). Tres
+hallazgos definieron el diseño:</p>
+<ol type="1">
+<li><strong>La estructura pedagógica hay que especificarla.</strong> Las
+clases siguen un guion PRIMM generado primero (predicción antes de
+explicación, worked examples con subgoal labels, estado de variables
+línea a línea, error típico, reto). Separar el plan (guion JSON validado
+y cacheado) de la ejecución (un paso por turno) evita que la
+conversación divague y que el plan se pague dos veces.</li>
+<li><strong>Los LLM no conocen los errores reales de los
+principiantes</strong>: inyectamos un banco de misconceptions
+documentadas (Sorva: leer <code>x = x + 1</code> como ecuación,
+<code>while</code> como interrupción instantánea…) y exigimos que los
+distractores de cada quiz encarnen una.</li>
+<li><strong>El razonamiento del modelo aumenta su confianza incluso al
+errar</strong>: el prompt del quiz exige verificación independiente
+(trazar el código y derivar la salida antes de escribir opciones,
+re-resolver desde cero, reescribir ítems ambiguos).</li>
+</ol>
+<p>El avance de la lección también es una decisión del modelo con
+contrato JSON <code>{avanza, mensaje}</code>: si el mensaje del
+estudiante atiende el paso, reacciona y desarrolla el siguiente; si es
+un saludo o una duda, responde natural y <strong>no avanza</strong> — un
+“hola” ya no dispara media lección. El conversatorio post-reprobación
+aplica los guardrails documentados de Khanmigo (pistas, no soluciones;
+escape ante el “no sé” repetido) más un paso theory-of-mind al estilo
+tutor-gpt: recibe el historial de intentos e infiere el malentendido
+antes de preguntar. Al reintentar, el prompt recibe los enunciados
+previos y exige <strong>variantes</strong> (patrón PrairieLearn):
+aprobar mide dominio, no memoria. Las mecánicas restantes también vienen
+de referentes con evidencia (<code>docs/INVESTIGACION-OSS.md</code>):
+racha y puntos sin los dark patterns de Duolingo, Pyodide de
+futurecoder, Python Tutor.</p>
+<h2 id="desafíos-y-soluciones">3. Desafíos y soluciones</h2>
+<p><strong>Timeouts que se disfrazan de errores de red.</strong> Con
+<code>gpt-5-mini</code>, las generaciones largas (demos, guías)
+superaban el timeout de 60 s del SDK, que reporta el corte como error de
+conexión: el sistema reintentaba en vano llamadas que iban bien.
+Diagnóstico con logs de reintentos; solución: timeout de 180 s y
+respuesta-vacía tratada como transitoria (los gpt-5 gastan razonamiento
+dentro de <code>max_completion_tokens</code>).</p>
+<p><strong>El front también necesita pruebas.</strong> Un bug de método
+HTTP (405) pasó inadvertido porque los tests del API no ejercitan el JS.
+Añadimos un bot E2E que replica las peticiones exactas del navegador
+contra un servidor real, y luego un <strong>bot Playwright</strong> que
+recorre la app completa y captura las pantallas del anexo.</p>
+<p><strong>Probar sin gastar.</strong> Las 289 pruebas corren contra
+dobles del LLM inyectados (respuestas en cola, fallas simuladas del
+SDK); la API real solo se toca en scripts de humo y E2E manuales. CI en
+GitHub Actions corre formato, linter, mypy estricto, pytest y el build
+del frontend en cada push.</p>
+<h2 id="capacidades-y-limitaciones-de-los-llms-reflexión">4. Capacidades
+y limitaciones de los LLMs (reflexión)</h2>
+<p>Lo que más nos sorprendió fue la <strong>transferencia de
+dominio</strong>: con solo “manejo bien Excel”, el modelo produjo el
+mapa hoja→DataFrame, filtro→selección, tabla dinámica→agrupación en
+títulos, analogías y ejemplos. También su capacidad de <strong>generar
+software pequeño</strong>: las demos interactivas salen funcionales y
+fieles al tema. Pero la calidad pedagógica <strong>no emerge
+sola</strong>: la diferencia entre un tutor mediocre y uno bueno estuvo
+en cuánta ciencia del aprendizaje codificamos en los prompts. Y la
+fiabilidad tampoco: JSON que a veces no valida, quizzes cuya corrección
+no puede darse por sentada, latencias de minutos que exigen UX de espera
+honesta. La conclusión del equipo: el LLM es un generador excepcional de
+contenido personalizado; el <strong>producto</strong> es el sistema
+alrededor — validación, reintentos, calificación determinista,
+persistencia, candados y una interfaz que administra la espera.</p>
+<h2 id="contribución-individual">5. Contribución individual</h2>
+<table>
+<thead>
+<tr>
+<th>Integrante</th>
+<th>Contribución</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>(nombre 1)</em></td>
+<td><em>(p. ej. cliente LLM, BD y pruebas)</em></td>
+</tr>
+<tr>
+<td><em>(nombre 2)</em></td>
+<td><em>(p. ej. investigación pedagógica y prompts)</em></td>
+</tr>
+<tr>
+<td><em>(nombre 3)</em></td>
+<td><em>(p. ej. frontend, E2E y video)</em></td>
+</tr>
+</tbody>
+</table>
+<h2
+id="anexo-recorrido-de-la-aplicación-capturas-del-bot-playwright">Anexo
+— Recorrido de la aplicación (capturas del bot Playwright)</h2>
+<p>Capturas generadas automáticamente por
+<code>scripts/capturas_playwright.py</code> interactuando con la app
+real (servidor limpio + API de OpenAI).</p>
+<p><strong>1. Mis cursos</strong> — menú inicial con la tarjeta de nuevo
+curso.</p>
+<figure>
+<img src="capturas/01-mis-cursos.png" alt="Mis cursos" />
+<figcaption aria-hidden="true">Mis cursos</figcaption>
+</figure>
+<p><strong>2. Nuevo curso</strong> — la creación es un chat: “¿Qué
+quieres aprender?”.</p>
+<figure>
+<img src="capturas/02-nuevo-curso.png" alt="Nuevo curso" />
+<figcaption aria-hidden="true">Nuevo curso</figcaption>
+</figure>
+<p><strong>3. El asesor NO crea de una</strong> — resume lo entendido y
+pregunta el nivel.</p>
+<figure>
+<img src="capturas/03-asesor-pregunta.png" alt="El asesor pregunta" />
+<figcaption aria-hidden="true">El asesor pregunta</figcaption>
+</figure>
+<p><strong>4. Propuesta de temario</strong> — lista de clases para
+ajustar o confirmar.</p>
+<figure>
+<img src="capturas/04-asesor-propone.png" alt="El asesor propone" />
+<figcaption aria-hidden="true">El asesor propone</figcaption>
+</figure>
+<p><strong>5. Clase 1 en el chat</strong> — confirmado el “ya, dale”,
+arranca la lección (guion PRIMM: pide predecir antes de explicar).</p>
+<figure>
+<img src="capturas/05-clase-1-arranca.png" alt="Arranca la clase 1" />
+<figcaption aria-hidden="true">Arranca la clase 1</figcaption>
+</figure>
+<p><strong>6. Predicción errada a propósito</strong> — el tutor corrige
+con amabilidad, explica el porqué y avanza de paso.</p>
+<figure>
+<img src="capturas/06-tutor-corrige-y-avanza.png"
+alt="El tutor corrige" />
+<figcaption aria-hidden="true">El tutor corrige</figcaption>
+</figure>
+<p><strong>7. Duda libre a mitad de clase</strong> — el estudiante
+interrumpe con una pregunta (“¿esto para qué me sirve en mi negocio?”);
+el tutor la responde y retoma el paso <strong>sin avanzar</strong> la
+lección (decisión de avance con criterio).</p>
+<figure>
+<img src="capturas/07-duda-al-tutor.png" alt="Duda al tutor" />
+<figcaption aria-hidden="true">Duda al tutor</figcaption>
+</figure>
+<p><strong>8. Clase completada</strong> — tras responder todos los
+pasos, la clase queda tachada en la barra lateral, el tutor cierra con
+el recap y aparece el CTA de evaluación; las clases 2-7 siguen con
+candado.</p>
+<figure>
+<img src="capturas/08-clase-completada.png" alt="Clase completada" />
+<figcaption aria-hidden="true">Clase completada</figcaption>
+</figure>
+<p><strong>9. Evaluación dentro del chat</strong> — 4 preguntas de
+comprensión (predicción / encuentra-el-bug) con distractores basados en
+misconceptions documentadas.</p>
+<figure>
+<img src="capturas/09-evaluacion.png" alt="Evaluación" />
+<figcaption aria-hidden="true">Evaluación</figcaption>
+</figure>
+<p><strong>10. Resultado (ruta de reprobar)</strong> — el bot respondió
+al azar y sacó 1 de 4: desglose por pregunta con la correcta y la
+explicación del error de razonamiento, botón de reintento (con preguntas
+nuevas) y el conversatorio socrático abriéndose automáticamente al
+final.</p>
+<figure>
+<img src="capturas/10-resultado.png" alt="Resultado" />
+<figcaption aria-hidden="true">Resultado</figcaption>
+</figure>
+<p><strong>11. Diseño del curso</strong> — el documento generado
+(persistido en la BD, con copia <code>curso.md</code> descargable).</p>
+<figure>
+<img src="capturas/11-diseno-documento.png" alt="Diseño del curso" />
+<figcaption aria-hidden="true">Diseño del curso</figcaption>
+</figure>
+<p><strong>12. Edición estructurada</strong> — título/objetivo/subtemas
+por clase, validados con las mismas reglas que usa el LLM.</p>
+<figure>
+<img src="capturas/12-diseno-editor-estructurado.png"
+alt="Editor estructurado" />
+<figcaption aria-hidden="true">Editor estructurado</figcaption>
+</figure>
+<p><strong>13. Mis cursos con progreso</strong> — el curso creado con su
+barra de avance.</p>
+<figure>
+<img src="capturas/13-mis-cursos-con-progreso.png"
+alt="Mis cursos con progreso" />
+<figcaption aria-hidden="true">Mis cursos con progreso</figcaption>
+</figure>
+
+  </div>
+</main>
+
+<footer class="bg-inverse-surface text-inverse-on-surface border-t-4 border-primary">
+  <div class="max-w-max-content-width mx-auto px-margin-mobile md:px-margin-desktop py-stack-md">
+    <p class="text-caption font-caption opacity-70">Profe Bit &middot; Trabajo 02 &middot; Prof. Juan David Ospina Arango &middot; UNAL &middot; Julio 2026 &middot; <a class="underline" href="index.html">Volver al inicio</a></p>
+  </div>
+</footer>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('open')">
+  <img id="lightbox-img" src="" alt=""/>
+</div>
+<script>
+document.querySelectorAll('.informe img').forEach((img) => {
+  img.addEventListener('click', () => {
+    document.getElementById('lightbox-img').src = img.src;
+    document.getElementById('lightbox').classList.add('open');
+  });
+});
+</script>
+</body>
+</html>
