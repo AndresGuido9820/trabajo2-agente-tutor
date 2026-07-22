@@ -281,7 +281,7 @@ tailwind.config = {
     <div class="mt-8 mb-4 fade-up">
       <span class="text-label-caps font-label-caps text-outline uppercase tracking-wider text-xs">3.2</span>
       <h3 class="text-headline-md font-headline-md text-on-surface mt-0.5">Los prompts reales de la app, tal cual van al modelo</h3>
-      <p class="text-body-md font-body-md text-on-surface-variant mt-2 max-w-3xl">Renderizados con un perfil de ejemplo («sé Excel, quiero analizar mis ventas»). Todos viven versionados en <code class="font-label-caps text-sm">src/tutor/prompts.py</code> (PROMPTS_VERSION=2). Haz clic para expandir.</p>
+      <p class="text-body-md font-body-md text-on-surface-variant mt-2 max-w-3xl">Estos no son ejemplos: son los prompts de producción, renderizados con un perfil real («sé Excel, quiero analizar mis ventas») para que se vea cómo la personalización entra en cada uno. Viven versionados en <code class="font-label-caps text-sm">src/tutor/prompts.py</code>; cada tarjeta indica las técnicas que usa. Haz clic para expandir el texto completo.</p>
       <div class="h-px bg-outline-variant mt-3"></div>
     </div>
     <div class="space-y-3">
@@ -290,7 +290,7 @@ tailwind.config = {
           <span class="chev material-symbols-outlined text-primary transition-transform mt-0.5">chevron_right</span>
           <span>
             <span class="block text-headline-md font-headline-md text-on-surface">System del tutor</span>
-            <span class="block text-caption font-caption text-on-surface-variant mt-1">La persona de Profe Bit + 8 reglas pedagógicas basadas en evidencia. Va en TODAS las llamadas de contenido; el perfil del estudiante se inyecta completo. · <code class="font-label-caps">system_tutor()</code> en <code class="font-label-caps">src/tutor/prompts.py</code></span>
+            <span class="block text-caption font-caption text-on-surface-variant mt-1">La persona de Profe Bit + 8 reglas pedagógicas basadas en evidencia. Va en TODAS las llamadas de contenido; el perfil del estudiante se inyecta completo. · <code class="font-label-caps">system_tutor()</code><span class="block mt-1"><span class="inline-block bg-surface-container text-on-surface-variant text-label-caps font-label-caps uppercase tracking-wider px-2 py-1 mr-1 mt-1 border border-outline-variant">Persona + reglas</span> <span class="inline-block bg-surface-container text-on-surface-variant text-label-caps font-label-caps uppercase tracking-wider px-2 py-1 mr-1 mt-1 border border-outline-variant">Personalización por perfil</span></span> en <code class="font-label-caps">src/tutor/prompts.py</code></span>
           </span>
         </summary>
         <pre class="bg-inverse-surface text-inverse-on-surface font-label-caps text-xs leading-6 px-6 py-5 max-h-96 overflow-y-auto border-t-2 border-outline">Eres &quot;Profe Bit&quot;, un tutor experto en enseñar fundamentos de programación a adultos autodidactas. Tu estudiante:
@@ -315,7 +315,7 @@ Reglas pedagógicas que sigues SIEMPRE:
           <span class="chev material-symbols-outlined text-primary transition-transform mt-0.5">chevron_right</span>
           <span>
             <span class="block text-headline-md font-headline-md text-on-surface">System del asesor de diseño</span>
-            <span class="block text-caption font-caption text-on-surface-variant mt-1">El asesor conversacional que entrevista al estudiante. Obliga un contrato JSON {mensaje, listo, perfil} en cada turno — listo solo con confirmación explícita. · <code class="font-label-caps">system_creacion()</code> en <code class="font-label-caps">src/tutor/prompts.py</code></span>
+            <span class="block text-caption font-caption text-on-surface-variant mt-1">El asesor conversacional que entrevista al estudiante. Obliga un contrato JSON {mensaje, listo, perfil} en cada turno — listo solo con confirmación explícita. · <code class="font-label-caps">system_creacion()</code><span class="block mt-1"><span class="inline-block bg-surface-container text-on-surface-variant text-label-caps font-label-caps uppercase tracking-wider px-2 py-1 mr-1 mt-1 border border-outline-variant">Contrato JSON</span> <span class="inline-block bg-surface-container text-on-surface-variant text-label-caps font-label-caps uppercase tracking-wider px-2 py-1 mr-1 mt-1 border border-outline-variant">Entrevista guiada</span></span> en <code class="font-label-caps">src/tutor/prompts.py</code></span>
           </span>
         </summary>
         <pre class="bg-inverse-surface text-inverse-on-surface font-label-caps text-xs leading-6 px-6 py-5 max-h-96 overflow-y-auto border-t-2 border-outline">Eres &quot;Profe Bit&quot;, un asesor pedagógico cálido y directo que diseña cursos de programación a la medida, CONVERSANDO en español.
@@ -347,7 +347,7 @@ Y cuando confirme, &quot;listo&quot;: true y &quot;perfil&quot; con:
           <span class="chev material-symbols-outlined text-primary transition-transform mt-0.5">chevron_right</span>
           <span>
             <span class="block text-headline-md font-headline-md text-on-surface">Examen diagnóstico</span>
-            <span class="block text-caption font-caption text-on-surface-variant mt-1">4 preguntas calibradas al nivel declarado (nivel 'nunca' → razonamiento sin sintaxis). Dificultad ascendente y distractores del banco de misconceptions. · <code class="font-label-caps">prompt_diagnostico()</code> en <code class="font-label-caps">src/tutor/prompts.py</code></span>
+            <span class="block text-caption font-caption text-on-surface-variant mt-1">4 preguntas calibradas al nivel declarado (nivel 'nunca' → razonamiento sin sintaxis). Dificultad ascendente y distractores del banco de misconceptions. · <code class="font-label-caps">prompt_diagnostico()</code><span class="block mt-1"><span class="inline-block bg-surface-container text-on-surface-variant text-label-caps font-label-caps uppercase tracking-wider px-2 py-1 mr-1 mt-1 border border-outline-variant">Calibración por nivel</span> <span class="inline-block bg-surface-container text-on-surface-variant text-label-caps font-label-caps uppercase tracking-wider px-2 py-1 mr-1 mt-1 border border-outline-variant">Dificultad ascendente</span></span> en <code class="font-label-caps">src/tutor/prompts.py</code></span>
           </span>
         </summary>
         <pre class="bg-inverse-surface text-inverse-on-surface font-label-caps text-xs leading-6 px-6 py-5 max-h-96 overflow-y-auto border-t-2 border-outline">Crea el EXAMEN DIAGNÓSTICO inicial para este estudiante (4 preguntas
@@ -390,7 +390,7 @@ Responde ÚNICAMENTE este JSON:
           <span class="chev material-symbols-outlined text-primary transition-transform mt-0.5">chevron_right</span>
           <span>
             <span class="block text-headline-md font-headline-md text-on-surface">Guion de clase v2 (por objetivos)</span>
-            <span class="block text-caption font-caption text-on-surface-variant mt-1">3-4 objetivos, cada uno con su secuencia PRIMM de 4-7 pasos, un mini-quiz de 2 preguntas pre-generado y un reto de código con tests auto-verificados por el propio modelo antes de emitirlos. · <code class="font-label-caps">prompt_guion_v2()</code> en <code class="font-label-caps">src/tutor/prompts.py</code></span>
+            <span class="block text-caption font-caption text-on-surface-variant mt-1">3-4 objetivos, cada uno con su secuencia PRIMM de 4-7 pasos, un mini-quiz de 2 preguntas pre-generado y un reto de código con tests auto-verificados por el propio modelo antes de emitirlos. · <code class="font-label-caps">prompt_guion_v2()</code><span class="block mt-1"><span class="inline-block bg-surface-container text-on-surface-variant text-label-caps font-label-caps uppercase tracking-wider px-2 py-1 mr-1 mt-1 border border-outline-variant">Encadenamiento</span> <span class="inline-block bg-surface-container text-on-surface-variant text-label-caps font-label-caps uppercase tracking-wider px-2 py-1 mr-1 mt-1 border border-outline-variant">PRIMM</span> <span class="inline-block bg-surface-container text-on-surface-variant text-label-caps font-label-caps uppercase tracking-wider px-2 py-1 mr-1 mt-1 border border-outline-variant">Auto-verificación</span></span> en <code class="font-label-caps">src/tutor/prompts.py</code></span>
           </span>
         </summary>
         <pre class="bg-inverse-surface text-inverse-on-surface font-label-caps text-xs leading-6 px-6 py-5 max-h-96 overflow-y-auto border-t-2 border-outline">Diseña el GUION COMPLETO de la clase 1 del curso de python: &quot;Variables y cálculos con tus datos de venta&quot;.
@@ -478,7 +478,7 @@ Responde ÚNICAMENTE este JSON:
           <span class="chev material-symbols-outlined text-primary transition-transform mt-0.5">chevron_right</span>
           <span>
             <span class="block text-headline-md font-headline-md text-on-surface">Evaluación final</span>
-            <span class="block text-caption font-caption text-on-surface-variant mt-1">Cuotas por nivel de Bloom (máx. 1 'recordar', mín. 2 'aplicar'), banco de misconceptions para los distractores, verificación independiente obligatoria y modo variantes para reintentos (aquí con una pregunta vetada y un concepto priorizado). · <code class="font-label-caps">prompt_quiz()</code> en <code class="font-label-caps">src/tutor/prompts.py</code></span>
+            <span class="block text-caption font-caption text-on-surface-variant mt-1">Cuotas por nivel de Bloom (máx. 1 'recordar', mín. 2 'aplicar'), banco de misconceptions para los distractores, verificación independiente obligatoria y modo variantes para reintentos (aquí con una pregunta vetada y un concepto priorizado). · <code class="font-label-caps">prompt_quiz()</code><span class="block mt-1"><span class="inline-block bg-surface-container text-on-surface-variant text-label-caps font-label-caps uppercase tracking-wider px-2 py-1 mr-1 mt-1 border border-outline-variant">Chain-of-Verification</span> <span class="inline-block bg-surface-container text-on-surface-variant text-label-caps font-label-caps uppercase tracking-wider px-2 py-1 mr-1 mt-1 border border-outline-variant">Few-shot</span> <span class="inline-block bg-surface-container text-on-surface-variant text-label-caps font-label-caps uppercase tracking-wider px-2 py-1 mr-1 mt-1 border border-outline-variant">Banco de misconceptions</span> <span class="inline-block bg-surface-container text-on-surface-variant text-label-caps font-label-caps uppercase tracking-wider px-2 py-1 mr-1 mt-1 border border-outline-variant">Variantes</span></span> en <code class="font-label-caps">src/tutor/prompts.py</code></span>
           </span>
         </summary>
         <pre class="bg-inverse-surface text-inverse-on-surface font-label-caps text-xs leading-6 px-6 py-5 max-h-96 overflow-y-auto border-t-2 border-outline">A partir de la lección de abajo, crea un quiz de 6 preguntas de opción múltiple sobre &quot;Variables y cálculos&quot;.
@@ -546,7 +546,7 @@ Lección:
           <span class="chev material-symbols-outlined text-primary transition-transform mt-0.5">chevron_right</span>
           <span>
             <span class="block text-headline-md font-headline-md text-on-surface">Decisión de avance por turno</span>
-            <span class="block text-caption font-caption text-on-surface-variant mt-1">El contrato {avanza, mensaje}: el modelo decide si la respuesta del estudiante atiende el paso (avanza) o es una duda/saludo (responde sin avanzar). Un 'hola' no dispara media lección. · <code class="font-label-caps">prompt_avance_leccion()</code> en <code class="font-label-caps">src/tutor/prompts.py</code></span>
+            <span class="block text-caption font-caption text-on-surface-variant mt-1">El contrato {avanza, mensaje}: el modelo decide si la respuesta del estudiante atiende el paso (avanza) o es una duda/saludo (responde sin avanzar). Un 'hola' no dispara media lección. · <code class="font-label-caps">prompt_avance_leccion()</code><span class="block mt-1"><span class="inline-block bg-surface-container text-on-surface-variant text-label-caps font-label-caps uppercase tracking-wider px-2 py-1 mr-1 mt-1 border border-outline-variant">Contrato JSON</span> <span class="inline-block bg-surface-container text-on-surface-variant text-label-caps font-label-caps uppercase tracking-wider px-2 py-1 mr-1 mt-1 border border-outline-variant">Decisión por turno</span></span> en <code class="font-label-caps">src/tutor/prompts.py</code></span>
           </span>
         </summary>
         <pre class="bg-inverse-surface text-inverse-on-surface font-label-caps text-xs leading-6 px-6 py-5 max-h-96 overflow-y-auto border-t-2 border-outline">Objetivos de esta lección:
@@ -581,7 +581,7 @@ Responde ÚNICAMENTE este JSON:
           <span class="chev material-symbols-outlined text-primary transition-transform mt-0.5">chevron_right</span>
           <span>
             <span class="block text-headline-md font-headline-md text-on-surface">Demo interactiva (artefacto)</span>
-            <span class="block text-caption font-caption text-on-surface-variant mt-1">Mini-página HTML autocontenida con la plantilla de interacción elegida por concepto (aquí: 'estado'). El resultado pasa un verificador local antes de mostrarse. · <code class="font-label-caps">prompt_artefacto()</code> en <code class="font-label-caps">src/tutor/prompts.py</code></span>
+            <span class="block text-caption font-caption text-on-surface-variant mt-1">Mini-página HTML autocontenida con la plantilla de interacción elegida por concepto (aquí: 'estado'). El resultado pasa un verificador local antes de mostrarse. · <code class="font-label-caps">prompt_artefacto()</code><span class="block mt-1"><span class="inline-block bg-surface-container text-on-surface-variant text-label-caps font-label-caps uppercase tracking-wider px-2 py-1 mr-1 mt-1 border border-outline-variant">Plantillas por concepto</span> <span class="inline-block bg-surface-container text-on-surface-variant text-label-caps font-label-caps uppercase tracking-wider px-2 py-1 mr-1 mt-1 border border-outline-variant">Restricciones duras</span></span> en <code class="font-label-caps">src/tutor/prompts.py</code></span>
           </span>
         </summary>
         <pre class="bg-inverse-surface text-inverse-on-surface font-label-caps text-xs leading-6 px-6 py-5 max-h-96 overflow-y-auto border-t-2 border-outline">Crea un MINI-ARTEFACTO interactivo que ilustre visualmente este concepto para el estudiante (curso de python):
@@ -615,120 +615,125 @@ Responde ÚNICAMENTE el documento HTML (empezando por &lt;!doctype html&gt;), si
   <section id="ejecucion" class="mb-stack-lg">
     <div class="mb-stack-md fade-up">
       <span class="block text-label-caps font-label-caps text-primary uppercase tracking-wider mb-3 border-b border-primary pb-2 inline-block">04 &mdash; Cómo ejecutarlo</span>
-      <h2 class="text-headline-lg font-headline-lg text-on-surface mb-3">Requisitos, dependencias y configuración</h2>
+      <h2 class="text-headline-lg font-headline-lg text-on-surface mb-3">Paso a paso, desde una máquina limpia</h2>
       <p class="text-body-md font-body-md text-on-surface-variant max-w-3xl">
-        Requisitos: <strong class="text-on-surface">Python &ge; 3.12</strong>, el gestor
-        <a class="text-primary underline" href="https://docs.astral.sh/uv/">uv</a> y una
-        <strong class="text-on-surface">API key de OpenAI</strong>. No necesitas Node: el frontend React
-        ya viene compilado en el repo y lo sirve el propio backend.
+        Solo necesitas dos cosas instaladas y una API key. No hace falta Node ni compilar nada:
+        el frontend ya viene construido dentro del repo y lo sirve el propio backend.
       </p>
     </div>
 
-    <div class="mt-0 mb-4 fade-up">
-      <span class="text-label-caps font-label-caps text-outline uppercase tracking-wider text-xs">4.1</span>
-      <h3 class="text-headline-md font-headline-md text-on-surface mt-0.5">Instalación y arranque</h3>
-      <div class="h-px bg-outline-variant mt-2"></div>
-    </div>
-    <div class="bg-inverse-surface text-inverse-on-surface p-6 font-label-caps text-sm leading-7 overflow-x-auto fade-up border-2 border-outline mb-stack-md">
+    <div class="space-y-6">
+      <div class="fade-up">
+        <div class="flex items-center gap-3 mb-2">
+          <span class="bg-primary text-on-primary w-7 h-7 flex items-center justify-center rounded-full font-label-caps text-xs">1</span>
+          <h3 class="text-headline-md font-headline-md text-on-surface">Instala los requisitos (una sola vez)</h3>
+        </div>
+        <p class="text-body-md font-body-md text-on-surface-variant mb-3 ml-10">
+          <strong class="text-on-surface">Python 3.12 o superior</strong> (desde
+          <a class="text-primary underline" href="https://www.python.org/downloads/">python.org</a>) y el gestor
+          <strong class="text-on-surface">uv</strong>, que se encarga de todo lo demás:
+        </p>
+        <div class="bg-inverse-surface text-inverse-on-surface p-5 font-label-caps text-sm leading-7 overflow-x-auto border-2 border-outline ml-10">
+<pre><span class="opacity-60"># macOS / Linux</span>
+curl -LsSf https://astral.sh/uv/install.sh | sh
+<span class="opacity-60"># Windows (PowerShell)</span>
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"</pre>
+        </div>
+      </div>
+
+      <div class="fade-up">
+        <div class="flex items-center gap-3 mb-2">
+          <span class="bg-primary text-on-primary w-7 h-7 flex items-center justify-center rounded-full font-label-caps text-xs">2</span>
+          <h3 class="text-headline-md font-headline-md text-on-surface">Clona el repositorio e instala las dependencias</h3>
+        </div>
+        <div class="bg-inverse-surface text-inverse-on-surface p-5 font-label-caps text-sm leading-7 overflow-x-auto border-2 border-outline ml-10">
 <pre>git clone https://github.com/AndresGuido9820/trabajo2-agente-tutor
 cd trabajo2-agente-tutor
-uv sync                    <span class="opacity-60"># crea el venv e instala TODAS las dependencias</span>
-cp .env.example .env       <span class="opacity-60"># y pon tu OPENAI_API_KEY=sk-...</span>
-uv run tutor-web           <span class="opacity-60"># interfaz web en http://127.0.0.1:8017</span>
-uv run tutor               <span class="opacity-60"># alternativa: la misma lógica en CLI</span></pre>
-    </div>
-
-    <div class="mt-8 mb-4 fade-up">
-      <span class="text-label-caps font-label-caps text-outline uppercase tracking-wider text-xs">4.2</span>
-      <h3 class="text-headline-md font-headline-md text-on-surface mt-0.5">Qué LLM usamos, y cómo cambiarlo</h3>
-      <div class="h-px bg-outline-variant mt-2"></div>
-    </div>
-    <p class="text-body-md font-body-md text-on-surface-variant max-w-3xl mb-4 fade-up">
-      Usamos la <strong class="text-on-surface">API de OpenAI</strong> con dos carriles de modelo:
-      <code class="font-label-caps text-sm">gpt-5-mini</code> para todo lo estructurado (temario, guiones,
-      quizzes, demos) y opcionalmente <code class="font-label-caps text-sm">gpt-5-nano</code> para los turnos
-      conversacionales (3-8&nbsp;s por turno). El bonus de ilustraciones usa
-      <code class="font-label-caps text-sm">gpt-image-1</code>. Toda la configuración es por variables de
-      entorno en <code class="font-label-caps text-sm">.env</code> — el código de negocio solo conoce la
-      interfaz <code class="font-label-caps text-sm">ClienteLLM</code>, así que cambiar de proveedor es tocar un solo módulo
-      (<code class="font-label-caps text-sm">src/tutor/llm.py</code>); de hecho el proyecto empezó con Anthropic y migró a OpenAI sin tocar la lógica.
-    </p>
-    <div class="border-2 border-outline-variant overflow-x-auto fade-up mb-stack-md">
-      <table class="w-full text-body-md font-body-md">
-        <thead class="bg-surface-container text-left">
-          <tr>
-            <th class="px-4 py-3 text-label-caps font-label-caps uppercase tracking-wider text-on-surface-variant">Variable</th>
-            <th class="px-4 py-3 text-label-caps font-label-caps uppercase tracking-wider text-on-surface-variant">Default</th>
-            <th class="px-4 py-3 text-label-caps font-label-caps uppercase tracking-wider text-on-surface-variant">Para qué</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-outline-variant bg-surface-container-lowest">
-          <tr><td class="px-4 py-3"><code class="font-label-caps text-sm">OPENAI_API_KEY</code></td><td class="px-4 py-3 text-on-surface-variant">— (requerida)</td><td class="px-4 py-3 text-on-surface-variant">Tu API key. Solo vive en <code class="font-label-caps text-sm">.env</code> (gitignoreado); nunca se loggea.</td></tr>
-          <tr><td class="px-4 py-3"><code class="font-label-caps text-sm">TUTOR_MODEL</code></td><td class="px-4 py-3 text-on-surface-variant">gpt-5-mini</td><td class="px-4 py-3 text-on-surface-variant">Modelo del carril «potente»: temario, guiones, evaluaciones, demos. Cualquier modelo de chat de OpenAI sirve.</td></tr>
-          <tr><td class="px-4 py-3"><code class="font-label-caps text-sm">TUTOR_MODEL_CHAT</code></td><td class="px-4 py-3 text-on-surface-variant">= TUTOR_MODEL</td><td class="px-4 py-3 text-on-surface-variant">Modelo del carril conversacional (turnos de clase, pistas, conversatorio). Con <code class="font-label-caps text-sm">gpt-5-nano</code> el tutor responde en 3-8&nbsp;s.</td></tr>
-          <tr><td class="px-4 py-3"><code class="font-label-caps text-sm">TUTOR_IMAGENES</code></td><td class="px-4 py-3 text-on-surface-variant">0</td><td class="px-4 py-3 text-on-surface-variant">Con <code class="font-label-caps text-sm">1</code>, ilustra cada clase con <code class="font-label-caps text-sm">gpt-image-1</code> (bonus; cuesta por imagen, con cache y degradación).</td></tr>
-          <tr><td class="px-4 py-3"><code class="font-label-caps text-sm">TUTOR_DATA_DIR</code></td><td class="px-4 py-3 text-on-surface-variant">./data</td><td class="px-4 py-3 text-on-surface-variant">Dónde viven los cursos (una BD SQLite por curso), el progreso y el registro local de uso/costos.</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="mt-8 mb-4 fade-up">
-      <span class="text-label-caps font-label-caps text-outline uppercase tracking-wider text-xs">4.3</span>
-      <h3 class="text-headline-md font-headline-md text-on-surface mt-0.5">Dependencias</h3>
-      <div class="h-px bg-outline-variant mt-2"></div>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-stack-md">
-      <div class="bg-surface-container-lowest border-2 border-outline-variant p-6 fade-up">
-        <span class="text-label-caps font-label-caps text-primary uppercase tracking-wider">Backend (uv sync)</span>
-        <ul class="text-body-md font-body-md text-on-surface-variant mt-3 space-y-1">
-          <li><code class="font-label-caps text-sm">openai</code> &ge; 1.50 — cliente del LLM</li>
-          <li><code class="font-label-caps text-sm">fastapi</code> + <code class="font-label-caps text-sm">uvicorn[standard]</code> — API y servidor</li>
-          <li><code class="font-label-caps text-sm">python-dotenv</code> — configuración .env</li>
-          <li><code class="font-label-caps text-sm">rich</code> — la interfaz CLI</li>
-          <li><code class="font-label-caps text-sm">sqlite3</code> — stdlib, sin ORM</li>
-        </ul>
+uv sync</pre>
+        </div>
+        <p class="text-caption font-caption text-on-surface-variant mt-2 ml-10">
+          <code class="font-label-caps">uv sync</code> crea el entorno virtual e instala TODAS las dependencias
+          (openai, fastapi, uvicorn, pytest, ruff, mypy…) con las versiones exactas del lockfile. Tarda menos de un minuto.
+        </p>
       </div>
-      <div class="bg-surface-container-lowest border-2 border-outline-variant p-6 fade-up">
-        <span class="text-label-caps font-label-caps text-primary uppercase tracking-wider">Desarrollo (incluidas en uv sync)</span>
-        <ul class="text-body-md font-body-md text-on-surface-variant mt-3 space-y-1">
-          <li><code class="font-label-caps text-sm">pytest</code> — 303 pruebas con dobles del LLM</li>
-          <li><code class="font-label-caps text-sm">ruff</code> — formato + linter estricto</li>
-          <li><code class="font-label-caps text-sm">mypy</code> — tipos en modo estricto</li>
-          <li><code class="font-label-caps text-sm">playwright</code> — pruebas E2E, capturas y axe</li>
-        </ul>
-      </div>
-      <div class="bg-surface-container-lowest border-2 border-outline-variant p-6 fade-up">
-        <span class="text-label-caps font-label-caps text-primary uppercase tracking-wider">Frontend (solo si tocas la UI)</span>
-        <ul class="text-body-md font-body-md text-on-surface-variant mt-3 space-y-1">
-          <li><code class="font-label-caps text-sm">react</code> 19 + <code class="font-label-caps text-sm">vite</code></li>
-          <li><code class="font-label-caps text-sm">@mantine/core</code> + notifications + spotlight</li>
-          <li><code class="font-label-caps text-sm">@tabler/icons-react</code>, <code class="font-label-caps text-sm">react-markdown</code></li>
-          <li>Pyodide (CDN, en runtime) — Python en el navegador</li>
-        </ul>
-        <p class="text-caption font-caption text-on-surface-variant mt-3"><code class="font-label-caps">cd frontend &amp;&amp; npm install &amp;&amp; npm run dev</code>; el build (<code class="font-label-caps">npm run build</code>) queda versionado y lo sirve FastAPI.</p>
-      </div>
-    </div>
 
-    <div class="mt-8 mb-4 fade-up">
-      <span class="text-label-caps font-label-caps text-outline uppercase tracking-wider text-xs">4.4</span>
-      <h3 class="text-headline-md font-headline-md text-on-surface mt-0.5">Comandos de desarrollo y verificación</h3>
-      <div class="h-px bg-outline-variant mt-2"></div>
-    </div>
-    <div class="bg-inverse-surface text-inverse-on-surface p-6 font-label-caps text-sm leading-7 overflow-x-auto fade-up border-2 border-outline">
-<pre>uv run pytest                          <span class="opacity-60"># 303 pruebas (el LLM siempre con dobles: no gasta tokens)</span>
-uv run ruff format --check . &amp;&amp; uv run ruff check .
-uv run mypy src                        <span class="opacity-60"># tipado estricto</span>
+      <div class="fade-up">
+        <div class="flex items-center gap-3 mb-2">
+          <span class="bg-primary text-on-primary w-7 h-7 flex items-center justify-center rounded-full font-label-caps text-xs">3</span>
+          <h3 class="text-headline-md font-headline-md text-on-surface">Configura tu API key de OpenAI</h3>
+        </div>
+        <p class="text-body-md font-body-md text-on-surface-variant mb-3 ml-10">
+          Genera una key en <a class="text-primary underline" href="https://platform.openai.com/api-keys">platform.openai.com/api-keys</a>
+          (necesita crédito: un curso completo cuesta centavos de dólar con gpt-5-mini) y ponla en un archivo <code class="font-label-caps text-sm">.env</code>:
+        </p>
+        <div class="bg-inverse-surface text-inverse-on-surface p-5 font-label-caps text-sm leading-7 overflow-x-auto border-2 border-outline ml-10">
+<pre>cp .env.example .env
+<span class="opacity-60"># edita .env y deja la línea así:</span>
+OPENAI_API_KEY=sk-proj-TU-KEY-AQUI</pre>
+        </div>
+        <p class="text-caption font-caption text-on-surface-variant mt-2 ml-10">
+          El archivo <code class="font-label-caps">.env</code> está en el <code class="font-label-caps">.gitignore</code>: tu key nunca sale de tu máquina.
+        </p>
+      </div>
 
-<span class="opacity-60"># Manuales (usan la API real, cuestan tokens):</span>
-uv run python scripts/humo_llm.py              <span class="opacity-60"># humo del cliente LLM</span>
-uv run python scripts/capturas_playwright.py   <span class="opacity-60"># bot que recorre la app y captura</span>
-uv run python scripts/a11y_playwright.py       <span class="opacity-60"># auditoría axe-core (no gasta tokens)</span></pre>
+      <div class="fade-up">
+        <div class="flex items-center gap-3 mb-2">
+          <span class="bg-primary text-on-primary w-7 h-7 flex items-center justify-center rounded-full font-label-caps text-xs">4</span>
+          <h3 class="text-headline-md font-headline-md text-on-surface">Arranca el tutor</h3>
+        </div>
+        <div class="bg-inverse-surface text-inverse-on-surface p-5 font-label-caps text-sm leading-7 overflow-x-auto border-2 border-outline ml-10">
+<pre>uv run tutor-web</pre>
+        </div>
+        <p class="text-body-md font-body-md text-on-surface-variant mt-2 ml-10">
+          Verás <code class="font-label-caps text-sm">Tutor web en http://127.0.0.1:8017</code> en la terminal.
+          Abre esa dirección en el navegador: te recibe el selector de perfiles, eliges quién estudia,
+          y en «Nuevo curso» le pides el tuyo con tus palabras. Eso es todo.
+          (¿Prefieres la terminal? <code class="font-label-caps text-sm">uv run tutor</code> corre la misma lógica en CLI.)
+        </p>
+      </div>
+
+      <div class="fade-up">
+        <div class="flex items-center gap-3 mb-2">
+          <span class="bg-surface-container-high text-on-surface-variant w-7 h-7 flex items-center justify-center rounded-full font-label-caps text-xs">+</span>
+          <h3 class="text-headline-md font-headline-md text-on-surface">Opcional: elegir el LLM y otras variables</h3>
+        </div>
+        <p class="text-body-md font-body-md text-on-surface-variant mb-3 ml-10">
+          Usamos la API de OpenAI con dos carriles: <code class="font-label-caps text-sm">gpt-5-mini</code> para lo
+          estructurado (temario, guiones, evaluaciones, demos) y, si lo activas,
+          <code class="font-label-caps text-sm">gpt-5-nano</code> para los turnos de conversación (responde en 3-8&nbsp;s).
+          Todo se cambia por variables en el mismo <code class="font-label-caps text-sm">.env</code> — y como el código
+          solo conoce la interfaz <code class="font-label-caps text-sm">ClienteLLM</code>, cambiar de proveedor es tocar
+          un único módulo (<code class="font-label-caps text-sm">src/tutor/llm.py</code>).
+        </p>
+        <div class="border-2 border-outline-variant overflow-x-auto ml-10">
+          <table class="w-full text-body-md font-body-md">
+            <thead class="bg-surface-container text-left">
+              <tr>
+                <th class="px-4 py-3 text-label-caps font-label-caps uppercase tracking-wider text-on-surface-variant">Variable</th>
+                <th class="px-4 py-3 text-label-caps font-label-caps uppercase tracking-wider text-on-surface-variant">Default</th>
+                <th class="px-4 py-3 text-label-caps font-label-caps uppercase tracking-wider text-on-surface-variant">Para qué</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant bg-surface-container-lowest">
+              <tr><td class="px-4 py-3"><code class="font-label-caps text-sm">OPENAI_API_KEY</code></td><td class="px-4 py-3 text-on-surface-variant">— (requerida)</td><td class="px-4 py-3 text-on-surface-variant">Tu API key. Sin ella el programa te lo dice claro y no arranca.</td></tr>
+              <tr><td class="px-4 py-3"><code class="font-label-caps text-sm">TUTOR_MODEL</code></td><td class="px-4 py-3 text-on-surface-variant">gpt-5-mini</td><td class="px-4 py-3 text-on-surface-variant">Modelo principal. Cualquier modelo de chat de OpenAI sirve.</td></tr>
+              <tr><td class="px-4 py-3"><code class="font-label-caps text-sm">TUTOR_MODEL_CHAT</code></td><td class="px-4 py-3 text-on-surface-variant">= TUTOR_MODEL</td><td class="px-4 py-3 text-on-surface-variant">Modelo solo para conversar. Recomendado: <code class="font-label-caps text-sm">gpt-5-nano</code>.</td></tr>
+              <tr><td class="px-4 py-3"><code class="font-label-caps text-sm">TUTOR_IMAGENES</code></td><td class="px-4 py-3 text-on-surface-variant">0</td><td class="px-4 py-3 text-on-surface-variant">Con <code class="font-label-caps text-sm">1</code>, ilustra cada clase con gpt-image-1 (bonus, cuesta por imagen).</td></tr>
+              <tr><td class="px-4 py-3"><code class="font-label-caps text-sm">TUTOR_DATA_DIR</code></td><td class="px-4 py-3 text-on-surface-variant">./data</td><td class="px-4 py-3 text-on-surface-variant">Carpeta de datos (perfiles, cursos, progreso). Bórrala y arrancas de cero.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="bg-surface-container-low border-l-4 border-tertiary px-6 py-4 fade-up ml-10">
+        <p class="text-body-md font-body-md text-on-surface-variant">
+          <strong class="text-on-surface">Si algo falla:</strong> «Falta OPENAI_API_KEY» &rarr; revisa el paso 3.
+          «Address already in use» &rarr; ya hay un tutor corriendo en el puerto 8017; ciérralo o mata el proceso.
+          Errores 429 de la API &rarr; tu cuenta de OpenAI no tiene crédito. Para verificar la instalación sin gastar
+          tokens: <code class="font-label-caps text-sm">uv run pytest</code> (307 pruebas, el LLM va con dobles).
+        </p>
+      </div>
     </div>
-    <p class="text-caption font-caption text-on-surface-variant mt-3 fade-up">
-      CI en GitHub Actions corre formato, linter, mypy, pytest y el build del frontend en cada push.
-      Seguridad: la API key jamás entra al repo (verificado sobre todo el historial de git); las respuestas
-      correctas de los quizzes nunca viajan al navegador; las demos corren en <code class="font-label-caps">iframe sandbox</code> sin red.
-    </p>
   </section>
 
   <!-- ══ 05 · DESAFÍOS ══ -->
@@ -788,39 +793,19 @@ uv run python scripts/a11y_playwright.py       <span class="opacity-60"># audito
   <!-- ══ 07 · REPORTES ══ -->
   <section id="reportes" class="mb-stack-lg">
     <div class="mb-stack-md fade-up">
-      <span class="block text-label-caps font-label-caps text-primary uppercase tracking-wider mb-3 border-b border-primary pb-2 inline-block">07 &mdash; Reportes y entregables</span>
-      <h2 class="text-headline-lg font-headline-lg text-on-surface mb-3">Todos los documentos del trabajo</h2>
+      <span class="block text-label-caps font-label-caps text-primary uppercase tracking-wider mb-3 border-b border-primary pb-2 inline-block">07 &mdash; Entregables</span>
+      <h2 class="text-headline-lg font-headline-lg text-on-surface mb-3">Video y reporte técnico</h2>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
-      <a href="reporte.html" class="bg-surface-container-lowest border-2 border-outline-variant p-6 fade-up hover:border-primary transition-colors block">
-        <span class="material-symbols-outlined text-primary text-3xl mb-3 block">description</span>
-        <h3 class="text-headline-md font-headline-md text-on-surface mb-1">Reporte técnico</h3>
-        <p class="text-body-md font-body-md text-on-surface-variant">1000-1500 palabras: enfoque y arquitectura, ingeniería de prompts, desafíos, reflexión y contribución individual.</p>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+      <a href="https://github.com/AndresGuido9820/trabajo2-agente-tutor/releases/download/video-demo/demo-desde-cero.mp4" id="tarjeta-video" target="_blank" class="bg-surface-container-lowest border-2 border-outline-variant p-8 fade-up hover:border-primary transition-colors block">
+        <span class="material-symbols-outlined text-primary text-4xl mb-4 block">smart_display</span>
+        <h3 class="text-headline-md font-headline-md text-on-surface mb-2">Video demostración</h3>
+        <p class="text-body-md font-body-md text-on-surface-variant">La app en uso, de punta a punta: se crea un curso conversando, el examen diagnóstico mide el punto de partida y la clase 1 se vive completa — retos, mini-quices, demo interactiva y evaluación final.</p>
       </a>
-      <a href="https://github.com/AndresGuido9820/trabajo2-agente-tutor/blob/main/SPEC.md" class="bg-surface-container-lowest border-2 border-outline-variant p-6 fade-up hover:border-primary transition-colors block">
-        <span class="material-symbols-outlined text-primary text-3xl mb-3 block">checklist</span>
-        <h3 class="text-headline-md font-headline-md text-on-surface mb-1">Especificación y rúbrica</h3>
-        <p class="text-body-md font-body-md text-on-surface-variant">Requisitos, criterios de la rúbrica y el checklist de pruebas de aceptación PA-01…PA-20 verificado con evidencia.</p>
-      </a>
-      <a href="https://github.com/AndresGuido9820/trabajo2-agente-tutor/tree/main/entregables/cursos-muestra" class="bg-surface-container-lowest border-2 border-outline-variant p-6 fade-up hover:border-primary transition-colors block">
-        <span class="material-symbols-outlined text-primary text-3xl mb-3 block">school</span>
-        <h3 class="text-headline-md font-headline-md text-on-surface mb-1">Cursos de muestra</h3>
-        <p class="text-body-md font-body-md text-on-surface-variant">Dos cursos completos generados: «nunca programé → web/JavaScript» y «sé Excel → datos con Python».</p>
-      </a>
-      <a href="https://github.com/AndresGuido9820/trabajo2-agente-tutor/tree/main/plan" class="bg-surface-container-lowest border-2 border-outline-variant p-6 fade-up hover:border-primary transition-colors block">
-        <span class="material-symbols-outlined text-primary text-3xl mb-3 block">account_tree</span>
-        <h3 class="text-headline-md font-headline-md text-on-surface mb-1">Plan por historias de usuario</h3>
-        <p class="text-body-md font-body-md text-on-surface-variant">42 HUs con criterios verificables, ejecutadas con Git Flow: rama, pruebas y merge --no-ff por historia.</p>
-      </a>
-      <a href="https://github.com/AndresGuido9820/trabajo2-agente-tutor/blob/main/docs/TESTING.md" class="bg-surface-container-lowest border-2 border-outline-variant p-6 fade-up hover:border-primary transition-colors block">
-        <span class="material-symbols-outlined text-primary text-3xl mb-3 block">science</span>
-        <h3 class="text-headline-md font-headline-md text-on-surface mb-1">Estrategia de pruebas</h3>
-        <p class="text-body-md font-body-md text-on-surface-variant">Cómo se prueba sin gastar tokens: dobles del LLM, E2E con Playwright, humo real y auditoría de accesibilidad.</p>
-      </a>
-      <a href="https://github.com/AndresGuido9820/trabajo2-agente-tutor/releases/tag/video-demo" class="bg-surface-container-lowest border-2 border-outline-variant p-6 fade-up hover:border-primary transition-colors block">
-        <span class="material-symbols-outlined text-primary text-3xl mb-3 block">smart_display</span>
-        <h3 class="text-headline-md font-headline-md text-on-surface mb-1">Video demo</h3>
-        <p class="text-body-md font-body-md text-on-surface-variant">Grabación real de la app: creación conversacional, examen diagnóstico y la clase 1 completa hasta la evaluación.</p>
+      <a href="reporte.html" class="bg-surface-container-lowest border-2 border-outline-variant p-8 fade-up hover:border-primary transition-colors block">
+        <span class="material-symbols-outlined text-primary text-4xl mb-4 block">description</span>
+        <h3 class="text-headline-md font-headline-md text-on-surface mb-2">Reporte técnico</h3>
+        <p class="text-body-md font-body-md text-on-surface-variant">El documento completo: enfoque y arquitectura, ingeniería de prompts, desafíos y soluciones, reflexión sobre los LLMs y contribución individual — con el recorrido de la aplicación en capturas.</p>
       </a>
     </div>
   </section>
