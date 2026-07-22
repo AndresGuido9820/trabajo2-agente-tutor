@@ -45,24 +45,24 @@ TUTOR_MODEL_CHAT=gpt-5-nano uv run tutor-web
 3. **Clases como conversaciones extensas**: cada clase se estructura en
    3-4 **objetivos de aprendizaje**, cada uno con su secuencia PRIMM
    (predices antes de que te explique) y un **mini-quiz de 2 preguntas**
-   al cerrarlo (+5 ⭐ por acierto; si fallas ambas, el tutor repasa con
+   al cerrarlo (+5 puntos por acierto; si fallas ambas, el tutor repasa con
    otro ejemplo y reintentas). El tutor **escribe en vivo** (SSE) y decide
    con criterio si tu mensaje avanza el paso o es una duda. Un **panel
    lateral** muestra los objetivos marcándose en tiempo real. Los bloques
-   de código traen **▶ Pruébalo** (Python en tu navegador vía Pyodide) y
-   al cerrar cada objetivo llega un **⌨️ reto de código real** con tests
-   automáticos estilo freeCodeCamp (+10 ⭐, pista socrática si te trabas).
-   El botón **✨** genera una demo interactiva del objetivo (plantilla
+   de código traen **Pruébalo** (Python en tu navegador vía Pyodide) y
+   al cerrar cada objetivo llega un **reto de código real** con tests
+   automáticos estilo freeCodeCamp (+10 puntos, pista socrática si te trabas).
+   El botón de **demo** genera una demo interactiva del objetivo (plantilla
    según el concepto, verificada antes de mostrarse, regenerable).
 4. **Evaluación y progresión**: evaluación final de 6+ preguntas con
    **niveles Bloom** (recordar/comprender/aplicar) y **nota ponderada** —
    saber definiciones no basta si no aplicas. Las preguntas salen de un
    **banco por clase sin repetición entre intentos** y priorizan lo que
-   fallaste en los mini-quices. Con 70+ apruebas (+30 ⭐) y desbloqueas la
+   fallaste en los mini-quices. Con 70+ apruebas (+30 puntos) y desbloqueas la
    siguiente clase; si no, **conversatorio socrático** y reintento con
-   preguntas nuevas. Lo fallado entra al **🔁 Repaso del día** (repetición
-   espaciada 1-3-7). Puntos, racha y estadísticas (📈 Mi progreso)
-   persistentes; buscador global ⌘K; exportar el curso a .zip.
+   preguntas nuevas. Lo fallado entra al **Repaso del día** (repetición
+   espaciada 1-3-7). Puntos, racha y estadísticas (Mi progreso)
+   persistentes; buscador global (⌘K); exportar el curso a .zip.
 
 ## Arquitectura
 
