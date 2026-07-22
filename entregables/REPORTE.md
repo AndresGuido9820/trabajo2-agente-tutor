@@ -5,12 +5,13 @@ enseñanza de la programación básica.
 
 ## 1. Enfoque y arquitectura
 
-Construí un agente tutor donde **todo es una conversación**. El
-estudiante pide su curso con sus palabras ("hazme un curso de Python para
-analizar las ventas de mi negocio; manejo bien Excel"); un asesor
-conversacional resume lo que entendió, pregunta lo que falta (nivel,
-experiencia, lenguaje), propone un temario y solo crea el curso cuando el
-estudiante confirma. Desde ahí, la app funciona como un ChatGPT educativo:
+La idea con la que arranqué era simple: que todo pasara conversando, como
+cuando uno le pide algo a ChatGPT, pero con un tutor que de verdad lleva
+la clase. Escribes "hazme un curso de Python para analizar las ventas de
+mi negocio; manejo bien Excel" y el asesor no te crea nada de una — resume
+lo que entendió, pregunta lo que falta (nivel, tiempo, lenguaje), te aplica
+un examen diagnóstico corto y propone un temario. El curso solo existe
+cuando tú dices "ya, dale". Desde ahí, la app funciona como un ChatGPT educativo:
 un menú de **Mis cursos**, y dentro de cada curso una barra lateral con el
 **diseño del curso** (documento estructurado) y **una conversación por
 clase**, cada una con su historial persistente. El tutor imparte la clase
@@ -20,10 +21,11 @@ dudas antes de reintentar con preguntas nuevas.
 
 Las decisiones de arquitectura que definieron el proyecto:
 
-**Sin frameworks de agentes.** El flujo es determinista (diseño → clase →
-evaluación → progresión) y el LLM es el motor de contenido, no un
-planificador: la orquestación propia (`agente.py`) resultó más simple,
-depurable y explicable que LangChain. **Proveedor aislado**: el código de
+**Sin frameworks de agentes.** Lo evalué y no valía la pena: el flujo es
+determinista (diseño → clase → evaluación → progresión) y el LLM es el
+motor de contenido, no un planificador. Una orquestación propia en
+`agente.py` me dio algo que con LangChain no tenía: saber exactamente qué
+pasa en cada paso cuando algo se rompe. **Proveedor aislado**: el código de
 negocio solo conoce la interfaz `ClienteLLM`; cuando cambié de Anthropic
 a OpenAI a mitad del proyecto, no se tocó una línea de lógica. **Salida
 estructurada por contrato**: todo lo que el programa consume (perfil
@@ -31,8 +33,8 @@ extraído de la conversación, temario, guiones, quizzes, la decisión de
 avanzar un paso) se pide como JSON con esquema explícito y se valida antes
 de usarse; si no valida, se reintenta incluyendo el error en el prompt.
 **Calificación local y determinista**: el LLM genera preguntas, pero la
-nota es una comparación de índices — nunca depende de una segunda llamada
-que pueda alucinar.
+nota es una comparación de índices en mi servidor. Punto. Nunca depende de
+una segunda llamada que pueda alucinar.
 
 **El diseño del curso vive en una base de datos.** Cada curso tiene su
 SQLite (`data/cursos/<id>/tutor.db`) con tablas `curso` (diseño, plan en
@@ -106,18 +108,20 @@ los dark patterns de Duolingo, Pyodide de futurecoder, Python Tutor.
 
 ## 3. Desafíos y soluciones
 
-**Timeouts que se disfrazan de errores de red.** Con `gpt-5-mini`, las
-generaciones largas (demos, guías) superaban el timeout de 60 s del SDK,
-que reporta el corte como error de conexión: el sistema reintentaba en vano
-llamadas que iban bien. Diagnóstico con logs de reintentos; solución:
-timeout de 180 s y respuesta-vacía tratada como transitoria (los gpt-5
-gastan razonamiento dentro de `max_completion_tokens`).
+**Timeouts que se disfrazan de errores de red.** Este me costó una tarde.
+Las generaciones largas (demos, guías) superaban el timeout de 60 s del
+SDK, y el SDK reporta ese corte como si fuera un error de conexión — así
+que mi sistema reintentaba, en vano, llamadas que en realidad iban bien.
+Lo destapé mirando los logs de reintentos. La solución fue doble: subir el
+timeout a 180 s y tratar la respuesta vacía como transitoria, porque los
+modelos razonadores se gastan el presupuesto de tokens pensando.
 
-**El front también necesita pruebas.** Un bug de método HTTP (405) pasó
-inadvertido porque los tests del API no ejercitan el JS. Añadí una suite
-E2E que replica las peticiones exactas del navegador contra un servidor
-real, y luego pruebas de interfaz con **Playwright** que recorren la app
-completa de principio a fin y capturan las pantallas del anexo.
+**El front también necesita pruebas.** Un 405 tonto (un método HTTP mal
+puesto) se me pasó porque los tests del API no ejercitan el JavaScript.
+Tocó aprender la lección: añadí una suite E2E que replica las peticiones
+exactas del navegador contra un servidor real, y pruebas de interfaz con
+Playwright que recorren la app de principio a fin — de ahí salen las
+pantallas del anexo.
 
 **Probar sin gastar.** Las 303 pruebas corren contra dobles del LLM
 inyectados (respuestas en cola, fallas simuladas del SDK); la API real solo
