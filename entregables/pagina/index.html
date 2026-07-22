@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Profe Bit &mdash; Tutor de Programación con LLMs · UNAL 2026</title>
+<meta name="description" content="Agente tutor de fundamentos de programación: curso diseñado conversando, examen diagnóstico, clases por objetivos con retos de código y evaluaciones con niveles de Bloom. UNAL 2026."/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<style>
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
+  .fade-up{opacity:0;transform:translateY(20px);transition:opacity .55s ease,transform .55s ease;}
+  .fade-up.visible{opacity:1;transform:none;}
+  .lightbox{display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.85);
+    backdrop-filter:blur(8px);align-items:center;justify-content:center;cursor:zoom-out;}
+  .lightbox.open{display:flex;}
+  .lightbox img{max-width:92vw;max-height:90vh;border-radius:.25rem;}
+</style>
+<script>
+tailwind.config = {
+  darkMode:"class",
+  theme:{extend:{
+    colors:{
+      "background":"#f6f7fb","surface":"#f6f7fb",
+      "surface-container":"#e9ebf4","surface-container-low":"#eef0f7",
+      "surface-container-high":"#dfe2ee","surface-container-lowest":"#ffffff",
+      "surface-dim":"#c9cdde","surface-variant":"#dde0ee",
+      "on-background":"#131629","on-surface":"#131629",
+      "on-surface-variant":"#414766","inverse-on-surface":"#eef0f7",
+      "inverse-surface":"#1f2340","outline":"#6c74a0","outline-variant":"#bcc2dc",
+      "primary":"#34409e","on-primary":"#ffffff",
+      "primary-container":"#4353c4","on-primary-container":"#dde3ff",
+      "primary-fixed":"#bac8ff","primary-fixed-dim":"#91a7ff","inverse-primary":"#91a7ff",
+      "secondary":"#087f5b","on-secondary":"#ffffff",
+      "secondary-container":"#d3f9ee","on-secondary-container":"#054a36",
+      "tertiary":"#92400e","on-tertiary":"#ffffff",
+      "tertiary-container":"#b45309","on-tertiary-container":"#fef3c7",
+      "error":"#b91c1c","on-error":"#ffffff","error-container":"#fee2e2","on-error-container":"#7f1d1d"
+    },
+    borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},
+    spacing:{
+      "stack-lg":"48px","stack-md":"24px","gutter":"24px",
+      "margin-desktop":"64px","stack-sm":"8px","margin-mobile":"16px",
+      "unit":"4px","max-content-width":"1280px"
+    },
+    fontFamily:{
+      "body-lg":["Hanken Grotesk"],"body-md":["Hanken Grotesk"],
+      "headline-lg":["Libre Caslon Text"],"headline-md":["Libre Caslon Text"],
+      "display-lg":["Libre Caslon Text"],"display-lg-mobile":["Libre Caslon Text"],
+      "label-caps":["JetBrains Mono"],"caption":["Hanken Grotesk"]
+    },
+    fontSize:{
+      "body-lg":["18px",{"lineHeight":"1.7","fontWeight":"400"}],
+      "body-md":["16px",{"lineHeight":"1.5","fontWeight":"400"}],
+      "headline-lg":["32px",{"lineHeight":"1.2","fontWeight":"700"}],
+      "headline-md":["22px",{"lineHeight":"1.3","fontWeight":"600"}],
+      "display-lg":["58px",{"lineHeight":"1.1","letterSpacing":"-0.02em","fontWeight":"700"}],
+      "display-lg-mobile":["36px",{"lineHeight":"1.2","fontWeight":"700"}],
+      "label-caps":["11px",{"lineHeight":"1.0","letterSpacing":"0.1em","fontWeight":"500"}],
+      "caption":["14px",{"lineHeight":"1.4","fontWeight":"400"}]
+    }
+  }}
+}
+</script>
+</head>
+<body class="bg-background text-on-background antialiased flex flex-col min-h-screen">
+
+<!-- ══ HEADER / NAV ══ -->
+<header class="bg-surface border-b-4 border-primary sticky top-0 z-50 w-full">
+  <div class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop max-w-max-content-width mx-auto py-stack-md">
+    <div class="flex items-center gap-3">
+      <div class="bg-primary text-on-primary w-8 h-8 flex items-center justify-center rounded font-label-caps text-sm font-bold">P</div>
+      <div class="text-label-caps font-label-caps text-primary uppercase tracking-wider text-xs md:text-sm">Profe Bit &middot; Tutor con LLMs</div>
+    </div>
+    <nav class="hidden md:flex items-center gap-6">
+      <a class="text-primary border-b-2 border-primary text-label-caps font-label-caps uppercase pb-1 tracking-wider" href="#inicio">Inicio</a>
+      <a class="text-on-surface-variant hover:text-primary transition-colors text-label-caps font-label-caps uppercase pb-1 tracking-wider" href="#producto">Producto</a>
+      <a class="text-on-surface-variant hover:text-primary transition-colors text-label-caps font-label-caps uppercase pb-1 tracking-wider" href="#arquitectura">Arquitectura</a>
+      <a class="text-on-surface-variant hover:text-primary transition-colors text-label-caps font-label-caps uppercase pb-1 tracking-wider" href="#prompts">Prompts</a>
+      <a class="text-on-surface-variant hover:text-primary transition-colors text-label-caps font-label-caps uppercase pb-1 tracking-wider" href="#ejecucion">Ejecución</a>
+      <a class="text-on-surface-variant hover:text-primary transition-colors text-label-caps font-label-caps uppercase pb-1 tracking-wider" href="#desafios">Desafíos</a>
+      <a class="text-on-surface-variant hover:text-primary transition-colors text-label-caps font-label-caps uppercase pb-1 tracking-wider" href="#reflexion">Reflexión</a>
+    </nav>
+    <div class="hidden md:flex items-center gap-3">
+      <a href="https://github.com/AndresGuido9820/trabajo2-agente-tutor/releases/download/video-demo/demo-desde-cero.mp4" id="boton-video" target="_blank"
+         class="flex border-2 border-primary text-primary text-label-caps font-label-caps px-5 py-3 uppercase tracking-wider hover:bg-primary hover:text-on-primary transition-colors items-center gap-2">
+        <span class="material-symbols-outlined text-base">smart_display</span> Video
+      </a>
+      <a href="https://github.com/AndresGuido9820/trabajo2-agente-tutor"
+         class="flex bg-primary text-on-primary text-label-caps font-label-caps px-6 py-3 uppercase tracking-wider hover:opacity-90 transition-opacity items-center gap-2">
+        <span class="material-symbols-outlined text-base">code</span> Repositorio
+      </a>
+    </div>
+  </div>
+</header>
+
+<main class="flex-grow w-full max-w-max-content-width mx-auto px-margin-mobile md:px-margin-desktop mt-stack-lg pb-stack-lg" id="inicio">
+
+  <!-- ══ HERO ══ -->
+  <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter mb-stack-lg fade-up">
+    <div class="md:col-span-10 md:col-start-2">
+      <span class="block text-label-caps font-label-caps text-primary mb-6 uppercase tracking-wider border-b border-primary pb-2 inline-block">
+        Trabajo 02 &middot; LLMs y Agentes para la enseñanza de la programación &middot; Universidad Nacional de Colombia &middot; Julio 2026
+      </span>
+      <h1 class="text-display-lg-mobile md:text-display-lg font-display-lg text-on-surface mb-8">
+        Un tutor de programación donde todo pasa conversando
+      </h1>
+      <p class="text-body-lg font-body-lg text-on-surface-variant max-w-3xl mb-8">
+        Pides tu curso con tus palabras, un asesor te entrevista y te aplica un examen diagnóstico,
+        y el curso completo se diseña a tu medida. Cada clase es una conversación con objetivos que
+        se cumplen en vivo, retos de código verificados en tu navegador, demos interactivas
+        generadas por el LLM y una evaluación final con niveles de Bloom y nota ponderada.
+      </p>
+      <div class="grid grid-cols-2 md:grid-cols-4 border-t-2 border-b-2 border-outline py-4 gap-4 bg-surface-container-low px-4">
+        <div>
+          <span class="block text-label-caps font-label-caps text-on-surface-variant mb-1 uppercase tracking-wider">Pruebas</span>
+          <span class="block text-headline-md font-headline-md text-primary">303</span>
+          <span class="text-caption font-caption text-on-surface-variant">pytest + mypy estricto + CI en cada push</span>
+        </div>
+        <div>
+          <span class="block text-label-caps font-label-caps text-on-surface-variant mb-1 uppercase tracking-wider">Historias de usuario</span>
+          <span class="block text-headline-md font-headline-md text-primary">42</span>
+          <span class="text-caption font-caption text-on-surface-variant">Git Flow: rama, tests y merge por HU</span>
+        </div>
+        <div>
+          <span class="block text-label-caps font-label-caps text-on-surface-variant mb-1 uppercase tracking-wider">Cursos de muestra</span>
+          <span class="block text-headline-md font-headline-md text-primary">2</span>
+          <span class="text-caption font-caption text-on-surface-variant">perfiles y lenguajes distintos</span>
+        </div>
+        <div>
+          <span class="block text-label-caps font-label-caps text-on-surface-variant mb-1 uppercase tracking-wider">Accesibilidad</span>
+          <span class="block text-headline-md font-headline-md text-secondary">0</span>
+          <span class="text-caption font-caption text-on-surface-variant">violaciones serias (axe-core, AA)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 01 · PRODUCTO ══ -->
+  <section id="producto" class="mb-stack-lg">
+    <div class="mb-stack-md fade-up">
+      <span class="block text-label-caps font-label-caps text-primary uppercase tracking-wider mb-3 border-b border-primary pb-2 inline-block">01 &mdash; El producto</span>
+      <h2 class="text-headline-lg font-headline-lg text-on-surface mb-3">De una frase a un curso completo</h2>
+      <p class="text-body-md font-body-md text-on-surface-variant max-w-2xl">
+        El recorrido real de un estudiante, capturado de la aplicación en uso: cada imagen es un
+        frame del video demo.
+      </p>
+    </div>
+
+    <div class="mt-0 mb-4 fade-up">
+      <span class="text-label-caps font-label-caps text-outline uppercase tracking-wider text-xs">1.1</span>
+      <h3 class="text-headline-md font-headline-md text-on-surface mt-0.5">Diseño conversacional del curso</h3>
+      <div class="h-px bg-outline-variant mt-2"></div>
+    </div>
+    <div class="border-2 border-outline-variant mb-stack-md fade-up cursor-zoom-in overflow-hidden" onclick="openLightbox(this.querySelector('img'))">
+      <img src="capturas-v2/02-creacion-conversacional.png" alt="Creación conversacional del curso" class="w-full object-cover hover:opacity-95 transition-opacity"/>
+      <div class="bg-surface-container px-4 py-3 border-t border-outline-variant flex items-center justify-between">
+        <span class="text-caption font-caption text-on-surface-variant">Fig. 1 &mdash; El asesor resume lo que entendió, pregunta nivel y objetivos, propone un temario de 8 unidades con analogías de Excel y solo crea el curso al confirmar.</span>
+        <span class="material-symbols-outlined text-on-surface-variant text-base ml-4">zoom_in</span>
+      </div>
+    </div>
+
+    <div class="mt-8 mb-4 fade-up">
+      <span class="text-label-caps font-label-caps text-outline uppercase tracking-wider text-xs">1.2</span>
+      <h3 class="text-headline-md font-headline-md text-on-surface mt-0.5">Examen diagnóstico: medir el punto de partida real</h3>
+      <div class="h-px bg-outline-variant mt-2"></div>
+    </div>
+    <div class="border-2 border-outline-variant mb-stack-md fade-up cursor-zoom-in overflow-hidden" onclick="openLightbox(this.querySelector('img'))">
+      <img src="capturas-v2/03-examen-diagnostico.png" alt="Examen diagnóstico inicial" class="w-full object-cover hover:opacity-95 transition-opacity"/>
+      <div class="bg-surface-container px-4 py-3 border-t border-outline-variant flex items-center justify-between">
+        <span class="text-caption font-caption text-on-surface-variant">Fig. 2 &mdash; Cuatro preguntas calibradas al nivel declarado miden lo que el estudiante realmente sabe; el resultado (qué domina, qué no) entra al perfil y recién entonces se genera el temario.</span>
+        <span class="material-symbols-outlined text-on-surface-variant text-base ml-4">zoom_in</span>
+      </div>
+    </div>
+
+    <div class="mt-8 mb-4 fade-up">
+      <span class="text-label-caps font-label-caps text-outline uppercase tracking-wider text-xs">1.3</span>
+      <h3 class="text-headline-md font-headline-md text-on-surface mt-0.5">La clase: objetivos que se cumplen en vivo</h3>
+      <div class="h-px bg-outline-variant mt-2"></div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter mb-stack-md">
+      <div class="border-2 border-outline-variant fade-up cursor-zoom-in overflow-hidden" onclick="openLightbox(this.querySelector('img'))">
+        <img src="capturas-v2/04-reto-codigo.png" alt="Reto de código" class="w-full object-cover hover:opacity-95 transition-opacity"/>
+        <div class="bg-surface-container px-4 py-3 border-t border-outline-variant">
+          <span class="text-caption font-caption text-on-surface-variant">Fig. 3 &mdash; Reto de código con tests que corren en el navegador (Pyodide); la pista es socrática, jamás la solución.</span>
+        </div>
+      </div>
+      <div class="border-2 border-outline-variant fade-up cursor-zoom-in overflow-hidden" onclick="openLightbox(this.querySelector('img'))">
+        <img src="capturas-v2/05-mini-quiz.png" alt="Mini-quiz y panel de objetivos" class="w-full object-cover hover:opacity-95 transition-opacity"/>
+        <div class="bg-surface-container px-4 py-3 border-t border-outline-variant">
+          <span class="text-caption font-caption text-on-surface-variant">Fig. 4 &mdash; Mini-quiz al cerrar cada objetivo; el panel derecho los va tachando en vivo.</span>
+        </div>
+      </div>
+      <div class="border-2 border-outline-variant fade-up cursor-zoom-in overflow-hidden" onclick="openLightbox(this.querySelector('img'))">
+        <img src="capturas-v2/06-demo-interactiva.png" alt="Demo interactiva" class="w-full object-cover hover:opacity-95 transition-opacity"/>
+        <div class="bg-surface-container px-4 py-3 border-t border-outline-variant">
+          <span class="text-caption font-caption text-on-surface-variant">Fig. 5 &mdash; Demo interactiva generada por el LLM (plantilla según el concepto), verificada y en sandbox sin red.</span>
+        </div>
+      </div>
+      <div class="border-2 border-outline-variant fade-up cursor-zoom-in overflow-hidden" onclick="openLightbox(this.querySelector('img'))">
+        <img src="capturas-v2/07-clase-completada.png" alt="Clase completada" class="w-full object-cover hover:opacity-95 transition-opacity"/>
+        <div class="bg-surface-container px-4 py-3 border-t border-outline-variant">
+          <span class="text-caption font-caption text-on-surface-variant">Fig. 6 &mdash; Panel al 100&nbsp;%: la evaluación final (Bloom + nota ponderada) se desbloquea solo al cumplir todos los objetivos.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-surface-container-low border-l-4 border-secondary px-6 py-5 fade-up">
+      <p class="text-body-md font-body-md text-on-surface-variant">
+        Además: <strong class="text-on-surface">repaso espaciado</strong> (1-3-7 días) alimentado por lo que fallas,
+        <strong class="text-on-surface"> conversatorio socrático</strong> al reprobar,
+        <strong class="text-on-surface"> estadísticas</strong> de aprendizaje, buscador global ⌘K, multicurso con
+        exportación a Markdown, streaming en vivo, tema claro/oscuro y reintentos sin pérdida ante caídas de red.
+      </p>
+    </div>
+  </section>
+
+  <!-- ══ 02 · ARQUITECTURA ══ -->
+  <section id="arquitectura" class="mb-stack-lg">
+    <div class="mb-stack-md fade-up">
+      <span class="block text-label-caps font-label-caps text-primary uppercase tracking-wider mb-3 border-b border-primary pb-2 inline-block">02 &mdash; Enfoque y arquitectura</span>
+      <h2 class="text-headline-lg font-headline-lg text-on-surface mb-3">Sin frameworks de agentes, con contratos</h2>
+      <p class="text-body-md font-body-md text-on-surface-variant max-w-3xl">
+        El flujo es determinista (diseño &rarr; clase &rarr; evaluación &rarr; progresión) y el LLM es el motor de
+        contenido, no un planificador: una orquestación propia resultó más simple, depurable y explicable que LangChain.
+      </p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+      <div class="bg-surface-container-lowest border-2 border-outline-variant p-6 fade-up">
+        <span class="material-symbols-outlined text-primary text-3xl mb-3 block">verified</span>
+        <h3 class="text-headline-md font-headline-md text-on-surface mb-2">Salida estructurada por contrato</h3>
+        <p class="text-body-md font-body-md text-on-surface-variant">Todo lo que el programa consume (perfil, temario, guiones, quizzes, la decisión de avanzar un paso) se pide como JSON con esquema explícito y se valida; si no valida, se reintenta con el error en el prompt.</p>
+      </div>
+      <div class="bg-surface-container-lowest border-2 border-outline-variant p-6 fade-up">
+        <span class="material-symbols-outlined text-primary text-3xl mb-3 block">calculate</span>
+        <h3 class="text-headline-md font-headline-md text-on-surface mb-2">Calificación local y determinista</h3>
+        <p class="text-body-md font-body-md text-on-surface-variant">El LLM genera preguntas, pero la nota es una comparación de índices en el servidor — nunca depende de una segunda llamada que pueda alucinar. Las respuestas correctas jamás viajan al navegador.</p>
+      </div>
+      <div class="bg-surface-container-lowest border-2 border-outline-variant p-6 fade-up">
+        <span class="material-symbols-outlined text-primary text-3xl mb-3 block">database</span>
+        <h3 class="text-headline-md font-headline-md text-on-surface mb-2">El diseño vive en una base de datos</h3>
+        <p class="text-body-md font-body-md text-on-surface-variant">Cada curso tiene su SQLite: diseño, guion por clase, perfil, progreso y chats. React + Mantine compilado y servido por el mismo FastAPI; carriles de modelo por tarea (potente para diseñar, liviano para conversar).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 03 · PROMPTS ══ -->
+  <section id="prompts" class="mb-stack-lg">
+    <div class="mb-stack-md fade-up">
+      <span class="block text-label-caps font-label-caps text-primary uppercase tracking-wider mb-3 border-b border-primary pb-2 inline-block">03 &mdash; Ingeniería de prompts</span>
+      <h2 class="text-headline-lg font-headline-lg text-on-surface mb-3">La pedagogía se especifica, no se asume</h2>
+      <p class="text-body-md font-body-md text-on-surface-variant max-w-3xl mb-6">
+        Antes de fijar los prompts investigamos literatura de enseñanza de la programación y tutores LLM.
+        Tres hallazgos definieron el diseño:
+      </p>
+    </div>
+    <div class="space-y-4">
+      <div class="bg-surface-container-low border-l-4 border-primary px-6 py-5 fade-up">
+        <p class="text-body-md font-body-md text-on-surface-variant"><strong class="text-on-surface">La estructura pedagógica hay que especificarla.</strong> Las clases siguen un guion PRIMM generado primero (predicción antes de explicación, worked examples con subgoal labels, estado de variables línea a línea, error típico, reto). Separar el plan de la ejecución evita que la conversación divague.</p>
+      </div>
+      <div class="bg-surface-container-low border-l-4 border-primary px-6 py-5 fade-up">
+        <p class="text-body-md font-body-md text-on-surface-variant"><strong class="text-on-surface">Los LLM no conocen los errores reales de los principiantes.</strong> Inyectamos un banco de misconceptions documentadas (leer <code class="font-label-caps text-sm">x = x + 1</code> como ecuación, <code class="font-label-caps text-sm">while</code> como interrupción instantánea…) y exigimos que cada distractor de quiz encarne una.</p>
+      </div>
+      <div class="bg-surface-container-low border-l-4 border-primary px-6 py-5 fade-up">
+        <p class="text-body-md font-body-md text-on-surface-variant"><strong class="text-on-surface">El avance también es una decisión con contrato.</strong> Cada turno devuelve <code class="font-label-caps text-sm">{avanza, mensaje}</code>: si el mensaje atiende el paso, avanza; si es un saludo o una duda, responde sin avanzar — un «hola» no dispara media lección. El conversatorio aplica los guardrails de Khanmigo (pistas, no soluciones) y los reintentos exigen variantes (patrón PrairieLearn).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 04 · EJECUCIÓN ══ -->
+  <section id="ejecucion" class="mb-stack-lg">
+    <div class="mb-stack-md fade-up">
+      <span class="block text-label-caps font-label-caps text-primary uppercase tracking-wider mb-3 border-b border-primary pb-2 inline-block">04 &mdash; Cómo ejecutarlo</span>
+      <h2 class="text-headline-lg font-headline-lg text-on-surface mb-3">Cuatro comandos</h2>
+      <p class="text-body-md font-body-md text-on-surface-variant max-w-2xl">
+        Requisitos: Python &ge; 3.12, <a class="text-primary underline" href="https://docs.astral.sh/uv/">uv</a> y una API key de OpenAI.
+        No necesitas Node: el frontend React ya viene compilado y lo sirve el propio backend.
+      </p>
+    </div>
+    <div class="bg-inverse-surface text-inverse-on-surface p-6 font-label-caps text-sm leading-7 overflow-x-auto fade-up border-2 border-outline">
+<pre>git clone https://github.com/AndresGuido9820/trabajo2-agente-tutor
+cd trabajo2-agente-tutor
+uv sync                    <span class="opacity-60"># instala todas las dependencias</span>
+cp .env.example .env       <span class="opacity-60"># y pon tu OPENAI_API_KEY=sk-...</span>
+uv run tutor-web           <span class="opacity-60"># abre http://127.0.0.1:8017</span></pre>
+    </div>
+    <p class="text-caption font-caption text-on-surface-variant mt-3 fade-up">
+      Opcionales en <code class="font-label-caps">.env</code>: <code class="font-label-caps">TUTOR_MODEL</code> (default gpt-5-mini),
+      <code class="font-label-caps">TUTOR_MODEL_CHAT=gpt-5-nano</code> (turnos más rápidos),
+      <code class="font-label-caps">TUTOR_IMAGENES=1</code> (ilustraciones con IA, bonus).
+      Para desarrollo: <code class="font-label-caps">uv run pytest</code> (303 pruebas con dobles del LLM), ruff y mypy estricto.
+    </p>
+  </section>
+
+  <!-- ══ 05 · DESAFÍOS ══ -->
+  <section id="desafios" class="mb-stack-lg">
+    <div class="mb-stack-md fade-up">
+      <span class="block text-label-caps font-label-caps text-primary uppercase tracking-wider mb-3 border-b border-primary pb-2 inline-block">05 &mdash; Desafíos y soluciones</span>
+      <h2 class="text-headline-lg font-headline-lg text-on-surface mb-3">Lo que se rompió y cómo se arregló</h2>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+      <div class="bg-surface-container-lowest border-2 border-outline-variant p-6 fade-up">
+        <span class="text-label-caps font-label-caps text-tertiary uppercase tracking-wider">Timeouts disfrazados</span>
+        <p class="text-body-md font-body-md text-on-surface-variant mt-2">Las generaciones largas superaban el timeout del SDK, que reporta el corte como error de conexión: el sistema reintentaba llamadas que iban bien. Solución: timeout de 180&nbsp;s y respuesta-vacía tratada como transitoria (los modelos razonadores gastan tokens de razonamiento dentro del límite).</p>
+      </div>
+      <div class="bg-surface-container-lowest border-2 border-outline-variant p-6 fade-up">
+        <span class="text-label-caps font-label-caps text-tertiary uppercase tracking-wider">El front también necesita pruebas</span>
+        <p class="text-body-md font-body-md text-on-surface-variant mt-2">Un bug de método HTTP pasó inadvertido porque los tests del API no ejercitan el JS. Añadimos bots Playwright que recorren la app real: capturas, E2E de caída-y-reintento del servidor y auditoría de accesibilidad con axe-core.</p>
+      </div>
+      <div class="bg-surface-container-lowest border-2 border-outline-variant p-6 fade-up">
+        <span class="text-label-caps font-label-caps text-tertiary uppercase tracking-wider">El system prompt manda</span>
+        <p class="text-body-md font-body-md text-on-surface-variant mt-2">El examen diagnóstico jamás se generaba contra la API real: se pedía con el system del asesor, cuyo contrato JSON obliga a responder <code class="font-label-caps text-sm">{mensaje, listo, perfil}</code>. Los dobles de test no lo detectan — el humo real, sí. Cada salida estructurada necesita su propio system.</p>
+      </div>
+      <div class="bg-surface-container-lowest border-2 border-outline-variant p-6 fade-up">
+        <span class="text-label-caps font-label-caps text-tertiary uppercase tracking-wider">Probar sin gastar</span>
+        <p class="text-body-md font-body-md text-on-surface-variant mt-2">Las 303 pruebas corren contra dobles del LLM inyectados (respuestas en cola, fallas simuladas del SDK); la API real solo se toca en scripts de humo y E2E manuales. CI corre formato, linter, mypy estricto, pytest y el build del frontend en cada push.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 06 · REFLEXIÓN ══ -->
+  <section id="reflexion" class="mb-stack-lg">
+    <div class="mb-stack-md fade-up">
+      <span class="block text-label-caps font-label-caps text-primary uppercase tracking-wider mb-3 border-b border-primary pb-2 inline-block">06 &mdash; Reflexión</span>
+      <h2 class="text-headline-lg font-headline-lg text-on-surface mb-3">Capacidades y limitaciones de los LLMs</h2>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+      <div class="fade-up">
+        <h3 class="text-headline-md font-headline-md text-secondary mb-3">Lo que sorprende</h3>
+        <p class="text-body-md font-body-md text-on-surface-variant mb-4">
+          La <strong class="text-on-surface">transferencia de dominio</strong>: con solo «manejo bien Excel», el modelo produjo el mapa
+          hoja&rarr;DataFrame, fórmula&rarr;expresión, tabla dinámica&rarr;agrupación en títulos, analogías y ejemplos de todo el curso.
+          Y su capacidad de <strong class="text-on-surface">generar software pequeño</strong>: las demos interactivas salen funcionales
+          y fieles al tema, verificadas por un control de calidad local.
+        </p>
+      </div>
+      <div class="fade-up">
+        <h3 class="text-headline-md font-headline-md text-tertiary mb-3">Lo que hay que vigilar</h3>
+        <p class="text-body-md font-body-md text-on-surface-variant mb-4">
+          La calidad pedagógica <strong class="text-on-surface">no emerge sola</strong>: sin el banco de misconceptions los distractores son
+          triviales, y sin verificación exigida el modelo escribe preguntas con respuestas ambiguas con total confianza.
+          El JSON se rompe bajo presión (seeds sin indentar, saltos sin escapar): todo lo estructurado necesita
+          validación con reintento. Y el costo/latencia obligan a decisiones de producto: carriles de modelo, caches y streaming.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 07 · EQUIPO ══ -->
+  <section id="equipo" class="mb-stack-lg">
+    <div class="mb-stack-md fade-up">
+      <span class="block text-label-caps font-label-caps text-primary uppercase tracking-wider mb-3 border-b border-primary pb-2 inline-block">07 &mdash; Equipo y contribución</span>
+      <h2 class="text-headline-lg font-headline-lg text-on-surface mb-3">Quién hizo qué</h2>
+    </div>
+    <div class="border-2 border-outline-variant overflow-hidden fade-up">
+      <table class="w-full text-body-md font-body-md">
+        <thead class="bg-surface-container text-left">
+          <tr>
+            <th class="px-4 py-3 text-label-caps font-label-caps uppercase tracking-wider text-on-surface-variant">Integrante</th>
+            <th class="px-4 py-3 text-label-caps font-label-caps uppercase tracking-wider text-on-surface-variant">Contribución</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-outline-variant bg-surface-container-lowest">
+          <tr><td class="px-4 py-3">Andrés F. Guido Montoya</td><td class="px-4 py-3 text-on-surface-variant">Arquitectura, backend (agente, prompts, evaluaciones), frontend, pruebas, video y documentación</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<!-- ══ FOOTER ══ -->
+<footer class="bg-inverse-surface text-inverse-on-surface border-t-4 border-primary">
+  <div class="max-w-max-content-width mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+      <div>
+        <p class="text-label-caps font-label-caps uppercase tracking-wider text-primary-fixed mb-3">Profe Bit &mdash; Trabajo 02</p>
+        <p class="text-body-md font-body-md opacity-80">Curso: Normalización — aplicaciones de LLMs y Agentes para la enseñanza de la programación básica</p>
+        <p class="text-body-md font-body-md opacity-80">Profesor: Juan David Ospina Arango &middot; Universidad Nacional de Colombia</p>
+        <p class="text-body-md font-body-md opacity-70 mt-2">Andrés F. Guido Montoya &middot; Julio 2026</p>
+      </div>
+      <div class="flex flex-col items-start md:items-end justify-between gap-4">
+        <div class="flex gap-6">
+          <a href="https://github.com/AndresGuido9820/trabajo2-agente-tutor" class="text-primary-fixed hover:opacity-80 transition-opacity text-label-caps font-label-caps uppercase tracking-wider flex items-center gap-2">
+            <span class="material-symbols-outlined text-base">code</span> Repositorio
+          </a>
+          <a href="https://github.com/AndresGuido9820/trabajo2-agente-tutor/releases/download/video-demo/demo-desde-cero.mp4" id="boton-video-footer" class="text-primary-fixed hover:opacity-80 transition-opacity text-label-caps font-label-caps uppercase tracking-wider flex items-center gap-2">
+            <span class="material-symbols-outlined text-base">smart_display</span> Video
+          </a>
+        </div>
+        <p class="text-caption font-caption opacity-60">React + Mantine &middot; FastAPI &middot; OpenAI API &middot; SQLite &middot; 303 pruebas</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('open')">
+  <img id="lightbox-img" src="" alt=""/>
+</div>
+
+<script>
+function openLightbox(img){
+  const lb = document.getElementById('lightbox');
+  document.getElementById('lightbox-img').src = img.src;
+  lb.classList.add('open');
+}
+const observador = new IntersectionObserver((entradas) => {
+  for (const e of entradas) if (e.isIntersecting) e.target.classList.add('visible');
+}, {threshold: 0.08});
+document.querySelectorAll('.fade-up').forEach((el) => observador.observe(el));
+</script>
+</body>
+</html>

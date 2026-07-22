@@ -1,14 +1,11 @@
-name: Publicar reporte (GitHub Pages)
+name: Publicar página (GitHub Pages)
 
 on:
   push:
     branches: [main, develop]
     paths:
-      - "entregables/REPORTE.md"
-      - "entregables/PAGINA.md"
-      - "entregables/capturas/**"
+      - "entregables/pagina/**"
       - "entregables/capturas-v2/**"
-      - ".github/pages/**"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -27,46 +24,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Instalar pandoc
-        run: sudo apt-get update -q && sudo apt-get install -y -q pandoc
-
-      - name: Construir el sitio (portada + reporte)
+      - name: Armar el sitio estático
         run: |
           mkdir -p _site
-          cp .github/pages/estilo.css _site/estilo.css
-          cp -r entregables/capturas _site/capturas
+          cp entregables/pagina/index.html _site/index.html
           cp -r entregables/capturas-v2 _site/capturas-v2
-          # Portada del proyecto (enlaces, video, cómo correr, capturas)
-          tail -n +2 entregables/PAGINA.md > /tmp/pagina.md
-          pandoc /tmp/pagina.md \
-            --standalone \
-            --css=estilo.css \
-            --metadata title="Profe Bit — Tutor de Programación con LLMs" \
-            --metadata author="Trabajo 02 · Normalización: aplicaciones de LLMs y Agentes para la enseñanza de la programación básica" \
-            --metadata date="Prof. Juan David Ospina Arango · $(date +%Y-%m-%d)" \
-            --metadata lang=es \
-            -o _site/index.html
-          # Reporte técnico (rúbrica) en su propia página
-          tail -n +2 entregables/REPORTE.md > /tmp/reporte.md
-          pandoc /tmp/reporte.md \
-            --standalone \
-            --toc --toc-depth=2 \
-            --css=estilo.css \
-            --metadata title="Reporte técnico — Profe Bit" \
-            --metadata author="Trabajo 02 · Normalización: aplicaciones de LLMs y Agentes para la enseñanza de la programación básica" \
-            --metadata date="Prof. Juan David Ospina Arango · $(date +%Y-%m-%d)" \
-            --metadata lang=es \
-            -o _site/reporte.html
-          for pagina in index reporte; do
-            cat >> _site/$pagina.html <<'HTML'
-          <footer class="pie">
-            <a href="index.html">Inicio</a> ·
-            <a href="reporte.html">Reporte técnico</a> ·
-            <a href="https://github.com/AndresGuido9820/trabajo2-agente-tutor">Repositorio</a> ·
-            Generado con GitHub Actions + pandoc.
-          </footer>
-          HTML
-          done
 
       - uses: actions/upload-pages-artifact@v3
         with:
