@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+jobs:
+  calidad:
+    name: Lint, tipos y pruebas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Instalar dependencias
+        run: uv sync --all-groups
+
+      - name: Formato (ruff format)
+        run: uv run ruff format --check .
+
+      - name: Linter (ruff check)
+        run: uv run ruff check .
+
+      - name: Tipos (mypy estricto)
+        run: uv run mypy src
+
+      - name: Pruebas (pytest)
+        run: uv run pytest
+
+  frontend:
+    name: Build del frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar y compilar
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build

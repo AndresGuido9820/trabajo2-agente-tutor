@@ -1,18 +1,37 @@
-# Secretos y datos locales
-.env
-data/
-
 # Python
 __pycache__/
 *.py[cod]
 .venv/
 *.egg-info/
-dist/
-
-# Herramientas
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+
+# Secretos y datos locales
+.env
+data/
+data-respaldo*/
+
+# Frontend
+frontend/node_modules/
+dist/
+# El build de la UI SÍ se versiona (FastAPI lo sirve):
+!src/tutor/static/dist/
+!src/tutor/static/dist/**
+
+# Documentación de trabajo interna (queda local)
+RULES.md
+SPEC.md
+docs/
+plan/
+entregables/GUION-VIDEO.md
+entregables/PAGINA.md
+entregables/REPORTE.md
+entregables/cursos-muestra/
+scripts/video_*.py
+
+# Video demo (pesado: queda local)
+entregables/video/
 
 # SO / editores
 .DS_Store

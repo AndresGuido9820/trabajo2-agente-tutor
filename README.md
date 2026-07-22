@@ -1,54 +1,128 @@
-# Tutor de Programación con LLMs — Trabajo 02
+# Profe Bit — Tutor de Programación con LLMs (Trabajo 02)
 
-Agente interactivo (CLI) que enseña fundamentos de programación adaptándose al
-perfil del estudiante: evalúa sus conocimientos previos y objetivos, genera un
-curso personalizado con un LLM (Anthropic Claude), crea evaluaciones y lleva el
-progreso.
+[![CI](https://github.com/AndresGuido9820/trabajo2-agente-tutor/actions/workflows/ci.yml/badge.svg)](https://github.com/AndresGuido9820/trabajo2-agente-tutor/actions/workflows/ci.yml)
 
-Curso: *Normalización: aplicaciones de LLMs y Agentes para la enseñanza de la
-programación básica* — Prof. Juan David Ospina Arango.
+Agente tutor interactivo que enseña fundamentos de programación. El
+estudiante **pide su curso conversando** ("hazme un curso de Python para
+analizar mis ventas; sé Excel"): el asesor pregunta lo que falta, propone un
+temario y lo crea al confirmar. Cada **clase es una conversación** con el
+tutor (método socrático), con evaluación que desbloquea la siguiente,
+conversatorio de dudas al reprobar, código ejecutable en el navegador
+(Pyodide), demos interactivas generadas por el LLM y puntos/racha.
 
-## Estructura del repositorio
+Curso: *Normalización: aplicaciones de LLMs y Agentes para la enseñanza de
+la programación básica* — Prof. Juan David Ospina Arango.
 
-| Ruta | Contenido |
-|---|---|
-| `SPEC.md` | Especificación: requisitos, criterios de evaluación del entregable y pruebas de aceptación |
-| `RULES.md` | Reglas de trabajo, calidad de código, linters y convenciones |
-| `docs/INVESTIGACION.md` | Investigación previa (antes de la primera línea de código) |
-| `docs/HALLAZGOS.md` | Bitácora de hallazgos durante el desarrollo |
-| `docs/TESTING.md` | Estrategia de pruebas: qué se testea, cómo y cuándo |
-| `plan/HU-*.md` | Historias de usuario, cada una con sus tareas y criterios |
-| `src/tutor/` | Código fuente del agente |
-| `tests/` | Pruebas automatizadas (pytest) |
+## Cómo correrlo
 
-## Configuración
-
-Requisitos: Python ≥ 3.12 y [uv](https://docs.astral.sh/uv/).
+Requisitos: Python ≥ 3.12 y [uv](https://docs.astral.sh/uv/). (No necesitas
+Node: el frontend ya viene compilado.)
 
 ```bash
-# 1. Clonar e instalar dependencias
-git clone <repo>
+git clone https://github.com/AndresGuido9820/trabajo2-agente-tutor
 cd trabajo2-agente-tutor
 uv sync
 
-# 2. Configurar la API key (nunca se versiona)
-cp .env.example .env
-# editar .env y poner ANTHROPIC_API_KEY=sk-ant-...
+cp .env.example .env          # y pon tu OPENAI_API_KEY=sk-...
 
-# 3. Ejecutar el tutor
-uv run tutor
+uv run tutor-web              # abre http://127.0.0.1:8017 (UI web, React)
+uv run tutor                  # alternativa: CLI en la terminal
+
+# Opcional: turnos de chat más rápidos con un modelo liviano
+TUTOR_MODEL_CHAT=gpt-5-nano uv run tutor-web
 ```
 
-## Comandos de desarrollo
+## Qué hace (recorrido)
+
+1. **Mis cursos**: menú con todos tus cursos y su progreso; "＋ Nuevo curso".
+2. **Diseño conversacional + examen diagnóstico**: describes qué quieres
+   aprender; el asesor resume, pregunta tu nivel/experiencia y objetivos,
+   propone un temario y, al confirmar, te aplica un **examen diagnóstico**
+   corto que mide tu conocimiento real — su resultado calibra el temario y
+   todas las clases. El diseño queda **estructurado en la base de datos**
+   (clase → título, objetivo, subtemas, prompt/guion) y como documento
+   `curso.md` visible, descargable y **editable** (editor estructurado).
+3. **Clases como conversaciones extensas**: cada clase se estructura en
+   3-4 **objetivos de aprendizaje**, cada uno con su secuencia PRIMM
+   (predices antes de que te explique) y un **mini-quiz de 2 preguntas**
+   al cerrarlo (+5 ⭐ por acierto; si fallas ambas, el tutor repasa con
+   otro ejemplo y reintentas). El tutor **escribe en vivo** (SSE) y decide
+   con criterio si tu mensaje avanza el paso o es una duda. Un **panel
+   lateral** muestra los objetivos marcándose en tiempo real. Los bloques
+   de código traen **▶ Pruébalo** (Python en tu navegador vía Pyodide) y
+   al cerrar cada objetivo llega un **⌨️ reto de código real** con tests
+   automáticos estilo freeCodeCamp (+10 ⭐, pista socrática si te trabas).
+   El botón **✨** genera una demo interactiva del objetivo (plantilla
+   según el concepto, verificada antes de mostrarse, regenerable).
+4. **Evaluación y progresión**: evaluación final de 6+ preguntas con
+   **niveles Bloom** (recordar/comprender/aplicar) y **nota ponderada** —
+   saber definiciones no basta si no aplicas. Las preguntas salen de un
+   **banco por clase sin repetición entre intentos** y priorizan lo que
+   fallaste en los mini-quices. Con 70+ apruebas (+30 ⭐) y desbloqueas la
+   siguiente clase; si no, **conversatorio socrático** y reintento con
+   preguntas nuevas. Lo fallado entra al **🔁 Repaso del día** (repetición
+   espaciada 1-3-7). Puntos, racha y estadísticas (📈 Mi progreso)
+   persistentes; buscador global ⌘K; exportar el curso a .zip.
+
+## Arquitectura
+
+```
+frontend/  (React + Mantine, Vite)  →  build en src/tutor/static/dist
+src/tutor/
+  web.py       API FastAPI (multi-curso; sirve el front)
+  agente.py    Orquestador: lecciones, quizzes, candados, chats, artefactos
+  curso.py     Temario/guiones/guías + persistencia del diseño
+  evaluacion.py  Quiz: generación LLM + calificación local determinista
+  prompts.py   TODOS los prompts, versionados (PRIMM, misconceptions, socrático)
+  llm.py       Cliente OpenAI: reintentos con backoff, JSON validado
+  db.py        SQLite por curso: curso, clases (con su prompt), perfil,
+               progreso, chat; migraciones automáticas
+  ui.py, __main__.py   CLI equivalente
+```
+
+- **Datos**: `data/cursos/<id>/tutor.db` (una BD por curso) + `curso.md`.
+- **Seguridad**: la API key solo vive en `.env` (gitignoreado); las
+  respuestas correctas de quizzes/checkpoints nunca viajan al navegador;
+  las demos corren en `iframe sandbox` sin red. Excepción consciente: los
+  tests de los retos de código sí viajan (se ejecutan en tu navegador con
+  Pyodide); el objetivo es aprender, no vigilar.
+
+## Desarrollo
 
 ```bash
-uv run pytest            # pruebas
-uv run ruff check .      # linter
-uv run ruff format .     # formateo
-uv run mypy src          # tipos
+uv run pytest              # 307 pruebas (LLM siempre con dobles)
+uv run ruff format --check . && uv run ruff check .
+uv run mypy src            # estricto
+
+# Frontend (solo si vas a tocar la UI)
+cd frontend && npm install && npm run dev    # proxy a :8017
+npm run build                                 # regenera static/dist
+
+# Manuales (cuestan tokens):
+uv run python scripts/humo_llm.py             # humo del cliente LLM
+uv run python scripts/exportar_curso.py datos-excel   # exporta un curso a Markdown
+uv run python scripts/capturas_playwright.py  # capturas automatizadas de la app
+uv run python scripts/e2e_reintento.py        # caída del server + reintento
+uv run python scripts/a11y_playwright.py      # axe-core (no cuesta tokens)
 ```
 
-## Estado del proyecto
+CI en GitHub Actions: lint + tipos + pruebas + build del frontend en cada
+push (`.github/workflows/ci.yml`).
 
-El avance se rastrea por HU en `plan/` (checkboxes por tarea). Los hallazgos y
-decisiones se registran en `docs/HALLAZGOS.md`.
+### Accesibilidad
+
+La app se opera completa con teclado (Tab/Enter/Espacio; `⌘K` abre el
+buscador, `Esc` cierra modales). El chat es una región `aria-live` que
+anuncia los mensajes del tutor; los botones-ícono llevan `aria-label`; los
+temas claro y oscuro pasan contraste AA (los colores de la variante
+"light" y el `dimmed` se ajustaron en `frontend/src/global.css`). La
+auditoría automática con axe-core (`scripts/a11y_playwright.py`) corre
+sobre Mis cursos, Clase y Mi progreso: 0 violaciones serias/críticas.
+
+## Entregables del curso
+
+- **Página del proyecto** (producto, arquitectura, prompts, ejecución):
+  <https://andresguido9820.github.io/trabajo2-agente-tutor/>
+- **Reporte técnico**:
+  <https://andresguido9820.github.io/trabajo2-agente-tutor/reporte.html>
+- **Video de demostración**: enlazado desde la página del proyecto.
