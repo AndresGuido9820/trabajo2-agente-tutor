@@ -1,15 +1,21 @@
-from .test_agente import temario_respuesta
+from .test_agente import quiz_respuesta, temario_respuesta
 from .test_chat_total import PERFIL_OK, turno_creacion, web_con
 
 
 def crear_curso(web, mensaje="curso de datos ya"):
     web.post("/api/creacion", json={"mensaje": mensaje})
+    web.post("/api/diagnostico/calificar", json={"respuestas": [0, 0, 0, 0]})
 
 
 class TestGestionCursos:
     def test_renombrar_persiste_y_lista(self, tmp_path):
         web, _ = web_con(
-            tmp_path, [turno_creacion("ok", True, PERFIL_OK), temario_respuesta()]
+            tmp_path,
+            [
+                turno_creacion("ok", True, PERFIL_OK),
+                quiz_respuesta(4),
+                temario_respuesta(),
+            ],
         )
         crear_curso(web)
         r = web.patch("/api/cursos/1", json={"nombre": "Ventas con Python"})
@@ -26,7 +32,12 @@ class TestGestionCursos:
 
     def test_archivar_marca_y_lista(self, tmp_path):
         web, _ = web_con(
-            tmp_path, [turno_creacion("ok", True, PERFIL_OK), temario_respuesta()]
+            tmp_path,
+            [
+                turno_creacion("ok", True, PERFIL_OK),
+                quiz_respuesta(4),
+                temario_respuesta(),
+            ],
         )
         crear_curso(web)
         web.patch("/api/cursos/1", json={"archivado": True})
@@ -36,7 +47,12 @@ class TestGestionCursos:
 
     def test_borrar_mueve_a_papelera_y_reasigna_activo(self, tmp_path):
         web, _ = web_con(
-            tmp_path, [turno_creacion("ok", True, PERFIL_OK), temario_respuesta()]
+            tmp_path,
+            [
+                turno_creacion("ok", True, PERFIL_OK),
+                quiz_respuesta(4),
+                temario_respuesta(),
+            ],
         )
         crear_curso(web)  # curso 1 (activo)
         web.post("/api/cursos")  # curso 2 (queda activo)

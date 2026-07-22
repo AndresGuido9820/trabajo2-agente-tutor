@@ -5,6 +5,7 @@ import {
 import { api, guardarBorrador, leerBorrador } from './api.js'
 import { avisarError } from './App.jsx'
 import { Escribiendo, Mensaje, ZonaChat } from './Chat.jsx'
+import { QuizCard } from './Clase.jsx'
 
 const EJEMPLOS = [
   'Hazme un curso de Python para analizar las ventas de mi negocio; manejo bien Excel',
@@ -38,7 +39,11 @@ export default function CreacionChat({ onCreado }) {
       const r = await api('/api/creacion', { mensaje: m })
       setMensajes((prev) => [...prev, { rol: 'tutor', texto: r.mensaje }])
       guardarBorrador('creacion', '')
-      if (r.listo) {
+      if (r.listo && r.diagnostico) {
+        // Examen diagnóstico (HU-41): mide el punto de partida real y
+        // recién con su resultado se diseña el temario.
+        setMensajes((prev) => [...prev, { rol: 'diagnostico', preguntas: r.diagnostico }])
+      } else if (r.listo) {
         setCreando(true)
         await onCreado()
       }
@@ -47,6 +52,18 @@ export default function CreacionChat({ onCreado }) {
       setFallo({ m })
     }
     setOcupado(false)
+  }
+
+  const calificarDiagnostico = async (respuestas) => {
+    try {
+      setCreando(true)
+      setOcupado(true)
+      const r = await api('/api/diagnostico/calificar', { respuestas })
+      setMensajes((prev) => [...prev, { rol: 'tutor', texto: r.resumen + ' Con eso calibro tu curso: creándolo…' }])
+      await onCreado()
+      setOcupado(false)
+      return true
+    } catch (e) { avisarError(e); setCreando(false); setOcupado(false); return false }
   }
 
   return (
@@ -66,7 +83,10 @@ export default function CreacionChat({ onCreado }) {
           </Container>
         )}
         {mensajes.map((m, i) => (
-          <Mensaje key={i} rol={m.rol}>{m.texto}</Mensaje>
+          m.rol === 'diagnostico'
+            ? <QuizCard key={i} preguntas={m.preguntas} titulo="EXAMEN DIAGNÓSTICO — ¿DESDE DÓNDE ARRANCAMOS?"
+                onCalificar={calificarDiagnostico} />
+            : <Mensaje key={i} rol={m.rol}>{m.texto}</Mensaje>
         ))}
         {ocupado && <Escribiendo texto={creando ? 'Diseñando tu curso y guardando el plan (~1 min)…' : undefined} />}
         {fallo && (

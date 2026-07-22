@@ -159,17 +159,13 @@ def recorrer(page: Page) -> None:
             # Tras el primer quiz, mostrar la demo interactiva una vez.
             if not demo_hecha and quiz_sin_responder(page) is None:
                 marca("V3 · Demo interactiva ✨ del objetivo")
-                page.get_by_label(
-                    "Pedir una demo interactiva de esta clase"
-                ).click()
+                page.get_by_label("Pedir una demo interactiva de esta clase").click()
                 page.wait_for_selector("iframe[title*='Demo']", timeout=ESPERA_LLM)
                 page.locator("iframe[title*='Demo']").last.scroll_into_view_if_needed()
                 time.sleep(6)
                 demo_hecha = True
             continue
-        n_retos = page.locator(
-            ".mantine-Paper-root", has_text="RETO DE CÓDIGO"
-        ).count()
+        n_retos = page.locator(".mantine-Paper-root", has_text="RETO DE CÓDIGO").count()
         if n_retos > retos:
             marca("V2r · Reto de código (verificar + pista)")
             manejar_reto(page)
@@ -187,9 +183,11 @@ def recorrer(page: Page) -> None:
     page.wait_for_selector("text=PREGUNTA 1 DE", timeout=ESPERA_LLM)
     page.locator("text=PREGUNTA 1 DE").first.scroll_into_view_if_needed()
     time.sleep(2.5)
-    for grupo in page.locator(
-        ".mantine-Paper-root", has_text="EVALUACIÓN"
-    ).last.locator("[role=radiogroup]").all():
+    for grupo in (
+        page.locator(".mantine-Paper-root", has_text="EVALUACIÓN")
+        .last.locator("[role=radiogroup]")
+        .all()
+    ):
         grupo.locator("input[type=radio]").first.check(force=True)
         time.sleep(0.5)
     page.locator("text=Calificar").last.click()
@@ -230,7 +228,9 @@ def main() -> int:
                 origen = Path(video.path())
                 destino = DESTINO / "demo-una-clase.webm"
                 origen.replace(destino)
-                print(f"\n🎥 Video: {destino} ({destino.stat().st_size // 1_000_000} MB)")
+                print(
+                    f"\n🎥 Video: {destino} ({destino.stat().st_size // 1_000_000} MB)"
+                )
             (DESTINO / "marcas-una-clase.txt").write_text("\n".join(marcas) + "\n")
     return 0
 

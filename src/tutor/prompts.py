@@ -761,6 +761,49 @@ reintentar la evaluación.
 13. Mensajes cortos (2-6 frases); es una conversación."""
 
 
+def prompt_diagnostico(perfil: PerfilEstudiante) -> str:
+    """Examen diagnóstico inicial (HU-41): mide el conocimiento REAL.
+
+    Se aplica al crear el curso, antes de generar el temario: el resultado
+    (qué domina y qué no) alimenta la personalización de todo el curso.
+    """
+    if perfil.nivel.value == "nunca":
+        calibre = """El estudiante dice que NUNCA ha programado: las preguntas miden
+razonamiento computacional SIN asumir sintaxis (secuencias de pasos,
+condiciones "si pasa X haz Y", patrones que se repiten, leer un
+pseudocódigo simple en español). Nada de código real."""
+    else:
+        calibre = f"""El estudiante declara nivel "{perfil.nivel.value}": las preguntas
+usan código {perfil.lenguaje or "python"} MUY corto (2-4 líneas) sobre
+fundamentos: variables y asignación, tipos, condicionales y bucles.
+Sirven para confirmar (o corregir) ese nivel declarado."""
+
+    return f"""Crea el EXAMEN DIAGNÓSTICO inicial para este estudiante (4 preguntas
+de opción múltiple). No es para calificarlo: es para saber desde dónde
+arranca su curso.
+
+{calibre}
+
+Reglas de formato (las mismas del quiz del curso):
+- Exactamente 4 opciones, UNA correcta; posición variada; sin "todas las
+  anteriores" ni negaciones.
+- Cada distractor encarna un error real de principiante; banco:
+{MISCONCEPTIONS}
+- "explicacion" justifica la correcta en una frase amable.
+- "concepto" nombra la habilidad medida (p. ej. "secuencias", "variables",
+  "condicionales", "bucles").
+- Dificultad ASCENDENTE: la 1 muy accesible, la 4 la más exigente del nivel.
+- VERIFICA cada pregunta resolviéndola tú antes de escribir las opciones.
+
+Responde ÚNICAMENTE este JSON:
+{{
+  "preguntas": [
+    {{"enunciado": "...", "opciones": ["a","b","c","d"], "correcta": 1,
+      "explicacion": "...", "concepto": "..."}}
+  ]
+}}"""
+
+
 def prompt_reencuentro(
     ultimos_mensajes: list[dict[str, str]], resumen_progreso: str
 ) -> str:
