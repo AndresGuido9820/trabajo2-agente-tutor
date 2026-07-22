@@ -52,6 +52,7 @@ from tutor.prompts import (
     prompt_diagnostico,
     prompt_extraer_perfil,
     system_creacion,
+    system_tutor,
 )
 
 logger = logging.getLogger(__name__)
@@ -569,9 +570,12 @@ def crear_app(
         # diseñar el temario. Si su generación falla, el curso se crea
         # igual sin examen (degradación: el diagnóstico es un plus).
         try:
+            # OJO: system_tutor, no system_creacion — el system del asesor
+            # OBLIGA al contrato {mensaje, listo, perfil} y el modelo jamás
+            # devolvería el quiz (visto contra la API real).
             quiz = pedir_json(
                 estado.cliente,
-                system=system_creacion(),
+                system=system_tutor(perfil),
                 prompt=prompt_diagnostico(perfil),
                 validar=lambda datos: validar_quiz(datos, 0, PREGUNTAS_DIAGNOSTICO),
             )

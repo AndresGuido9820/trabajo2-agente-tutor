@@ -118,6 +118,56 @@ def responder_quiz(page: Page, tarjeta) -> None:
     time.sleep(1.5)
 
 
+def responder_diagnostico(page: Page) -> None:
+    """Responde el examen diagnóstico del chat de creación (HU-41)."""
+    tarjeta = (
+        page.locator(".mantine-Paper-root", has_text="EXAMEN DIAGNÓSTICO")
+        .filter(has=page.locator("button", has_text="Calificar"))
+        .last
+    )
+    tarjeta.scroll_into_view_if_needed()
+    time.sleep(2)
+    for grupo in tarjeta.locator("[role=radiogroup]").all():
+        grupo.locator("input[type=radio]").first.check(force=True)
+        time.sleep(0.7)
+    tarjeta.locator("button", has_text="Calificar").click()
+
+
+def crear_curso(page: Page, pitch: str, datos: str) -> None:
+    """Diseña un curso conversando + examen diagnóstico + entra a la clase."""
+    page.click("text=Nuevo curso")
+    page.wait_for_selector("text=¿Qué quieres aprender?", timeout=15_000)
+    time.sleep(1.5)
+    mensajes_creacion = [
+        pitch,
+        datos,
+        "Sí, es correcto: proponme el plan",
+        "Me encanta la propuesta: ya, dale, arranca",
+        "Sí, confirmo: crea el curso ya, tal como está",
+        "ya, dale",
+    ]
+    hay_examen = "document.body.innerText.includes('EXAMEN DIAGNÓSTICO')"
+    en_clase = "document.body.innerText.includes('Clase 1:')"
+    for mensaje in mensajes_creacion:
+        if page.evaluate(f"() => {hay_examen} || {en_clase}"):
+            break
+        n = page.locator(".prosa").count()
+        escribir(page, mensaje)
+        page.wait_for_function(
+            f"() => (document.querySelectorAll('.prosa').length >= {n + 2}"
+            f" && !document.querySelector('button[data-loading]'))"
+            f" || {hay_examen} || {en_clase}",
+            timeout=ESPERA_LLM,
+        )
+        time.sleep(2)
+    # Examen diagnóstico (HU-41); si degradó, ya estaríamos en la clase.
+    if not page.evaluate(f"() => {en_clase}"):
+        page.wait_for_selector("text=EXAMEN DIAGNÓSTICO", timeout=ESPERA_LLM)
+        marca("· Examen diagnóstico (mide el conocimiento real)")
+        responder_diagnostico(page)
+    page.wait_for_selector("text=Clase 1:", timeout=ESPERA_LLM)
+
+
 def manejar_reto(page: Page) -> None:
     """Verifica el reto con el seed (falla a propósito) y pide la pista."""
     tarjeta = page.locator(".mantine-Paper-root", has_text="RETO DE CÓDIGO").last
@@ -138,32 +188,13 @@ def recorrer(page: Page) -> None:
     page.goto(BASE)
     page.wait_for_selector("text=Mis cursos", timeout=30_000)
     time.sleep(2.5)
-    page.click("text=Nuevo curso")
-    page.wait_for_selector("text=¿Qué quieres aprender?", timeout=15_000)
-    time.sleep(1.5)
-    mensajes_creacion = [
+    crear_curso(
+        page,
         "Hazme un curso de Python para analizar las ventas de mi negocio; "
         "manejo bien Excel",
         "Mi nivel es básico: sé fórmulas y tablas dinámicas de Excel, y "
         "tengo unas 5 horas a la semana",
-        "Sí, es correcto: proponme el plan",
-        "Me encanta la propuesta: ya, dale, arranca",
-        "Sí, confirmo: crea el curso ya, tal como está",
-        "ya, dale",
-    ]
-    en_clase = "document.body.innerText.includes('Clase 1:')"
-    for mensaje in mensajes_creacion:
-        if page.evaluate(f"() => {en_clase}"):
-            break
-        n = page.locator(".prosa").count()
-        escribir(page, mensaje)
-        page.wait_for_function(
-            f"() => (document.querySelectorAll('.prosa').length >= {n + 2}"
-            f" && !document.querySelector('button[data-loading]')) || {en_clase}",
-            timeout=ESPERA_LLM,
-        )
-        time.sleep(2)
-    page.wait_for_selector("text=Clase 1:", timeout=ESPERA_LLM)
+    )
 
     # ---- C2: la clase 1 arranca con el panel en cero ----------------------
     marca("C2 · La clase 1 abre: panel de objetivos en 0 %")
@@ -232,6 +263,29 @@ def recorrer(page: Page) -> None:
     time.sleep(4)
     page.mouse.wheel(0, 600)
     time.sleep(3)
+
+    # ---- C8: SEGUNDO curso, perfil totalmente distinto --------------------
+    marca("C8 · Segundo curso: otro perfil (nunca programé → web)")
+    page.click("text=Mis cursos")
+    page.wait_for_selector("text=Nuevo curso", timeout=15_000)
+    time.sleep(2)
+    crear_curso(
+        page,
+        "Quiero aprender a hacer páginas web desde cero, nunca he programado",
+        "Nunca he programado; tengo 4 horas a la semana; mi meta es mi "
+        "página personal; elige tú las tecnologías",
+    )
+    marca("C8b · La clase 1 del curso web: temario y tono distintos")
+    esperar(page, 1)  # apertura del tutor del curso nuevo
+    time.sleep(3.5)
+    turno(page, "creo que esa línea muestra un texto en la página, ¿no?")
+    time.sleep(2.5)
+
+    # Cierre: la biblioteca con LOS DOS cursos.
+    marca("C9 · Mis cursos: los dos cursos, perfiles distintos")
+    page.click("text=Mis cursos")
+    page.wait_for_selector("text=Nuevo curso", timeout=15_000)
+    time.sleep(4)
     marca("FIN")
 
 
