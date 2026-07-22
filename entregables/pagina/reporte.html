@@ -1027,12 +1027,82 @@ cuesta un centavo más.</p>
 </tr>
 </tbody>
 </table>
-<p>En la práctica, un curso completo de 7-8 clases sale por unos
-<strong>pocos centavos de dólar</strong> con <code>gpt-5-mini</code> en
-el carril potente y <code>gpt-5-nano</code> en el de chat. La generación
-de los guiones es lo que más pesa; el resto es ruido. Los precios
-exactos de la API cambian seguido, así que lo que importa es el orden de
-magnitud: esto no cuesta dólares, cuesta centavos.</p>
+<p>Puse números. Tomo como referencia un curso completo de 8 clases y
+los precios de los modelos que uso: <code>gpt-5-mini</code> a $0.25 /
+$2.00 por millón de tokens (entrada / salida) y <code>gpt-5-nano</code>
+a $0.05 / $0.40. Esta es la estimación, desglosada por concepto:</p>
+<table>
+<thead>
+<tr>
+<th>Concepto</th>
+<th>Llamadas</th>
+<th>Modelo</th>
+<th>Tokens aprox. (in / out)</th>
+<th>Costo aprox.</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Creación del curso + diagnóstico</td>
+<td>~9</td>
+<td>gpt-5-mini</td>
+<td>14k / 4k</td>
+<td>$0.01</td>
+</tr>
+<tr>
+<td>Guiones PRIMM (una por clase)</td>
+<td>8</td>
+<td>gpt-5-mini</td>
+<td>16k / 28k</td>
+<td>$0.06</td>
+</tr>
+<tr>
+<td>Evaluaciones finales</td>
+<td>8</td>
+<td>gpt-5-mini</td>
+<td>16k / 16k</td>
+<td>$0.04</td>
+</tr>
+<tr>
+<td>Demos interactivas (opcionales)</td>
+<td>~3</td>
+<td>gpt-5-mini</td>
+<td>3k / 6k</td>
+<td>$0.01</td>
+</tr>
+<tr>
+<td>Turnos de conversación en clase</td>
+<td>~240</td>
+<td>gpt-5-nano</td>
+<td>600k / 72k</td>
+<td>$0.06</td>
+</tr>
+<tr>
+<td>Calificar, progreso, repaso</td>
+<td>—</td>
+<td>local (sin LLM)</td>
+<td>—</td>
+<td>$0.00</td>
+</tr>
+<tr>
+<td><strong>Total estimado por curso</strong></td>
+<td></td>
+<td></td>
+<td></td>
+<td><strong>≈ $0.18</strong></td>
+</tr>
+</tbody>
+</table>
+<p>O sea, <strong>alrededor de 15 a 20 centavos de dólar por un curso
+completo</strong>. El grueso se lo llevan los guiones (mucho token de
+salida porque el modelo razona el plan) y los cientos de turnos de chat,
+que igual salen baratos porque van en el modelo liviano. Si se activan
+las ilustraciones de clase (bonus, apagadas por defecto) hay que sumar
+el costo de <code>gpt-image-1</code>, del orden de $0.01 a $0.04 por
+imagen —unos 10 a 30 centavos más por curso—. Los precios de la API
+cambian seguido y el uso real varía según cuánto pregunte cada
+estudiante, así que léelo como un orden de magnitud, no como una factura
+al centavo: esto no cuesta dólares por curso, cuesta centavos.</p>
 <p>Y si hay que apretar el gasto, hay palancas claras:
 <code>TUTOR_MODEL_CHAT</code> baja el modelo de los turnos a uno más
 barato, <code>TUTOR_IMAGENES</code> apagado (el default) evita el costo
