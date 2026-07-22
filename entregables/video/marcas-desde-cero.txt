@@ -1,1 +1,18 @@
-00:01  C1 · Mis cursos → Nuevo curso (diseño conversacional)
+00:00  C1 · Mis cursos → Nuevo curso (diseño conversacional)
+03:19  · Examen diagnóstico (mide el conocimiento real)
+03:50  C2 · La clase 1 abre: panel de objetivos en 0 %
+05:07  C3 · La clase conversada: objetivos marcándose en vivo
+07:14  C3.r · Reto de código (verificar + pista)
+08:08  C3.q1 · Mini-quiz
+08:31  C3.q2 · Mini-quiz
+08:35  C4 · Demo interactiva del objetivo
+11:27  C3.r · Reto de código (verificar + pista)
+12:16  C3.q3 · Mini-quiz
+12:40  C3.q4 · Mini-quiz
+15:34  C3.r · Reto de código (verificar + pista)
+16:33  C3.q5 · Mini-quiz
+16:59  C3.q6 · Mini-quiz
+22:02  C3.q7 · Mini-quiz
+22:34  C3.q8 · Mini-quiz
+22:39  C5 · Clase completada: panel al 100 %, evaluación desbloqueada
+22:42  C6 · Evaluación final (niveles Bloom, nota ponderada)
