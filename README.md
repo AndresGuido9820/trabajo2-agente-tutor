@@ -27,14 +27,19 @@ cp .env.example .env          # y pon tu OPENAI_API_KEY=sk-...
 
 uv run tutor-web              # abre http://127.0.0.1:8017 (UI web, React)
 uv run tutor                  # alternativa: CLI en la terminal
+
+# Opcional: turnos de chat más rápidos con un modelo liviano
+TUTOR_MODEL_CHAT=gpt-5-nano uv run tutor-web
 ```
 
 ## Qué hace (recorrido)
 
 1. **Mis cursos**: menú con todos tus cursos y su progreso; "＋ Nuevo curso".
-2. **Diseño conversacional**: describes qué quieres aprender; el asesor
-   resume, pregunta tu nivel/experiencia, propone un temario y crea el curso
-   cuando confirmas. El diseño queda **estructurado en la base de datos**
+2. **Diseño conversacional + examen diagnóstico**: describes qué quieres
+   aprender; el asesor resume, pregunta tu nivel/experiencia y objetivos,
+   propone un temario y, al confirmar, te aplica un **examen diagnóstico**
+   corto que mide tu conocimiento real — su resultado calibra el temario y
+   todas las clases. El diseño queda **estructurado en la base de datos**
    (clase → título, objetivo, subtemas, prompt/guion) y como documento
    `curso.md` visible, descargable y **editable** (editor estructurado).
 3. **Clases como conversaciones extensas**: cada clase se estructura en

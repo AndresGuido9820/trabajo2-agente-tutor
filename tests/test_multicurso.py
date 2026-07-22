@@ -7,7 +7,7 @@ from tutor.perfil import guardar_perfil
 from tutor.web import crear_app
 
 from .conftest import ClienteLLMFalso
-from .test_agente import temario_respuesta
+from .test_agente import quiz_respuesta, temario_respuesta
 from .test_chat_total import PERFIL_OK, turno_creacion
 
 
@@ -33,11 +33,13 @@ class TestMisCursos:
             tmp_path,
             [
                 turno_creacion("ok", True, PERFIL_OK),
+                quiz_respuesta(4),
                 temario_respuesta(),
             ],
         )
         web.post("/api/cursos")
         web.post("/api/creacion", json={"mensaje": "curso de datos ya dale"})
+        web.post("/api/diagnostico/calificar", json={"respuestas": [0, 0, 0, 0]})
         assert web.get("/api/estado").json()["perfil"] is True
 
         # Segundo curso: vacío e independiente
@@ -73,10 +75,16 @@ class TestMisCursos:
 class TestDisenoEstructurado:
     def _web_con_curso(self, tmp_path):
         web, falso = web_con(
-            tmp_path, [turno_creacion("ok", True, PERFIL_OK), temario_respuesta()]
+            tmp_path,
+            [
+                turno_creacion("ok", True, PERFIL_OK),
+                quiz_respuesta(4),
+                temario_respuesta(),
+            ],
         )
         web.post("/api/cursos")
         web.post("/api/creacion", json={"mensaje": "curso de datos ya dale"})
+        web.post("/api/diagnostico/calificar", json={"respuestas": [0, 0, 0, 0]})
         return web, falso
 
     def test_diseno_estructurado_se_lee_y_edita(self, tmp_path):

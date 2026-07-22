@@ -7,7 +7,7 @@ from tutor.config import Configuracion
 from tutor.web import crear_app
 
 from .conftest import ClienteLLMFalso
-from .test_agente import temario_respuesta
+from .test_agente import quiz_respuesta, temario_respuesta
 from .test_leccion import guion_respuesta
 
 
@@ -34,12 +34,15 @@ def web_con(tmp_path, respuestas):
 
 class TestCreacionConversacional:
     def test_conversa_pregunta_y_al_confirmar_crea_el_curso(self, tmp_path):
+        from .test_agente import quiz_respuesta
+
         web, falso = web_con(
             tmp_path,
             [
                 turno_creacion("Bueno, quieres datos. ¿Cuál es tu nivel de Python?"),
                 turno_creacion("Propongo estas unidades… ¿arrancamos?"),
                 turno_creacion("¡Dale! Creando tu curso…", True, PERFIL_OK),
+                quiz_respuesta(4),  # examen diagnóstico (HU-41)
                 temario_respuesta(),
             ],
         )
@@ -55,6 +58,14 @@ class TestCreacionConversacional:
 
         r3 = web.post("/api/creacion", json={"mensaje": "ya, dale"}).json()
         assert r3["listo"] is True
+        # Confirmar NO diseña todavía: primero el examen diagnóstico (HU-41)
+        assert len(r3["diagnostico"]) == 4
+        assert "correcta" not in r3["diagnostico"][0]
+        r4 = web.post(
+            "/api/diagnostico/calificar", json={"respuestas": [0, 0, 1, 1]}
+        ).json()
+        assert r4["aciertos"] == 2
+        assert "Diagnóstico inicial 2/4" in r4["resumen"]
 
         # Quedó el curso, el plan .md y el estado completo
         estado = web.get("/api/estado").json()
@@ -66,11 +77,18 @@ class TestCreacionConversacional:
         assert (tmp_path / "cursos" / "1" / "curso.md").exists()
 
     def test_con_curso_existente_da_409(self, tmp_path):
+        from .test_agente import quiz_respuesta
+
         web, _ = web_con(
             tmp_path,
-            [turno_creacion("ok", True, PERFIL_OK), temario_respuesta()],
+            [
+                turno_creacion("ok", True, PERFIL_OK),
+                quiz_respuesta(4),
+                temario_respuesta(),
+            ],
         )
         web.post("/api/creacion", json={"mensaje": "curso de datos ya dale"})
+        web.post("/api/diagnostico/calificar", json={"respuestas": [0, 0, 0, 0]})
         r = web.post("/api/creacion", json={"mensaje": "otro curso"})
         assert r.status_code == 409
 
@@ -122,11 +140,13 @@ class TestEstudioEnChat:
             [
                 turno_creacion("¿tu nivel?"),
                 turno_creacion("ok", True, PERFIL_OK),
+                quiz_respuesta(4),
                 temario_respuesta(),
             ],
         )
         web.post("/api/creacion", json={"mensaje": "curso de datos"})
         web.post("/api/creacion", json={"mensaje": "ya dale"})
+        web.post("/api/diagnostico/calificar", json={"respuestas": [0, 0, 0, 0]})
         h = web.get("/api/historial/creacion").json()["mensajes"]
         assert h[0]["rol"] == "yo" and h[0]["texto"] == "curso de datos"
         assert h[0]["id"] > 0  # id de BD: anchor del buscador (HU-37)
@@ -138,17 +158,29 @@ class TestEstudioEnChat:
 
     def test_estado_incluye_conceptos_para_el_temario(self, tmp_path):
         web, _ = web_con(
-            tmp_path, [turno_creacion("ok", True, PERFIL_OK), temario_respuesta()]
+            tmp_path,
+            [
+                turno_creacion("ok", True, PERFIL_OK),
+                quiz_respuesta(4),
+                temario_respuesta(),
+            ],
         )
         web.post("/api/creacion", json={"mensaje": "curso de datos ya"})
+        web.post("/api/diagnostico/calificar", json={"respuestas": [0, 0, 0, 0]})
         u0 = web.get("/api/estado").json()["unidades"][0]
         assert u0["conceptos"] == ["variables", "tipos"]
 
     def test_plan_editable_a_mano(self, tmp_path):
         web, _ = web_con(
-            tmp_path, [turno_creacion("ok", True, PERFIL_OK), temario_respuesta()]
+            tmp_path,
+            [
+                turno_creacion("ok", True, PERFIL_OK),
+                quiz_respuesta(4),
+                temario_respuesta(),
+            ],
         )
         web.post("/api/creacion", json={"mensaje": "curso de datos ya"})
+        web.post("/api/diagnostico/calificar", json={"respuestas": [0, 0, 0, 0]})
         r = web.post("/api/plan", json={"md": "# Mi plan editado a mano"})
         assert r.status_code == 200
         assert web.get("/api/plan").json()["md"] == "# Mi plan editado a mano"
@@ -162,11 +194,13 @@ class TestEstudioEnChat:
             tmp_path,
             [
                 turno_creacion("ok", True, PERFIL_OK),
+                quiz_respuesta(4),
                 temario_respuesta(),
                 guion_respuesta(),
                 "hola, ¡arranquemos!",
             ],
         )
         web.post("/api/creacion", json={"mensaje": "curso de datos ya"})
+        web.post("/api/diagnostico/calificar", json={"respuestas": [0, 0, 0, 0]})
         r = web.post("/api/estudio", json={}).json()
         assert r["texto"] == "hola, ¡arranquemos!" and r["unidad"] == 0

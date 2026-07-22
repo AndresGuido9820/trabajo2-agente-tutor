@@ -12,7 +12,8 @@ import json
 import logging
 import shutil
 import sys
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -28,6 +29,7 @@ from tutor.config import (
     HORAS_PARA_REENCUENTRO,
     NOTA_APROBATORIA,
     PRECIOS_MODELO,
+    PREGUNTAS_DIAGNOSTICO,
     Configuracion,
     cargar_configuracion,
 )
@@ -39,13 +41,18 @@ from tutor.curso import (
     validar_temario,
 )
 from tutor.errores import ErrorBloqueada, ErrorConfiguracion, ErrorDatos, ErrorLLM
-from tutor.evaluacion import Quiz, resumenes
+from tutor.evaluacion import Quiz, resumenes, validar_quiz
 from tutor.exportar import paquete_zip
 from tutor.imagenes import ilustrar_unidad
 from tutor.llm import ClienteLLM, ClienteOpenAI, pedir_json
 from tutor.models import Nivel, Objetivo, PerfilEstudiante
 from tutor.perfil import guardar_perfil, validar_perfil_extraido
-from tutor.prompts import prompt_creacion, prompt_extraer_perfil, system_creacion
+from tutor.prompts import (
+    prompt_creacion,
+    prompt_diagnostico,
+    prompt_extraer_perfil,
+    system_creacion,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -186,6 +193,8 @@ class _SesionCurso:
         )
         self.quizzes: dict[int, Quiz] = {}
         self.creacion: list[tuple[str, str]] = []
+        # Examen diagnóstico pendiente al crear el curso (HU-41).
+        self.diagnostico: Quiz | None = None
 
 
 class _Estado:
@@ -278,6 +287,24 @@ class _Estado:
     def anotar(self, canal: str, rol: str, texto: str) -> None:
         """Agrega un mensaje al historial de una conversación (tabla chat)."""
         db.anotar_chat(self.ruta_db, canal, rol, texto)
+
+
+def _disenar_curso(estado: _Estado, descripcion: str) -> None:
+    """Genera el temario y persiste el plan del curso activo (HU-41)."""
+    agente = estado.agente
+    assert agente is not None
+    temario = _con_llm_estatico(lambda: agente.curso).temario
+    plan = plan_markdown(temario, descripcion)
+    guardar_plan_md(estado.ruta_db, plan)
+    (estado.dir_activo / "curso.md").write_text(plan, "utf-8")
+
+
+def _con_llm_estatico(operacion: Callable[[], Any]) -> Any:
+    """Versión de módulo de ``_con_llm`` (mapea ErrorLLM a 502)."""
+    try:
+        return operacion()
+    except ErrorLLM as error:
+        raise HTTPException(502, str(error)) from error
 
 
 def crear_app(
@@ -538,12 +565,81 @@ def crear_app(
             raise HTTPException(502, f"Perfil extraído inválido: {error}") from error
         guardar_perfil(perfil, estado.dir_activo / ARCHIVO_PERFIL)
         estado.agente = Agente(estado.cliente, estado.dir_activo, perfil)
-        agente = estado.agente
-        temario = _con_llm(lambda: agente.curso).temario
-        plan = plan_markdown(temario, descripcion)
-        guardar_plan_md(estado.ruta_db, plan)  # metadata del diseño en la BD
-        (estado.dir_activo / "curso.md").write_text(plan, "utf-8")
-        return {"mensaje": turno["mensaje"], "listo": True}
+        # Examen diagnóstico (HU-41): mide el conocimiento REAL antes de
+        # diseñar el temario. Si su generación falla, el curso se crea
+        # igual sin examen (degradación: el diagnóstico es un plus).
+        try:
+            quiz = pedir_json(
+                estado.cliente,
+                system=system_creacion(),
+                prompt=prompt_diagnostico(perfil),
+                validar=lambda datos: validar_quiz(datos, 0, PREGUNTAS_DIAGNOSTICO),
+            )
+            estado.sesion().diagnostico = quiz
+            return {
+                "mensaje": turno["mensaje"],
+                "listo": True,
+                "diagnostico": [
+                    {"enunciado": p.enunciado, "opciones": p.opciones}
+                    for p in quiz.preguntas
+                ],
+            }
+        except ErrorLLM:
+            logger.warning("Diagnóstico no disponible; se crea el curso directo")
+            _disenar_curso(estado, descripcion)
+            return {"mensaje": turno["mensaje"], "listo": True, "diagnostico": None}
+
+    @app.post("/api/diagnostico/calificar")
+    def api_diagnostico_calificar(cuerpo: CuerpoRespuestas) -> dict[str, Any]:
+        """Califica el examen diagnóstico y AHÍ SÍ diseña el curso (HU-41).
+
+        El resultado (qué domina y qué falló) se incorpora al perfil, así
+        el temario y todas las clases se calibran al conocimiento real.
+        """
+        sesion = estado.sesion()
+        quiz = sesion.diagnostico
+        if quiz is None:
+            raise HTTPException(409, "No hay un examen diagnóstico pendiente.")
+        if len(cuerpo.respuestas) != len(quiz.preguntas):
+            raise HTTPException(400, f"Se esperaban {len(quiz.preguntas)} respuestas.")
+        detalle = []
+        dominados: list[str] = []
+        brechas: list[str] = []
+        for pregunta, respuesta in zip(quiz.preguntas, cuerpo.respuestas, strict=True):
+            if not 0 <= respuesta < len(pregunta.opciones):
+                raise HTTPException(400, f"Respuesta fuera de rango: {respuesta}")
+            acierto = respuesta == pregunta.correcta
+            (dominados if acierto else brechas).append(pregunta.concepto)
+            detalle.append(
+                {
+                    "acierto": acierto,
+                    "elegida": pregunta.opciones[respuesta],
+                    "correcta": pregunta.opciones[pregunta.correcta],
+                    "explicacion": pregunta.explicacion,
+                }
+            )
+        sesion.diagnostico = None
+        agente = _agente()
+        resumen = (
+            f"Diagnóstico inicial {len(dominados)}/{len(quiz.preguntas)}: "
+            + (f"domina {', '.join(dominados)}" if dominados else "sin aciertos")
+            + (f"; brechas en {', '.join(brechas)}" if brechas else "")
+            + "."
+        )
+        # El diagnóstico entra al perfil: el temario y las clases lo usan.
+        perfil = replace(
+            agente.perfil,
+            experiencia=(agente.perfil.experiencia + " " + resumen).strip(),
+        )
+        guardar_perfil(perfil, estado.dir_activo / ARCHIVO_PERFIL)
+        estado.agente = Agente(estado.cliente, estado.dir_activo, perfil)
+        _disenar_curso(estado, perfil.descripcion)
+        return {
+            "aciertos": len(dominados),
+            "total": len(quiz.preguntas),
+            "resumen": resumen,
+            "detalle": detalle,
+        }
 
     @app.post("/api/plan")
     def api_actualizar_plan(cuerpo: CuerpoPlan) -> dict[str, Any]:
