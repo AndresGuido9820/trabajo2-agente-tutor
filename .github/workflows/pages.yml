@@ -30,6 +30,7 @@ jobs:
           mkdir -p _site
           cp entregables/pagina/index.html _site/index.html
           cp entregables/pagina/reporte.html _site/reporte.html
+          cp entregables/pagina/sistema.svg _site/sistema.svg
           cp -r entregables/capturas-v2 _site/capturas-v2
           cp -r entregables/capturas _site/capturas
 

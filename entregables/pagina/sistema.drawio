@@ -1,0 +1,103 @@
+<mxGraphModel dx="1440" dy="1400" grid="1" gridSize="20" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1440" pageHeight="1400" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+
+    <mxCell id="title" value="Cómo funciona Profe Bit: el LLM genera el contenido, el sistema valida y decide" style="text;html=1;align=left;verticalAlign=middle;fontSize=18;fontStyle=1;fontColor=#131629;" vertex="1" parent="1">
+      <mxGeometry x="40" y="20" width="1180" height="30" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="sw1" value="" style="rounded=0;fillColor=#eef0f7;strokeColor=#34409e;strokeWidth=2;" vertex="1" parent="1">
+      <mxGeometry x="40" y="62" width="20" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="sw1t" value="Genera el LLM (contenido)" style="text;html=1;align=left;verticalAlign=middle;fontSize=13;fontColor=#414766;" vertex="1" parent="1">
+      <mxGeometry x="68" y="62" width="230" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="sw2" value="" style="rounded=0;fillColor=#ffffff;strokeColor=#bcc2dc;strokeWidth=2;" vertex="1" parent="1">
+      <mxGeometry x="320" y="62" width="20" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="sw2t" value="Decide el sistema (control determinista)" style="text;html=1;align=left;verticalAlign=middle;fontSize=13;fontColor=#414766;" vertex="1" parent="1">
+      <mxGeometry x="348" y="62" width="320" height="20" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="sepA" value="Diseño del curso — una sola vez, se cachea en SQLite" style="text;html=1;align=left;verticalAlign=middle;fontSize=14;fontStyle=1;fontColor=#34409e;" vertex="1" parent="1">
+      <mxGeometry x="40" y="100" width="700" height="22" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="A1" value="El estudiante pide su curso conversando" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#bcc2dc;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#131629;" vertex="1" parent="1">
+      <mxGeometry x="450" y="126" width="300" height="48" as="geometry"/>
+    </mxCell>
+    <mxCell id="A2" value="El asesor entrevista y extrae el perfil (JSON)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef0f7;strokeColor=#34409e;strokeWidth=2;fontSize=14;fontColor=#131629;" vertex="1" parent="1">
+      <mxGeometry x="450" y="196" width="300" height="48" as="geometry"/>
+    </mxCell>
+    <mxCell id="A3" value="Examen diagnóstico calibrado al nivel" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef0f7;strokeColor=#34409e;strokeWidth=2;fontSize=14;fontColor=#131629;" vertex="1" parent="1">
+      <mxGeometry x="450" y="266" width="300" height="48" as="geometry"/>
+    </mxCell>
+    <mxCell id="A4" value="Califica el diagnóstico (local) y calibra el perfil" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#bcc2dc;strokeWidth=2;fontSize=14;fontColor=#131629;" vertex="1" parent="1">
+      <mxGeometry x="450" y="336" width="300" height="56" as="geometry"/>
+    </mxCell>
+    <mxCell id="A5" value="Genera el temario y un guion PRIMM por clase" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef0f7;strokeColor=#34409e;strokeWidth=2;fontSize=14;fontColor=#131629;" vertex="1" parent="1">
+      <mxGeometry x="450" y="414" width="300" height="56" as="geometry"/>
+    </mxCell>
+    <mxCell id="A6" value="Valida el JSON y cachea el diseño en SQLite" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#bcc2dc;strokeWidth=2;fontSize=14;fontColor=#131629;" vertex="1" parent="1">
+      <mxGeometry x="450" y="492" width="300" height="48" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="sepB" value="Cada clase — se recorre el guion cacheado, un paso por turno" style="text;html=1;align=left;verticalAlign=middle;fontSize=14;fontStyle=1;fontColor=#34409e;" vertex="1" parent="1">
+      <mxGeometry x="40" y="560" width="720" height="22" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="D1" value="¿El mensaje del estudiante&#10;atiende el paso actual?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#eef0f7;strokeColor=#34409e;strokeWidth=2.5;fontSize=14;fontStyle=1;fontColor=#131629;" vertex="1" parent="1">
+      <mxGeometry x="440" y="590" width="320" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="Bno" value="Saludo o duda: responde natural y con pistas socráticas, y retoma el paso sin adelantar" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef0f7;strokeColor=#34409e;strokeWidth=2;fontSize=13;fontColor=#131629;" vertex="1" parent="1">
+      <mxGeometry x="1000" y="600" width="340" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="Asi" value="Reacciona (celebra o corrige) y despliega el paso siguiente" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef0f7;strokeColor=#34409e;strokeWidth=2;fontSize=14;fontColor=#131629;" vertex="1" parent="1">
+      <mxGeometry x="450" y="742" width="300" height="56" as="geometry"/>
+    </mxCell>
+    <mxCell id="D2" value="¿Quedan pasos u objetivos&#10;por cubrir en la clase?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#bcc2dc;strokeWidth=2.5;fontSize=14;fontStyle=1;fontColor=#131629;" vertex="1" parent="1">
+      <mxGeometry x="440" y="836" width="320" height="104" as="geometry"/>
+    </mxCell>
+    <mxCell id="E1" value="Evaluación final: banco por clase, sin repetir entre intentos" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef0f7;strokeColor=#34409e;strokeWidth=2;fontSize=14;fontColor=#131629;" vertex="1" parent="1">
+      <mxGeometry x="450" y="982" width="300" height="56" as="geometry"/>
+    </mxCell>
+    <mxCell id="D3" value="Nota ponderada (Bloom),&#10;calificada localmente: ¿≥ 70?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#bcc2dc;strokeWidth=2.5;fontSize=14;fontStyle=1;fontColor=#131629;" vertex="1" parent="1">
+      <mxGeometry x="440" y="1076" width="320" height="104" as="geometry"/>
+    </mxCell>
+    <mxCell id="Fno" value="Conversatorio socrático que infiere el malentendido; reintento con preguntas nuevas" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef0f7;strokeColor=#34409e;strokeWidth=2;fontSize=13;fontColor=#131629;" vertex="1" parent="1">
+      <mxGeometry x="1000" y="1086" width="340" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="Fok" value="Aprueba: desbloquea la siguiente clase y agenda el repaso espaciado (1-3-7)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#bcc2dc;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#131629;" vertex="1" parent="1">
+      <mxGeometry x="450" y="1220" width="300" height="64" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="footer" value="Regla transversal: toda salida del modelo es JSON con contrato, validado antes de usarse. Si no valida, se reintenta con el error incrustado en el prompt; si aun así falla, el sistema degrada con gracia y no rompe el flujo." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef0f7;strokeColor=#34409e;strokeWidth=2.5;fontSize=13;fontColor=#131629;spacingLeft=10;spacingRight=10;" vertex="1" parent="1">
+      <mxGeometry x="40" y="1320" width="1360" height="60" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5b6486;strokeWidth=1.8;endArrow=block;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="A1" target="A2"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5b6486;strokeWidth=1.8;endArrow=block;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="A2" target="A3"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5b6486;strokeWidth=1.8;endArrow=block;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="A3" target="A4"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5b6486;strokeWidth=1.8;endArrow=block;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="A4" target="A5"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5b6486;strokeWidth=1.8;endArrow=block;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="A5" target="A6"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5b6486;strokeWidth=1.8;endArrow=block;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="A6" target="D1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+    <mxCell id="e7" value="atiende el paso  →  avanza" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5b6486;strokeWidth=1.8;endArrow=block;fontSize=12;fontColor=#34409e;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="D1" target="Asi"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e8" value="saludo o duda" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5b6486;strokeWidth=1.8;endArrow=block;fontSize=12;fontColor=#34409e;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="D1" target="Bno"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e8b" value="no avanza: siguiente mensaje" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9aa2c4;strokeWidth=1.6;endArrow=block;dashed=1;fontSize=11;fontColor=#5b6486;labelBackgroundColor=#ffffff;exitX=0.5;exitY=0;entryX=0.85;entryY=0;" edge="1" parent="1" source="Bno" target="D1">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1170" y="566"/><mxPoint x="712" y="566"/></Array></mxGeometry>
+    </mxCell>
+    <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5b6486;strokeWidth=1.8;endArrow=block;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="Asi" target="D2"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e10" value="sí, quedan pasos" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9aa2c4;strokeWidth=1.6;endArrow=block;dashed=1;fontSize=11;fontColor=#5b6486;labelBackgroundColor=#ffffff;exitX=0;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="D2" target="D1">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="300" y="888"/><mxPoint x="300" y="645"/></Array></mxGeometry>
+    </mxCell>
+    <mxCell id="e11" value="no quedan pasos" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5b6486;strokeWidth=1.8;endArrow=block;fontSize=12;fontColor=#34409e;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="D2" target="E1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5b6486;strokeWidth=1.8;endArrow=block;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="E1" target="D3"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e13" value="sí (≥ 70)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5b6486;strokeWidth=1.8;endArrow=block;fontSize=12;fontColor=#34409e;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="D3" target="Fok"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e14" value="no (&lt; 70)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5b6486;strokeWidth=1.8;endArrow=block;fontSize=12;fontColor=#34409e;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="D3" target="Fno"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e15" value="reintenta" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9aa2c4;strokeWidth=1.6;endArrow=block;dashed=1;fontSize=11;fontColor=#5b6486;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="Fno" target="E1">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1400" y="1131"/><mxPoint x="1400" y="1010"/></Array></mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>
