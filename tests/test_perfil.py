@@ -1,14 +1,14 @@
 import pytest
 
-from tutor.errores import ErrorDatos
-from tutor.models import Nivel, Objetivo, PerfilEstudiante
-from tutor.perfil import (
+from tutor.ensenanza.perfil import (
     cargar_perfil,
     guardar_perfil,
     preguntar_perfil,
     validar_lenguaje,
     validar_opcion,
 )
+from tutor.nucleo.errores import ErrorDatos
+from tutor.nucleo.models import Nivel, Objetivo, PerfilEstudiante
 
 
 def perfil_ejemplo(**cambios):
@@ -92,7 +92,7 @@ class TestPersistencia:
             cargar_perfil(ruta)
 
     def test_cargar_perfil_con_campos_faltantes_lanza_error(self, tmp_path):
-        from tutor import db
+        from tutor.persistencia import db
 
         ruta = tmp_path / "perfil.json"
         db.guardar_documento(ruta, "perfil", {"version": 1, "nivel": "basico"})
@@ -100,7 +100,7 @@ class TestPersistencia:
             cargar_perfil(ruta)
 
     def test_cargar_perfil_con_enum_invalido_lanza_error(self, tmp_path):
-        from tutor import db
+        from tutor.persistencia import db
 
         ruta = tmp_path / "perfil.json"
         guardar_perfil(perfil_ejemplo(), ruta)
@@ -113,7 +113,7 @@ class TestPersistencia:
 
 def test_perfil_extraido_degrada_lenguaje_raro_a_vacio():
     """Un lenguaje inválido del LLM no tumba la creación (hallazgo 2026-07-21)."""
-    from tutor.perfil import validar_perfil_extraido
+    from tutor.ensenanza.perfil import validar_perfil_extraido
 
     perfil = validar_perfil_extraido(
         {"nivel": "nunca", "objetivo": "front", "lenguaje": "¿JS (vanilla)?"},

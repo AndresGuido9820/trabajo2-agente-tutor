@@ -5,11 +5,11 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 
-from tutor.agente import Agente
 from tutor.config import Configuracion
-from tutor.curso import validar_guion
-from tutor.models import Nivel, Objetivo, PerfilEstudiante
-from tutor.web import crear_app
+from tutor.ensenanza.agente import Agente
+from tutor.ensenanza.curso import validar_guion
+from tutor.interfaces.web import crear_app
+from tutor.nucleo.models import Nivel, Objetivo, PerfilEstudiante
 
 from .conftest import ClienteLLMFalso
 from .test_agente import temario_respuesta
@@ -86,7 +86,7 @@ class TestValidarGuionV2:
         assert guion.intermedios == []
 
     def test_serializa_y_recarga_identico(self, tmp_path):
-        from tutor.curso import _guion_a_json
+        from tutor.ensenanza.curso import _guion_a_json
 
         guion = validar_guion(guion_v2_json())
         assert validar_guion(_guion_a_json(guion)) == guion
@@ -143,7 +143,7 @@ class TestQuizIntermedio:
         ]
 
     def test_sin_quiz_pendiente_falla(self, tmp_path):
-        from tutor.errores import ErrorDatos
+        from tutor.nucleo.errores import ErrorDatos
 
         agente, _ = agente_en_fin_de_objetivo(tmp_path, [])
         with pytest.raises(ErrorDatos):

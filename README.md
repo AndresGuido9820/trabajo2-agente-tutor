@@ -66,18 +66,33 @@ TUTOR_MODEL_CHAT=gpt-5-nano uv run tutor-web
 
 ## Arquitectura
 
+La estructura del backend está organizada por área de dominio (los nombres de
+las carpetas dicen qué hace el sistema, no qué framework usa):
+
 ```
 frontend/  (React + Mantine, Vite)  →  build en src/tutor/static/dist
 src/tutor/
-  web.py       API FastAPI (multi-curso; sirve el front)
-  agente.py    Orquestador: lecciones, quizzes, candados, chats, artefactos
-  curso.py     Temario/guiones/guías + persistencia del diseño
-  evaluacion.py  Quiz: generación LLM + calificación local determinista
-  prompts.py   TODOS los prompts, versionados (PRIMM, misconceptions, socrático)
-  llm.py       Cliente OpenAI: reintentos con backoff, JSON validado
-  db.py        SQLite por curso: curso, clases (con su prompt), perfil,
-               progreso, chat; migraciones automáticas
-  ui.py, __main__.py   CLI equivalente
+  nucleo/          dominio puro
+    models.py      dataclasses del dominio (Temario, Clase, Quiz, Perfil…)
+    errores.py     jerarquía de excepciones (ErrorTutor y subtipos)
+  ensenanza/       lógica pedagógica
+    agente.py      orquestador: lecciones, quizzes, candados, chats, artefactos
+    curso.py       temario/guiones/guías + persistencia del diseño
+    evaluacion.py  quiz: generación LLM + calificación local determinista
+    progreso.py    puntos, racha, candados, repaso espaciado 1-3-7
+    perfil.py      perfil del estudiante (nivel, meta, experiencia)
+    prompts.py     TODOS los prompts, versionados (PRIMM, misconceptions…)
+  proveedor/       integración con el LLM
+    llm.py         cliente OpenAI: reintentos con backoff, JSON validado
+    imagenes.py    bonus: ilustración de clase con gpt-image-1
+  persistencia/    almacenamiento
+    db.py          SQLite por curso: curso, clases, perfil, progreso, chat
+    exportar.py    exporta un curso a .zip de Markdown
+  interfaces/      adaptadores de entrada
+    web.py         API FastAPI (multi-curso; sirve el front)
+    ui.py          CLI equivalente (misma lógica, sin navegador)
+  config.py        configuración por entorno (.env)
+  __main__.py      entry point de la CLI
 ```
 
 - **Datos**: `data/cursos/<id>/tutor.db` (una BD por curso) + `curso.md`.

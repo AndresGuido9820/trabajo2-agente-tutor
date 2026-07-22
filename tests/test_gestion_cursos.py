@@ -76,8 +76,8 @@ class TestGestionCursos:
 
 def test_guardar_curso_preserva_nombre_y_archivado(tmp_path):
     """Generar contenido no puede borrar la metadata (hallazgo 2026-07-21)."""
-    from tutor import db
-    from tutor.curso import Curso, Temario, Unidad, guardar_curso
+    from tutor.ensenanza.curso import Curso, Temario, Unidad, guardar_curso
+    from tutor.persistencia import db
 
     ruta = tmp_path / "tutor.db"
     curso = Curso(

@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from tutor.curso import (
+from tutor.ensenanza.curso import (
     Curso,
     Temario,
     cargar_curso,
@@ -11,8 +11,8 @@ from tutor.curso import (
     guardar_curso,
     validar_temario,
 )
-from tutor.errores import ErrorLLM
-from tutor.progreso import Progreso, Resultado
+from tutor.ensenanza.progreso import Progreso, Resultado
+from tutor.nucleo.errores import ErrorLLM
 
 from .conftest import ClienteLLMFalso
 

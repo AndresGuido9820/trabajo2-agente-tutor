@@ -15,7 +15,7 @@ from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-from tutor import db
+from tutor.persistencia import db
 
 logger = logging.getLogger(__name__)
 

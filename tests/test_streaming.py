@@ -5,12 +5,12 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 
-from tutor import db
-from tutor.agente import Agente
 from tutor.config import Configuracion
-from tutor.llm import ExtractorCampoJSON
-from tutor.models import Nivel, Objetivo, PerfilEstudiante
-from tutor.web import crear_app
+from tutor.ensenanza.agente import Agente
+from tutor.interfaces.web import crear_app
+from tutor.nucleo.models import Nivel, Objetivo, PerfilEstudiante
+from tutor.persistencia import db
+from tutor.proveedor.llm import ExtractorCampoJSON
 
 from .conftest import ClienteLLMFalso
 from .test_agente import temario_respuesta
@@ -83,7 +83,7 @@ class TestTurnoStream:
         )
         agente = Agente(falso, tmp_path, PERFIL)
         list(agente.turno_estudio_stream(None, unidad=0))
-        from tutor.errores import ErrorLLM
+        from tutor.nucleo.errores import ErrorLLM
 
         with pytest.raises(ErrorLLM):
             list(agente.turno_estudio_stream("sigamos"))
@@ -129,7 +129,7 @@ class TestEndpointSSE:
         assert mensajes[-1]["texto"] == "hola, ¡arranquemos!"
 
     def test_error_llega_como_evento(self, web_con):
-        from tutor.errores import ErrorLLM
+        from tutor.nucleo.errores import ErrorLLM
 
         web, _ = web_con(
             [temario_respuesta(), guion_respuesta(), "apertura", ErrorLLM("se cayó")]

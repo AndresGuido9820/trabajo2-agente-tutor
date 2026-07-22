@@ -239,36 +239,43 @@ hace que cada prompt tenga un trabajo pequeño y bien definido, en vez de
 un "mega-prompt" que intente llevar la clase entera.</p>
 <h3 id="arquitectura-de-carpetas-y-archivos">Arquitectura de carpetas y
 archivos</h3>
-<p>El proyecto separa el backend (Python, <code>src/tutor/</code>) del
-frontend (React, <code>frontend/</code>), y el build del frontend se
-compila dentro del paquete para que un solo proceso de FastAPI sirva
-todo. Cada módulo del backend tiene una responsabilidad única:</p>
+<p>El backend está organizado con <em>screaming architecture</em>: las
+carpetas dicen qué hace el sistema (enseñar, evaluar, persistir), no qué
+framework usa. Cada módulo tiene una responsabilidad única, y el build
+del frontend se compila dentro del paquete para que un solo proceso de
+FastAPI sirva todo.</p>
 <pre><code>trabajo2-agente-tutor/
 ├─ src/tutor/                 backend (paquete instalable)
-│  ├─ web.py                  API FastAPI: endpoints, multiusuario, sirve el front
-│  ├─ agente.py              orquestador: lecciones, quizzes, candados, chats, demos
-│  ├─ curso.py               diseño del curso: temario, guiones, guías + persistencia
-│  ├─ evaluacion.py          quiz: genera con el LLM, CALIFICA local y determinista
-│  ├─ prompts.py             TODOS los prompts, versionados (PROMPTS_VERSION = 2)
-│  ├─ llm.py                 cliente OpenAI: reintentos con backoff, JSON validado
-│  ├─ perfil.py              perfil del estudiante (nivel, meta, experiencia previa)
-│  ├─ progreso.py            puntos, racha, candados, repaso espaciado 1-3-7
-│  ├─ db.py                  SQLite por curso: curso, clases, perfil, progreso, chat
-│  ├─ models.py             dataclasses del dominio (Temario, Clase, Quiz, Perfil…)
-│  ├─ config.py             configuración por entorno (.env): modelos, rutas, flags
-│  ├─ imagenes.py           bonus: ilustración de clase con gpt-image-1
-│  ├─ exportar.py           exporta un curso a .zip de Markdown
-│  ├─ errores.py            excepciones propias (ErrorLLM, etc.)
-│  ├─ ui.py, __main__.py    CLI equivalente (misma lógica, sin navegador)
-│  └─ static/dist/          build del frontend (servido por FastAPI)
-├─ frontend/src/             React + Mantine (Vite)
-│  ├─ App.jsx                shell, navegación, selector de perfil
-│  ├─ Clase.jsx              la clase: chat, panel de objetivos, retos, demos
-│  ├─ CreacionChat.jsx       creación conversacional + examen diagnóstico
+│  ├─ nucleo/                 dominio puro, sin dependencias de framework
+│  │  ├─ models.py            dataclasses del dominio (Temario, Clase, Quiz…)
+│  │  └─ errores.py           jerarquía de excepciones (ErrorTutor y subtipos)
+│  ├─ ensenanza/              la lógica pedagógica (el corazón del tutor)
+│  │  ├─ agente.py            orquestador: lecciones, quizzes, candados, chats
+│  │  ├─ curso.py             diseño del curso: temario, guiones + persistencia
+│  │  ├─ evaluacion.py        quiz: genera con el LLM, CALIFICA local y determinista
+│  │  ├─ progreso.py          puntos, racha, candados, repaso espaciado 1-3-7
+│  │  ├─ perfil.py            perfil del estudiante (nivel, meta, experiencia)
+│  │  └─ prompts.py           TODOS los prompts, versionados (PROMPTS_VERSION = 2)
+│  ├─ proveedor/              integración con el LLM (aislada tras una interfaz)
+│  │  ├─ llm.py               cliente OpenAI: reintentos con backoff, JSON validado
+│  │  └─ imagenes.py          bonus: ilustración de clase con gpt-image-1
+│  ├─ persistencia/           almacenamiento
+│  │  ├─ db.py                SQLite por curso: curso, clases, perfil, progreso
+│  │  └─ exportar.py          exporta un curso a .zip de Markdown
+│  ├─ interfaces/             adaptadores de entrada (la lógica no vive aquí)
+│  │  ├─ web.py               API FastAPI: endpoints, multiusuario, sirve el front
+│  │  └─ ui.py                CLI equivalente (misma lógica, sin navegador)
+│  ├─ config.py               configuración por entorno (.env): modelos, rutas
+│  ├─ __main__.py             entry point de la CLI
+│  └─ static/dist/            build del frontend (servido por FastAPI)
+├─ frontend/src/              React + Mantine (Vite)
+│  ├─ App.jsx                 shell, navegación, selector de perfil
+│  ├─ Clase.jsx               la clase: chat, panel de objetivos, retos, demos
+│  ├─ CreacionChat.jsx        creación conversacional + examen diagnóstico
 │  ├─ MisCursos.jsx, Diseno.jsx, Estadisticas.jsx, Repaso.jsx, Usuarios.jsx
-│  └─ api.js                 cliente HTTP + SSE
-├─ tests/                    307 pruebas (el LLM siempre con dobles)
-└─ data/cursos/&lt;id&gt;/tutor.db una base de datos SQLite por curso (gitignoreada)</code></pre>
+│  └─ api.js                  cliente HTTP + SSE
+├─ tests/                     307 pruebas (el LLM siempre con dobles)
+└─ data/cursos/&lt;id&gt;/tutor.db  una base de datos SQLite por curso (gitignoreada)</code></pre>
 <p><strong>Segunda iteración (plan v2, 16 HUs).</strong> Sobre esa base
 ejecuté dos olas de mejoras. La clase pasó a estructurarse en
 <strong>objetivos de aprendizaje</strong> con secuencia PRIMM propia,
@@ -376,8 +383,8 @@ pide al modelo que "tenga en cuenta al estudiante".</li>
 <h3 id="mapa-de-prompts-qué-hace-cada-uno-y-cuándo-se-dispara">Mapa de
 prompts: qué hace cada uno y cuándo se dispara</h3>
 <p>Todos viven versionados en un solo módulo
-(<code>src/tutor/prompts.py</code>, <code>PROMPTS_VERSION = 2</code>).
-Este es el inventario completo:</p>
+(<code>src/tutor/ensenanza/prompts.py</code>,
+<code>PROMPTS_VERSION = 2</code>). Este es el inventario completo:</p>
 <table>
 <thead>
 <tr>

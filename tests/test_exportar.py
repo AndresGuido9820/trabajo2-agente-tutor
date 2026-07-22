@@ -6,11 +6,11 @@ import zipfile
 import pytest
 from fastapi.testclient import TestClient
 
-from tutor import db
 from tutor.config import Configuracion
-from tutor.exportar import paquete_zip, slug
-from tutor.progreso import Resultado, cargar_progreso, guardar_progreso
-from tutor.web import crear_app
+from tutor.ensenanza.progreso import Resultado, cargar_progreso, guardar_progreso
+from tutor.interfaces.web import crear_app
+from tutor.persistencia import db
+from tutor.persistencia.exportar import paquete_zip, slug
 
 from .conftest import ClienteLLMFalso
 from .test_agente import temario_respuesta

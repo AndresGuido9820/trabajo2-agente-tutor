@@ -14,13 +14,13 @@ import sys
 from pathlib import Path
 
 from tutor.config import cargar_configuracion
-from tutor.curso import Curso, generar_leccion, generar_temario
-from tutor.errores import ErrorTutor
-from tutor.evaluacion import generar_quiz
-from tutor.llm import ClienteOpenAI
-from tutor.models import Nivel, Objetivo, PerfilEstudiante
-from tutor.progreso import Progreso
-from tutor.prompts import PROMPTS_VERSION, system_tutor
+from tutor.ensenanza.curso import Curso, generar_leccion, generar_temario
+from tutor.ensenanza.evaluacion import generar_quiz
+from tutor.ensenanza.progreso import Progreso
+from tutor.ensenanza.prompts import PROMPTS_VERSION, system_tutor
+from tutor.nucleo.errores import ErrorTutor
+from tutor.nucleo.models import Nivel, Objetivo, PerfilEstudiante
+from tutor.proveedor.llm import ClienteOpenAI
 
 QUIZZES_A_EXPORTAR = 2  # quiz de las 2 primeras unidades como muestra
 

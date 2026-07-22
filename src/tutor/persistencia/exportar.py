@@ -13,11 +13,11 @@ import unicodedata
 import zipfile
 from pathlib import Path
 
-from tutor import db
-from tutor.agente import ARCHIVO_DB
 from tutor.config import NOTA_APROBATORIA
-from tutor.curso import cargar_curso, cargar_plan_md
-from tutor.progreso import Progreso, cargar_progreso
+from tutor.ensenanza.agente import ARCHIVO_DB
+from tutor.ensenanza.curso import cargar_curso, cargar_plan_md
+from tutor.ensenanza.progreso import Progreso, cargar_progreso
+from tutor.persistencia import db
 
 _ROLES = {"yo": "Tú", "tutor": "Profe Bit"}
 

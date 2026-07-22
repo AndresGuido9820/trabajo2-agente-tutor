@@ -3,8 +3,8 @@
 from fastapi.testclient import TestClient
 
 from tutor.config import Configuracion, cargar_configuracion
-from tutor.imagenes import ilustrar_unidad, prompt_visual, ruta_imagen
-from tutor.web import crear_app
+from tutor.interfaces.web import crear_app
+from tutor.proveedor.imagenes import ilustrar_unidad, prompt_visual, ruta_imagen
 
 from .conftest import ClienteLLMFalso
 from .test_agente import temario_respuesta

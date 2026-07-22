@@ -3,14 +3,14 @@ import json
 import pytest
 
 from tutor.config import PREGUNTAS_POR_QUIZ
-from tutor.errores import ErrorLLM
-from tutor.evaluacion import (
+from tutor.ensenanza.evaluacion import (
     Quiz,
     calificar,
     generar_quiz,
     validar_quiz,
     validar_respuesta,
 )
+from tutor.nucleo.errores import ErrorLLM
 
 from .conftest import ClienteLLMFalso
 

@@ -4,9 +4,9 @@ import pytest
 from fastapi.testclient import TestClient
 
 from tutor.config import Configuracion
-from tutor.models import Nivel, Objetivo
-from tutor.perfil import validar_perfil_extraido
-from tutor.web import crear_app
+from tutor.ensenanza.perfil import validar_perfil_extraido
+from tutor.interfaces.web import crear_app
+from tutor.nucleo.models import Nivel, Objetivo
 
 from .conftest import ClienteLLMFalso
 from .test_agente import temario_respuesta

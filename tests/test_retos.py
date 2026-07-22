@@ -4,10 +4,10 @@ import json
 
 import pytest
 
-from tutor.agente import Agente
-from tutor.curso import validar_guion, validar_reto
-from tutor.errores import ErrorDatos
-from tutor.models import Nivel, Objetivo, PerfilEstudiante
+from tutor.ensenanza.agente import Agente
+from tutor.ensenanza.curso import validar_guion, validar_reto
+from tutor.nucleo.errores import ErrorDatos
+from tutor.nucleo.models import Nivel, Objetivo, PerfilEstudiante
 
 from .conftest import ClienteLLMFalso
 from .test_agente import temario_respuesta
@@ -79,7 +79,7 @@ class TestValidarReto:
         assert validar_guion(guion_json()).retos == []
 
     def test_serializa_ida_y_vuelta(self):
-        from tutor.curso import _guion_a_json
+        from tutor.ensenanza.curso import _guion_a_json
 
         guion = validar_guion(json.loads(guion_con_retos()))
         assert validar_guion(_guion_a_json(guion)) == guion

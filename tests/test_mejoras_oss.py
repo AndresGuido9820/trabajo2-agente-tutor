@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 
-from tutor.agente import Agente
-from tutor.progreso import Progreso, cargar_progreso, guardar_progreso
+from tutor.ensenanza.agente import Agente
+from tutor.ensenanza.progreso import Progreso, cargar_progreso, guardar_progreso
 
 from .conftest import ClienteLLMFalso
 from .test_agente import quiz_respuesta, temario_respuesta

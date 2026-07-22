@@ -14,7 +14,7 @@ dependencies = [
 
 [project.scripts]
 tutor = "tutor.__main__:main"
-tutor-web = "tutor.web:main"
+tutor-web = "tutor.interfaces.web:main"
 
 [dependency-groups]
 dev = [
@@ -45,8 +45,8 @@ pydocstyle.convention = "google"
 "tests/*" = ["D"]  # los nombres de test ya documentan el comportamiento
 # N818 exige sufijo "...Error" en inglés; el dominio usa prefijo en español
 # (ErrorLLM, ErrorConfiguracion), consistente en todo el código.
-"src/tutor/errores.py" = ["N818"]
-"src/tutor/llm.py" = ["N818"]
+"src/tutor/nucleo/errores.py" = ["N818"]
+"src/tutor/proveedor/llm.py" = ["N818"]
 
 [tool.mypy]
 strict = true

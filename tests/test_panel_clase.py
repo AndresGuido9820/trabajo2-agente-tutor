@@ -1,6 +1,6 @@
 """Pruebas del panel lateral de la clase (plan/v2/HU-25)."""
 
-from tutor.progreso import cargar_progreso, guardar_progreso
+from tutor.ensenanza.progreso import cargar_progreso, guardar_progreso
 
 from .test_guion_v2 import PERFIL, agente_en_fin_de_objetivo
 from .test_leccion import avanza
@@ -8,7 +8,7 @@ from .test_leccion import avanza
 
 class TestPanelDeClase:
     def test_sin_guion_devuelve_vacio(self, tmp_path):
-        from tutor.agente import Agente
+        from tutor.ensenanza.agente import Agente
 
         from .conftest import ClienteLLMFalso
         from .test_agente import temario_respuesta
@@ -46,7 +46,7 @@ class TestPanelDeClase:
         assert all(o["estado"] == "cumplido" for o in panel["objetivos"])
 
     def test_sobrevive_reinicio_del_servidor(self, tmp_path):
-        from tutor.agente import Agente
+        from tutor.ensenanza.agente import Agente
 
         from .conftest import ClienteLLMFalso
 
@@ -62,7 +62,7 @@ class TestPanelDeClase:
 
     def test_resultados_intermedios_persisten(self, tmp_path):
         ruta = tmp_path / "tutor.db"
-        from tutor.progreso import Progreso
+        from tutor.ensenanza.progreso import Progreso
 
         p = Progreso()
         p.cumplir_objetivo(0, 1, aciertos=1, total=2, repaso=True)

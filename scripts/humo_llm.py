@@ -10,8 +10,8 @@ import sys
 from typing import Any
 
 from tutor.config import cargar_configuracion
-from tutor.errores import ErrorTutor
-from tutor.llm import ClienteOpenAI, pedir_json
+from tutor.nucleo.errores import ErrorTutor
+from tutor.proveedor.llm import ClienteOpenAI, pedir_json
 
 
 def _validar(datos: Any) -> list[str]:

@@ -20,10 +20,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from tutor.models import Objetivo, PerfilEstudiante
+from tutor.nucleo.models import Objetivo, PerfilEstudiante
 
 if TYPE_CHECKING:
-    from tutor.curso import Temario
+    from tutor.ensenanza.curso import Temario
 
 PROMPTS_VERSION = 2
 

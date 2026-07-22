@@ -3,9 +3,9 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from tutor import db
 from tutor.config import Configuracion
-from tutor.web import crear_app
+from tutor.interfaces.web import crear_app
+from tutor.persistencia import db
 
 from .conftest import ClienteLLMFalso
 from .test_agente import temario_respuesta

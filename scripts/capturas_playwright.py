@@ -158,7 +158,7 @@ def main() -> int:
             "-c",
             "from dotenv import load_dotenv; load_dotenv();"
             "import uvicorn; from tutor.config import cargar_configuracion;"
-            "from tutor.web import crear_app;"
+            "from tutor.interfaces.web import crear_app;"
             f"uvicorn.run(crear_app(cargar_configuracion()), host='127.0.0.1', "
             f"port={PUERTO}, log_level='warning')",
         ],

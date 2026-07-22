@@ -19,7 +19,6 @@ from typing import Any, Protocol
 
 from openai import APIConnectionError, APIStatusError, OpenAI
 
-from tutor import db
 from tutor.config import (
     BASE_BACKOFF_SEGUNDOS,
     MAX_REINTENTOS_API,
@@ -28,7 +27,8 @@ from tutor.config import (
     TIMEOUT_API_SEGUNDOS,
     Configuracion,
 )
-from tutor.errores import ErrorLLM
+from tutor.nucleo.errores import ErrorLLM
+from tutor.persistencia import db
 
 logger = logging.getLogger(__name__)
 
@@ -193,7 +193,11 @@ class ClienteOpenAI:
         Raises:
             Exception: Cualquier error del SDK (el llamador lo degrada).
         """
-        from tutor.imagenes import MODELO_IMAGENES, TAMANO_IMAGEN, decodificar_b64
+        from tutor.proveedor.imagenes import (
+            MODELO_IMAGENES,
+            TAMANO_IMAGEN,
+            decodificar_b64,
+        )
 
         respuesta = self._cliente.images.generate(
             model=MODELO_IMAGENES,

@@ -1,10 +1,10 @@
 from fastapi.testclient import TestClient
 
-from tutor import db
 from tutor.config import Configuracion
-from tutor.models import Nivel, Objetivo, PerfilEstudiante
-from tutor.perfil import guardar_perfil
-from tutor.web import crear_app
+from tutor.ensenanza.perfil import guardar_perfil
+from tutor.interfaces.web import crear_app
+from tutor.nucleo.models import Nivel, Objetivo, PerfilEstudiante
+from tutor.persistencia import db
 
 from .conftest import ClienteLLMFalso
 from .test_agente import quiz_respuesta, temario_respuesta
@@ -125,9 +125,9 @@ class TestMigracionIdempotente:
     def test_json_legacy_no_aplasta_cursos_existentes(self, tmp_path):
         import json as json_mod
 
-        from tutor import db as db_mod
         from tutor.config import Configuracion
-        from tutor.web import crear_app
+        from tutor.interfaces.web import crear_app
+        from tutor.persistencia import db as db_mod
 
         from .conftest import ClienteLLMFalso
 
@@ -152,7 +152,7 @@ class TestMigracionIdempotente:
     def test_migracion_aparta_los_json_tras_migrar(self, tmp_path):
         import json as json_mod
 
-        from tutor import db as db_mod
+        from tutor.persistencia import db as db_mod
 
         (tmp_path / "perfil.json").write_text(
             json_mod.dumps({"nivel": "basico"}), "utf-8"

@@ -5,7 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 from tutor.config import Configuracion
-from tutor.models import Nivel, Objetivo, PerfilEstudiante
+from tutor.nucleo.models import Nivel, Objetivo, PerfilEstudiante
 
 
 class ClienteLLMFalso:

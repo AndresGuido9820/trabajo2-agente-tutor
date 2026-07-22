@@ -2,9 +2,9 @@ import json
 
 import pytest
 
-from tutor.agente import Agente
-from tutor.curso import cargar_curso, validar_guion
-from tutor.ui import bucle_leccion
+from tutor.ensenanza.agente import Agente
+from tutor.ensenanza.curso import cargar_curso, validar_guion
+from tutor.interfaces.ui import bucle_leccion
 
 from .conftest import ClienteLLMFalso
 from .test_agente import temario_respuesta
