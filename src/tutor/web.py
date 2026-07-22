@@ -176,6 +176,12 @@ class CuerpoDiseno(BaseModel):
     clases: list[ClaseDiseno]
 
 
+class CuerpoUsuario(BaseModel):
+    """Body de creación de un perfil de estudiante (HU-42)."""
+
+    nombre: str
+
+
 class CuerpoCursoPatch(BaseModel):
     """Body de edición de metadata de un curso (HU-29)."""
 
@@ -290,7 +296,95 @@ class _Estado:
         db.anotar_chat(self.ruta_db, canal, rol, texto)
 
 
-def _disenar_curso(estado: _Estado, descripcion: str) -> None:
+class _Usuarios:
+    """Perfiles de estudiante sin contraseña, estilo selector local (HU-42).
+
+    Cada usuario tiene su propia carpeta de datos (cursos, progreso, chats)
+    totalmente aislada. El usuario "principal" apunta a la raíz histórica
+    ``dir_datos`` (retro-compatibilidad); los nuevos viven en
+    ``dir_datos/usuarios/<id>/``.
+    """
+
+    def __init__(self, configuracion: Configuracion, cliente: ClienteLLM) -> None:
+        self.configuracion = configuracion
+        self.cliente = cliente
+        self.registro = configuracion.dir_datos / "usuarios.json"
+        self.lista = self._cargar()
+        self.activo: str = self.lista[0]["id"]
+        self._estados: dict[str, _Estado] = {}
+
+    def _cargar(self) -> list[dict[str, str]]:
+        if self.registro.exists():
+            try:
+                usuarios = json.loads(self.registro.read_text("utf-8"))
+                if usuarios:
+                    return list(usuarios)
+            except (OSError, json.JSONDecodeError):
+                logger.warning("usuarios.json ilegible; se regenera")
+        return [{"id": "principal", "nombre": "Estudiante"}]
+
+    def _guardar(self) -> None:
+        self.registro.parent.mkdir(parents=True, exist_ok=True)
+        self.registro.write_text(
+            json.dumps(self.lista, ensure_ascii=False, indent=2), "utf-8"
+        )
+
+    def dir_de(self, usuario_id: str) -> Path:
+        if usuario_id == "principal":
+            return self.configuracion.dir_datos
+        return self.configuracion.dir_datos / "usuarios" / usuario_id
+
+    def estado(self) -> _Estado:
+        """El estado del usuario activo (perezoso, uno por usuario)."""
+        if self.activo not in self._estados:
+            base = self.dir_de(self.activo)
+            base.mkdir(parents=True, exist_ok=True)
+            self._estados[self.activo] = _Estado(
+                replace(self.configuracion, dir_datos=base), self.cliente
+            )
+        return self._estados[self.activo]
+
+    def crear(self, nombre: str) -> dict[str, str]:
+        limpio = nombre.strip()
+        if not limpio:
+            raise ValueError("El nombre no puede estar vacío.")
+        base = "".join(c if c.isalnum() else "-" for c in limpio.lower()).strip("-")
+        usuario_id = base or "estudiante"
+        sufijo = 2
+        while any(u["id"] == usuario_id for u in self.lista):
+            usuario_id = f"{base}-{sufijo}"
+            sufijo += 1
+        usuario = {"id": usuario_id, "nombre": limpio}
+        self.lista.append(usuario)
+        self._guardar()
+        self.activo = usuario_id
+        return usuario
+
+    def activar(self, usuario_id: str) -> None:
+        if not any(u["id"] == usuario_id for u in self.lista):
+            raise KeyError(usuario_id)
+        self.activo = usuario_id
+
+
+class _EstadoProxy:
+    """Delegado transparente al estado del usuario activo (HU-42).
+
+    Los endpoints siguen usando ``estado.<lo que sea>``: el proxy resuelve
+    contra el usuario activo en cada acceso, así el cambio de usuario no
+    toca ni una línea de los endpoints.
+    """
+
+    def __init__(self, usuarios: _Usuarios) -> None:
+        object.__setattr__(self, "_usuarios", usuarios)
+
+    def __getattr__(self, nombre: str) -> Any:
+        return getattr(self._usuarios.estado(), nombre)
+
+    def __setattr__(self, nombre: str, valor: Any) -> None:
+        setattr(self._usuarios.estado(), nombre, valor)
+
+
+def _disenar_curso(estado: Any, descripcion: str) -> None:
     """Genera el temario y persiste el plan del curso activo (HU-41)."""
     agente = estado.agente
     assert agente is not None
@@ -317,14 +411,17 @@ def crear_app(
         configuracion: Configuración efectiva.
         cliente: Cliente LLM; inyectable para pruebas (por defecto OpenAI).
     """
-    estado = _Estado(configuracion, cliente or ClienteOpenAI(configuracion))
+    usuarios = _Usuarios(configuracion, cliente or ClienteOpenAI(configuracion))
+    usuarios.estado()  # instancia el usuario activo (corre migraciones al arrancar)
+    estado = _EstadoProxy(usuarios)
     app = FastAPI(title="Tutor de programación", docs_url=None, redoc_url=None)
 
     def _agente() -> Agente:
         """Agente activo o 409 si aún no hay perfil."""
-        if estado.agente is None:
+        agente = usuarios.estado().agente
+        if agente is None:
             raise HTTPException(409, "Primero crea tu perfil.")
-        return estado.agente
+        return agente
 
     def _con_llm(operacion: Any) -> Any:
         """Ejecuta una operación mapeando errores de dominio a HTTP."""
@@ -372,6 +469,28 @@ def crear_app(
                 for fila in agente.filas_unidades()
             ],
         }
+
+    @app.get("/api/usuarios")
+    def api_usuarios() -> dict[str, Any]:
+        """Perfiles de estudiante y cuál está activo (HU-42)."""
+        return {"usuarios": usuarios.lista, "activo": usuarios.activo}
+
+    @app.post("/api/usuarios")
+    def api_crear_usuario(cuerpo: CuerpoUsuario) -> dict[str, Any]:
+        """Crea un perfil nuevo (datos totalmente aislados) y lo activa."""
+        try:
+            return usuarios.crear(cuerpo.nombre)
+        except ValueError as error:
+            raise HTTPException(400, str(error)) from error
+
+    @app.post("/api/usuarios/{usuario_id}/activar")
+    def api_activar_usuario(usuario_id: str) -> dict[str, Any]:
+        """Cambia el estudiante activo; cada uno ve SOLO sus cursos."""
+        try:
+            usuarios.activar(usuario_id)
+        except KeyError as error:
+            raise HTTPException(404, f"No existe el usuario {usuario_id}.") from error
+        return {"ok": True}
 
     @app.get("/api/cursos")
     def api_cursos() -> dict[str, Any]:

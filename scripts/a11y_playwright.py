@@ -41,7 +41,11 @@ def recorrer(page: Page) -> list[dict]:
     """Audita Mis cursos, Clase y Mi progreso."""
     fallas: list[dict] = []
     page.goto(BASE)
-    page.wait_for_selector("text=Mis cursos", timeout=30_000)
+    # Selector de perfiles (HU-42): auditarlo y entrar con el primero.
+    page.wait_for_selector("text=¿Quién estudia hoy?", timeout=30_000)
+    fallas += auditar(page, "Selector de perfiles")
+    page.locator(".mantine-Card-root").first.click()
+    page.wait_for_selector("text=Nuevo curso", timeout=30_000)
     fallas += auditar(page, "Mis cursos")
 
     page.click("text=Entrar →")

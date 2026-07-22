@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
-  ActionIcon, AppShell, Badge, Box, Button, Card, Group, Progress, ScrollArea,
-  Stack, Text, ThemeIcon, Title, Tooltip, useMantineColorScheme,
+  ActionIcon, AppShell, Avatar, Badge, Box, Button, Card, Group, Progress,
+  ScrollArea, Stack, Text, ThemeIcon, Title, Tooltip, useMantineColorScheme,
 } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { Spotlight, spotlight } from '@mantine/spotlight'
@@ -17,6 +17,7 @@ import Diseno from './Diseno.jsx'
 import CreacionChat from './CreacionChat.jsx'
 import Estadisticas from './Estadisticas.jsx'
 import Repaso from './Repaso.jsx'
+import Usuarios from './Usuarios.jsx'
 
 export function avisar(mensaje, color = 'teal') {
   notifications.show({ message: mensaje, color, withBorder: true })
@@ -26,8 +27,9 @@ export function avisarError(e) {
 }
 
 export default function App({ escala, cambiarEscala }) {
-  // vista: cursos | creacion | diseno | clase
-  const [vista, setVista] = useState('cursos')
+  // vista: usuarios | cursos | creacion | diseno | clase | stats | repaso
+  const [vista, setVista] = useState('usuarios')
+  const [usuario, setUsuario] = useState(null)
   const [estado, setEstado] = useState(null)
   const [convos, setConvos] = useState({})
   const [claseActiva, setClaseActiva] = useState(0)
@@ -68,6 +70,16 @@ export default function App({ escala, cambiarEscala }) {
 
   const abrirClase = (i) => { setDestacar(null); setClaseActiva(i); setVista('clase') }
 
+  const entrarComoUsuario = async () => {
+    try {
+      const u = await api('/api/usuarios')
+      setUsuario(u.usuarios.find((x) => x.id === u.activo) || null)
+    } catch { /* opcional */ }
+    setEstado(null)
+    await refrescar()
+    setVista('cursos')
+  }
+
   // Navegación desde el buscador: activa el curso y abre la conversación.
   const irADesdeBusqueda = async (curso, canal, msgId) => {
     try {
@@ -96,6 +108,16 @@ export default function App({ escala, cambiarEscala }) {
             <Text fw={800} size="sm" ff="monospace">P</Text>
           </ThemeIcon>
           <Text fw={650} style={{ flex: 1 }} lts="-0.01em">Profe Bit</Text>
+          {usuario && (
+            <Tooltip label={`Estudiando como ${usuario.nombre} — clic para cambiar de perfil`}>
+              <ActionIcon variant="subtle" color="gray" aria-label="Cambiar de perfil"
+                onClick={() => setVista('usuarios')}>
+                <Avatar size={22} radius="xl" color="indigo" variant="filled">
+                  <Text size="10px" fw={700}>{usuario.nombre.trim()[0]?.toUpperCase()}</Text>
+                </Avatar>
+              </ActionIcon>
+            </Tooltip>
+          )}
           <Tooltip label="Buscar en todo (⌘K)">
             <ActionIcon variant="subtle" color="gray" aria-label="Buscar"
               onClick={() => spotlight.open()}><IconSearch size={17} stroke={1.8} /></ActionIcon>
@@ -155,6 +177,7 @@ export default function App({ escala, cambiarEscala }) {
 
       <AppShell.Main>
         <BarraConexion />
+        {vista === 'usuarios' && <Usuarios onElegir={entrarComoUsuario} />}
         {vista === 'cursos' && <MisCursos onEntrar={entrarCurso} onNuevo={nuevoCurso} />}
         {vista === 'creacion' && (
           <CreacionChat onCreado={async () => {
