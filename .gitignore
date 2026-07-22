@@ -19,9 +19,19 @@ dist/
 !src/tutor/static/dist/
 !src/tutor/static/dist/**
 
+# Documentación de trabajo interna (queda local)
+RULES.md
+SPEC.md
+docs/
+plan/
+entregables/GUION-VIDEO.md
+entregables/PAGINA.md
+entregables/REPORTE.md
+entregables/cursos-muestra/
+scripts/video_*.py
+
 # Video demo (pesado: queda local)
-entregables/video/*.webm
-entregables/video/*.mp4
+entregables/video/
 
 # SO / editores
 .DS_Store

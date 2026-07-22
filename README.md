@@ -86,13 +86,11 @@ src/tutor/
   las demos corren en `iframe sandbox` sin red. Excepción consciente: los
   tests de los retos de código sí viajan (se ejecutan en tu navegador con
   Pyodide); el objetivo es aprender, no vigilar.
-- **Decisiones y fuentes**: `docs/INVESTIGACION*.md` (pedagogía, OSS, UX) y
-  `docs/HALLAZGOS.md` (bitácora). Plan por HU en `plan/`.
 
 ## Desarrollo
 
 ```bash
-uv run pytest              # 289 pruebas (LLM siempre con dobles)
+uv run pytest              # 307 pruebas (LLM siempre con dobles)
 uv run ruff format --check . && uv run ruff check .
 uv run mypy src            # estricto
 
@@ -102,8 +100,8 @@ npm run build                                 # regenera static/dist
 
 # Manuales (cuestan tokens):
 uv run python scripts/humo_llm.py             # humo del cliente LLM
-uv run python scripts/exportar_curso.py datos-excel   # cursos de muestra
-uv run python scripts/capturas_playwright.py  # bot que captura la app
+uv run python scripts/exportar_curso.py datos-excel   # exporta un curso a Markdown
+uv run python scripts/capturas_playwright.py  # capturas automatizadas de la app
 uv run python scripts/e2e_reintento.py        # caída del server + reintento
 uv run python scripts/a11y_playwright.py      # axe-core (no cuesta tokens)
 ```
@@ -123,8 +121,8 @@ sobre Mis cursos, Clase y Mi progreso: 0 violaciones serias/críticas.
 
 ## Entregables del curso
 
-- `entregables/REPORTE.md` — reporte técnico (con capturas del recorrido).
-- `entregables/GUION-VIDEO.md` — guion del video de demostración.
-- `entregables/cursos-muestra/` — 2 cursos generados (perfiles y lenguajes
-  distintos).
-- `SPEC.md` — requisitos, criterios de la rúbrica y pruebas de aceptación.
+- **Página del proyecto** (producto, arquitectura, prompts, ejecución):
+  <https://andresguido9820.github.io/trabajo2-agente-tutor/>
+- **Reporte técnico**:
+  <https://andresguido9820.github.io/trabajo2-agente-tutor/reporte.html>
+- **Video de demostración**: enlazado desde la página del proyecto.
