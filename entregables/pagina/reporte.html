@@ -288,6 +288,76 @@ verificado por axe-core, buscador global ⌘K, estadísticas, exportación a
 consciente: los tests de los retos viajan al navegador (deben ejecutarse
 client-side) y son inspeccionables — el objetivo es aprender, no
 vigilar; las respuestas de quizzes siguen sin viajar jamás.</p>
+<h3 id="lo-que-se-puede-hacer-el-recorrido-de-punta-a-punta">Lo que se
+puede hacer: el recorrido de punta a punta</h3>
+<p>Antes de entrar en lo técnico, así se ve y se usa el sistema. Estas
+pantallas son de la app real —las genera
+<code>scripts/capturas_playwright.py</code> interactuando con el
+servidor y la API de OpenAI— y recorren todo lo que un estudiante puede
+hacer: pedir un curso con sus palabras, presentar el diagnóstico, vivir
+una clase (incluido equivocarse y preguntar libre), evaluarse y ver su
+progreso.</p>
+<p><strong>1. Mis cursos.</strong> El menú inicial, con todos los cursos
+y la tarjeta para crear uno nuevo. Cada persona tiene su propio espacio
+(multiusuario).</p>
+<p><img src="capturas/01-mis-cursos.png" alt="Mis cursos" /></p>
+<p><strong>2. Nuevo curso: se pide conversando.</strong> No hay
+formulario; le dices qué quieres aprender como se lo dirías a un
+profesor.</p>
+<p><img src="capturas/02-nuevo-curso.png" alt="Nuevo curso" /></p>
+<p><strong>3. El asesor no crea de una.</strong> Resume lo que entendió
+y pregunta tu nivel y tus objetivos antes de proponer nada.</p>
+<p><img src="capturas/03-asesor-pregunta.png"
+alt="El asesor pregunta" /></p>
+<p><strong>4. Propuesta de temario.</strong> Una lista de clases a tu
+medida, para que la ajustes o la confirmes. El curso solo se crea cuando
+dices que sí.</p>
+<p><img src="capturas/04-asesor-propone.png"
+alt="El asesor propone" /></p>
+<p><strong>5. La clase es una conversación.</strong> Confirmado el
+curso, arranca la clase 1 con el método PRIMM: te pide predecir qué hace
+un código antes de explicarlo.</p>
+<p><img src="capturas/05-clase-1-arranca.png"
+alt="Arranca la clase 1" /></p>
+<p><strong>6. Equivocarse es parte del método.</strong> Si predices mal,
+el tutor corrige con amabilidad, explica el porqué y sigue — no te
+regaña ni te da la respuesta de una.</p>
+<p><img src="capturas/06-tutor-corrige-y-avanza.png"
+alt="El tutor corrige" /></p>
+<p><strong>7. Puedes preguntar lo que quieras.</strong> Si interrumpes
+con una duda ("¿esto para qué me sirve en mi negocio?"), el tutor la
+responde y retoma el paso <strong>sin adelantar</strong> la lección.</p>
+<p><img src="capturas/07-duda-al-tutor.png" alt="Duda al tutor" /></p>
+<p><strong>8. Clase completada.</strong> Al cubrir todos los pasos, la
+clase queda tachada en la barra lateral, el tutor cierra con un recap y
+se habilita la evaluación; las siguientes clases están bloqueadas hasta
+aprobar.</p>
+<p><img src="capturas/08-clase-completada.png"
+alt="Clase completada" /></p>
+<p><strong>9. Evaluación dentro del chat.</strong> Preguntas de
+comprensión (predicción o encuentra-el-bug) cuyos distractores encarnan
+errores reales de principiante.</p>
+<p><img src="capturas/09-evaluacion.png" alt="Evaluación" /></p>
+<p><strong>10. Si repruebas, hay red.</strong> Desglose por pregunta con
+la respuesta correcta y la explicación del error de razonamiento, botón
+de reintento con preguntas nuevas, y un conversatorio socrático que se
+abre para repasar lo que falló.</p>
+<p><img src="capturas/10-resultado.png" alt="Resultado" /></p>
+<p><strong>11. El diseño del curso es visible y editable.</strong> El
+documento generado queda persistido en la base de datos, con una copia
+<code>curso.md</code> descargable.</p>
+<p><img src="capturas/11-diseno-documento.png"
+alt="Diseño del curso" /></p>
+<p><strong>12. Edición estructurada.</strong> Puedes ajustar título,
+objetivo y subtemas de cada clase; los cambios pasan por las mismas
+validaciones que usa el LLM.</p>
+<p><img src="capturas/12-diseno-editor-estructurado.png"
+alt="Editor estructurado" /></p>
+<p><strong>13. Progreso que persiste.</strong> Cada curso muestra su
+barra de avance; además hay puntos, racha, estadísticas, repaso del día
+y buscador global.</p>
+<p><img src="capturas/13-mis-cursos-con-progreso.png"
+alt="Mis cursos con progreso" /></p>
 <h2 id="2-ingeniería-de-prompts">2. Ingeniería de prompts</h2>
 <p>Esta es la parte del proyecto en la que más tiempo invertí, y con
 razón: en un tutor, el prompt no es un accesorio, es el plan de
@@ -855,7 +925,7 @@ método HTTP mal puesto) se me pasó porque los tests del API no ejercitan
 el JavaScript. Tocó aprender la lección: añadí una suite E2E que replica
 las peticiones exactas del navegador contra un servidor real, y pruebas
 de interfaz con Playwright que recorren la app de principio a fin — de
-ahí salen las pantallas del anexo.</p>
+ahí salen las pantallas del recorrido de la sección 1.</p>
 <p><strong>Probar sin gastar.</strong> Las 303 pruebas corren contra
 dobles del LLM inyectados (respuestas en cola, fallas simuladas del
 SDK); la API real solo se toca en scripts de humo y E2E manuales. CI en
@@ -877,7 +947,157 @@ honesta. Mi conclusión: el LLM es un generador excepcional de contenido
 personalizado; el <strong>producto</strong> es el sistema alrededor —
 validación, reintentos, calificación determinista, persistencia,
 candados y una interfaz que administra la espera.</p>
-<h2 id="5-contribución-individual">5. Contribución individual</h2>
+<h2 id="5-costos">5. Costos</h2>
+<p>El costo del sistema es, básicamente, lo que cobra la API de OpenAI
+por las llamadas al modelo. Todo lo demás es gratis: la calificación de
+quizzes y evaluaciones es local, el código de los retos corre en el
+navegador del estudiante con Pyodide, la base de datos es SQLite en
+disco y el frontend lo sirve el mismo proceso. No hay factura de
+servidores de inferencia ni de ejecución de código.</p>
+<p>Dos decisiones bajan la cuenta de forma directa. La primera es el
+<strong>carril de modelo</strong>: lo estructurado y de una sola vez va
+al modelo potente, pero los turnos de conversación —que son los más
+frecuentes— van a un modelo liviano que cuesta una fracción. La segunda
+es el <strong>cacheo</strong>: el guion de cada clase, que es la llamada
+más cara, se genera una sola vez y se guarda; recorrerlo después no
+cuesta un centavo más.</p>
+<table>
+<thead>
+<tr>
+<th>Operación</th>
+<th>Frecuencia</th>
+<th>Carril</th>
+<th>Peso en el costo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Crear el curso (entrevista)</td>
+<td>~6-10 llamadas, una vez</td>
+<td>potente</td>
+<td>bajo</td>
+</tr>
+<tr>
+<td>Examen diagnóstico</td>
+<td>1 llamada, una vez</td>
+<td>potente</td>
+<td>bajo</td>
+</tr>
+<tr>
+<td>Guion PRIMM de la clase</td>
+<td>1 por clase, se cachea</td>
+<td>potente</td>
+<td><strong>alto (el grueso)</strong></td>
+</tr>
+<tr>
+<td>Turno de clase</td>
+<td>decenas por clase</td>
+<td>chat liviano</td>
+<td>bajo por turno</td>
+</tr>
+<tr>
+<td>Mini-quiz de objetivo</td>
+<td>pre-generado dentro del guion</td>
+<td>—</td>
+<td>incluido en el guion</td>
+</tr>
+<tr>
+<td>Evaluación final</td>
+<td>1 por intento</td>
+<td>potente</td>
+<td>medio</td>
+</tr>
+<tr>
+<td>Demo interactiva</td>
+<td>opcional, a pedido</td>
+<td>potente</td>
+<td>bajo</td>
+</tr>
+<tr>
+<td>Ilustración de clase</td>
+<td>opcional (apagada por defecto)</td>
+<td>gpt-image-1</td>
+<td>variable</td>
+</tr>
+<tr>
+<td>Calificar, progreso, repaso</td>
+<td>siempre</td>
+<td>ninguno (local)</td>
+<td>cero</td>
+</tr>
+</tbody>
+</table>
+<p>En la práctica, un curso completo de 7-8 clases sale por unos
+<strong>pocos centavos de dólar</strong> con <code>gpt-5-mini</code> en
+el carril potente y <code>gpt-5-nano</code> en el de chat. La generación
+de los guiones es lo que más pesa; el resto es ruido. Los precios
+exactos de la API cambian seguido, así que lo que importa es el orden de
+magnitud: esto no cuesta dólares, cuesta centavos.</p>
+<p>Y si hay que apretar el gasto, hay palancas claras:
+<code>TUTOR_MODEL_CHAT</code> baja el modelo de los turnos a uno más
+barato, <code>TUTOR_IMAGENES</code> apagado (el default) evita el costo
+de las ilustraciones, y desarrollar no cuesta nada porque las 307
+pruebas corren contra dobles del LLM, no contra la API real.</p>
+<h2 id="6-mejoras-a-futuro">6. Mejoras a futuro</h2>
+<p>Dejo esto funcionando y con una lista clara de por dónde seguiría. La
+ordeno por la parte del sistema que toca.</p>
+<p><strong>Contexto y memoria.</strong> Hoy cada llamada arma su
+contexto a mano desde la base de datos, y funciona, pero se queda corto
+cuando el material crece. Lo siguiente sería montar un motor de
+indexación —tipo el que usa Obsidian sobre una bóveda de notas— para
+hacer RAG de verdad: indexar todas las clases, conversaciones y retos de
+un estudiante y recuperar solo lo relevante para cada turno, en vez de
+acarrear el historial completo. Eso abre una <strong>memoria de largo
+plazo</strong> que hoy no existe: que el tutor recuerde, entre cursos,
+que a esta persona le costaron los bucles o que aprende mejor con
+ejemplos de su negocio. El perfil dejaría de ser un puñado de campos
+para volverse un expediente vivo.</p>
+<p><strong>Prompting.</strong> Me gustaría cerrar el ciclo de evaluación
+de prompts: hoy los ajusté a mano mirando resultados, y el paso natural
+es un banco de casos con métricas (¿el quiz mide lo que dice medir?, ¿el
+guion respeta PRIMM?) para comparar versiones de un prompt de forma
+objetiva y no "a ojo". También probar prompts que se adapten al
+desempeño en vivo —subir o bajar el rigor según cómo va el estudiante— y
+separar mejor el idioma: prompts internos en inglés (más baratos en
+tokens) con el contenido para el estudiante en español.</p>
+<p><strong>Búsqueda web y nuevas herramientas.</strong> El tutor hoy
+vive de lo que el modelo sabe. Darle <strong>búsqueda web</strong> le
+permitiría traer documentación oficial actualizada, ejemplos reales y
+noticias del lenguaje, y citar la fuente en vez de arriesgar datos
+desactualizados. En la misma línea, pasar a un esquema de <strong>tool
+use / function calling</strong> formal: que el modelo pueda pedir
+"ejecuta este código", "búscame esto", "revisa el progreso" como
+herramientas explícitas, en lugar de que yo orqueste todo por fuera. Eso
+simplificaría el flujo y lo haría más extensible.</p>
+<p><strong>Flujo del sistema.</strong> Con memoria y herramientas, el
+flujo puede dejar de ser lineal (diseño → clase → evaluación) y volverse
+más adaptativo: que el propio sistema decida reordenar clases, insertar
+un repaso o proponer un desvío según lo que detecte. Un tutor que
+replanifica, no solo que ejecuta un plan fijo.</p>
+<p><strong>Entregables para el estudiante.</strong> Quiero que el curso
+se pueda "llevar": entregar una <strong>mini malla curricular</strong>
+visual (el mapa de clases con dependencias y objetivos), el <strong>plan
+completo de todas las clases</strong> exportable —no solo la que estás
+viendo—, y certificados o resúmenes de lo aprendido. Que al terminar
+tengas algo tangible, no solo el progreso dentro de la app.</p>
+<p><strong>Evaluaciones más exigentes.</strong> Las evaluaciones de hoy
+son de opción múltiple bien hechas, pero el siguiente nivel es pedir
+<strong>código de verdad</strong> evaluado contra una batería de casos,
+ejercicios de depuración sobre programas reales, y preguntas que
+obliguen a explicar el porqué y no solo a marcar la opción correcta.
+Subir el listón de "aplicar" y "crear" en la taxonomía de Bloom.</p>
+<p><strong>Playgrounds y artefactos de aprendizaje.</strong> Los retos
+ya corren Python en el navegador con Pyodide; el paso siguiente son
+<strong>playgrounds completos</strong> —un editor con varios archivos,
+consola y guardado— donde el estudiante experimente libre, no solo
+resuelva el reto puntual. Y ampliar el catálogo de
+<strong>artefactos</strong>: hoy genero demos HTML, pero cabrían
+visualizadores de estructuras de datos paso a paso, diagramas de flujo
+del propio código del estudiante, animaciones de algoritmos, tarjetas de
+repaso generadas de lo que falló. La idea de fondo es la misma con la
+que arranqué: que cada concepto tenga la representación que mejor lo
+hace entender, y que el LLM la fabrique a la medida.</p>
+<h2 id="7-contribución-individual">7. Contribución individual</h2>
 <p>Desarrollé este trabajo individualmente, de punta a punta:</p>
 <table>
 <thead>
@@ -896,66 +1116,6 @@ video demo y documentación.</td>
 </tr>
 </tbody>
 </table>
-<h2 id="anexo--recorrido-de-la-aplicación-capturas">Anexo — Recorrido de
-la aplicación (capturas)</h2>
-<p>Capturas generadas automáticamente por
-<code>scripts/capturas_playwright.py</code> interactuando con la app
-real (servidor limpio + API de OpenAI).</p>
-<p><strong>1. Mis cursos</strong> — menú inicial con la tarjeta de nuevo
-curso.</p>
-<p><img src="capturas/01-mis-cursos.png" alt="Mis cursos" /></p>
-<p><strong>2. Nuevo curso</strong> — la creación es un chat: "¿Qué
-quieres aprender?".</p>
-<p><img src="capturas/02-nuevo-curso.png" alt="Nuevo curso" /></p>
-<p><strong>3. El asesor NO crea de una</strong> — resume lo entendido y
-pregunta el nivel.</p>
-<p><img src="capturas/03-asesor-pregunta.png"
-alt="El asesor pregunta" /></p>
-<p><strong>4. Propuesta de temario</strong> — lista de clases para
-ajustar o confirmar.</p>
-<p><img src="capturas/04-asesor-propone.png"
-alt="El asesor propone" /></p>
-<p><strong>5. Clase 1 en el chat</strong> — confirmado el "ya, dale",
-arranca la lección (guion PRIMM: pide predecir antes de explicar).</p>
-<p><img src="capturas/05-clase-1-arranca.png"
-alt="Arranca la clase 1" /></p>
-<p><strong>6. Predicción errada a propósito</strong> — el tutor corrige
-con amabilidad, explica el porqué y avanza de paso.</p>
-<p><img src="capturas/06-tutor-corrige-y-avanza.png"
-alt="El tutor corrige" /></p>
-<p><strong>7. Duda libre a mitad de clase</strong> — el estudiante
-interrumpe con una pregunta ("¿esto para qué me sirve en mi negocio?");
-el tutor la responde y retoma el paso <strong>sin avanzar</strong> la
-lección (decisión de avance con criterio).</p>
-<p><img src="capturas/07-duda-al-tutor.png" alt="Duda al tutor" /></p>
-<p><strong>8. Clase completada</strong> — tras responder todos los
-pasos, la clase queda tachada en la barra lateral, el tutor cierra con
-el recap y aparece el CTA de evaluación; las clases 2-7 siguen con
-candado.</p>
-<p><img src="capturas/08-clase-completada.png"
-alt="Clase completada" /></p>
-<p><strong>9. Evaluación dentro del chat</strong> — 4 preguntas de
-comprensión (predicción / encuentra-el-bug) con distractores basados en
-misconceptions documentadas.</p>
-<p><img src="capturas/09-evaluacion.png" alt="Evaluación" /></p>
-<p><strong>10. Resultado (ruta de reprobar)</strong> — respondí al azar
-a propósito y saqué 1 de 4: desglose por pregunta con la correcta y la
-explicación del error de razonamiento, botón de reintento (con preguntas
-nuevas) y el conversatorio socrático abriéndose automáticamente al
-final.</p>
-<p><img src="capturas/10-resultado.png" alt="Resultado" /></p>
-<p><strong>11. Diseño del curso</strong> — el documento generado
-(persistido en la BD, con copia <code>curso.md</code> descargable).</p>
-<p><img src="capturas/11-diseno-documento.png"
-alt="Diseño del curso" /></p>
-<p><strong>12. Edición estructurada</strong> — título/objetivo/subtemas
-por clase, validados con las mismas reglas que usa el LLM.</p>
-<p><img src="capturas/12-diseno-editor-estructurado.png"
-alt="Editor estructurado" /></p>
-<p><strong>13. Mis cursos con progreso</strong> — el curso creado con su
-barra de avance.</p>
-<p><img src="capturas/13-mis-cursos-con-progreso.png"
-alt="Mis cursos con progreso" /></p>
 
 </div>
 </main>
