@@ -102,6 +102,10 @@ tailwind.config = {
   .informe details.prompt[open] .chev{transform:rotate(90deg);}
   .informe details.prompt .tit{font-family:"Libre Caslon Text",serif;font-size:18px;font-weight:600;color:#131629;display:block;}
   .informe details.prompt .sub{font-family:"Hanken Grotesk",sans-serif;font-size:14px;line-height:1.55;color:#414766;display:block;margin-top:3px;}
+
+  .informe figure.diagrama{margin:0 0 20px;border:2px solid #bcc2dc;background:#fff;padding:14px;overflow-x:auto;}
+  .informe figure.diagrama img{width:100%;min-width:820px;border:0;margin:0;cursor:zoom-in;}
+  .informe figure.diagrama figcaption{font-family:"Hanken Grotesk",sans-serif;font-size:13px;color:#5b6486;margin-top:8px;text-align:center;}
   .informe details.prompt pre{margin:0;border:0;border-top:2px solid #6c74a0;max-height:440px;white-space:pre-wrap;word-break:break-word;}
 </style>
 </head>
@@ -285,15 +289,45 @@ consciente: los tests de los retos viajan al navegador (deben ejecutarse
 client-side) y son inspeccionables — el objetivo es aprender, no
 vigilar; las respuestas de quizzes siguen sin viajar jamás.</p>
 <h2 id="2-ingeniería-de-prompts">2. Ingeniería de prompts</h2>
-<p>Todos los prompts viven versionados en un solo módulo
-(<code>src/tutor/prompts.py</code>, <code>PROMPTS_VERSION = 2</code>),
-separados en <em>system prompts</em> (definen el rol y las reglas de un
-carril) y <em>prompts de tarea</em> (piden una salida concreta). Ninguno
-está escrito "a mano suelta": cada uno tiene un caso de uso, un modelo
-asignado y una técnica que resuelve un problema específico que fui
-encontrando.</p>
+<p>Esta es la parte del proyecto en la que más tiempo invertí, y con
+razón: en un tutor, el prompt no es un accesorio, es el plan de
+estudios. Voy a contar cómo lo pensé, qué principios seguí, cómo el
+sistema reacciona ante lo que haga el estudiante, y las técnicas
+concretas que usé para que el modelo no me mienta.</p>
+<h3
+id="cómo-lo-pensé-el-prompt-como-especificación-no-como-conversación">Cómo
+lo pensé: el prompt como especificación, no como conversación</h3>
+<p>Mi primer instinto fue el que tiene todo el mundo: un system prompt
+largo del estilo "eres un tutor buena onda, enseña bien". No funcionó.
+El modelo divagaba, se saltaba pasos, a veces soltaba la solución de un
+ejercicio antes de que el estudiante lo intentara. La lección que saqué
+—y que ordena todos los prompts del proyecto— es que <strong>un prompt
+es una especificación</strong>: entre más chico y concreto el trabajo
+que le pido al modelo, más confiable es la salida.</p>
+<p>De ahí salieron cuatro decisiones que se repiten en cada prompt:</p>
+<ul>
+<li><strong>Un prompt, una tarea.</strong> No hay un mega-prompt que "dé
+la clase". Hay uno que diseña el guion, otro que decide el turno, otro
+que arma un quiz. Cada uno se puede probar y arreglar por separado.</li>
+<li><strong>Rol y reglas van en el <em>system</em>; la tarea concreta va
+en el <em>user</em>.</strong> El system fija quién es el tutor y qué
+nunca hace; el prompt de tarea pide una cosa puntual con su formato de
+salida. Separarlos me dejó cambiar una regla pedagógica sin tocar veinte
+prompts.</li>
+<li><strong>Todo lo que el programa consume, sale como JSON con
+contrato.</strong> Perfil, temario, guion, la decisión de avanzar, el
+quiz: nada de "parséame esta prosa". Pido un JSON con esquema y lo
+valido antes de usarlo.</li>
+<li><strong>Personalización por inyección de contexto, no por
+pedirla.</strong> El perfil del estudiante (nivel, meta con sus
+palabras, qué ya sabe) se inserta <em>dentro</em> del prompt, no se le
+pide al modelo que "tenga en cuenta al estudiante".</li>
+</ul>
 <h3 id="mapa-de-prompts-qué-hace-cada-uno-y-cuándo-se-dispara">Mapa de
 prompts: qué hace cada uno y cuándo se dispara</h3>
+<p>Todos viven versionados en un solo módulo
+(<code>src/tutor/prompts.py</code>, <code>PROMPTS_VERSION = 2</code>).
+Este es el inventario completo:</p>
 <table>
 <thead>
 <tr>
@@ -321,41 +355,52 @@ guiada, no crea hasta confirmar</td>
 <td><code>system_tutor</code></td>
 <td>Contexto de todo turno de clase</td>
 <td>Potente</td>
-<td>Persona + reglas; se personaliza con el perfil del estudiante</td>
+<td>Persona + 8 reglas pedagógicas; se personaliza con el perfil</td>
 </tr>
 <tr>
 <td><code>prompt_guion_v2</code></td>
 <td>Una vez por clase, al abrirla (se cachea)</td>
 <td>Potente</td>
-<td>Encadenamiento de objetivos, PRIMM, auto-verificación del plan</td>
+<td>Objetivos encadenados, PRIMM, auto-verificación del plan</td>
 </tr>
 <tr>
 <td><code>prompt_avance_leccion</code></td>
 <td>En <strong>cada</strong> mensaje del estudiante durante la
 clase</td>
 <td>Chat (gpt-5-nano)</td>
-<td>Contrato JSON <code>{avanza, mensaje}</code>: decide avanzar vs.
-resolver duda</td>
+<td>Contrato JSON <code>{avanza, mensaje}</code>: avanzar vs. resolver
+duda</td>
+</tr>
+<tr>
+<td><code>prompt_turno_leccion</code></td>
+<td>Al desplegar un paso nuevo del guion</td>
+<td>Chat</td>
+<td>Un paso a la vez, reacciona a la respuesta previa</td>
 </tr>
 <tr>
 <td><code>prompt_quiz</code></td>
 <td>Al cerrar un objetivo (mini-quiz) y en la evaluación final</td>
 <td>Potente</td>
-<td>Chain-of-Verification, few-shot, banco de misconceptions,
-variantes</td>
+<td>Chain-of-Verification, few-shot, banco de misconceptions</td>
+</tr>
+<tr>
+<td><code>prompt_pista_reto</code></td>
+<td>Cuando el estudiante falla un reto de código</td>
+<td>Chat</td>
+<td>Pista socrática sobre el test que falló, nunca la solución</td>
 </tr>
 <tr>
 <td><code>prompt_artefacto</code></td>
-<td>Al pulsar ✨ para generar una demo interactiva</td>
+<td>Al pulsar el botón de demo interactiva</td>
 <td>Potente</td>
-<td>Plantilla según el concepto, restricciones duras (sin red,
-autocontenido)</td>
+<td>Plantilla según el concepto, restricciones duras (sin red)</td>
 </tr>
 <tr>
-<td><code>system_conversatorio</code></td>
-<td>Al reprobar, para el repaso socrático</td>
+<td><code>system_conversatorio</code> +
+<code>prompt_reencuentro</code></td>
+<td>Al reprobar la evaluación</td>
 <td>Chat</td>
-<td>Guardrails Khanmigo (pistas, no soluciones) + theory-of-mind</td>
+<td>Guardrails Khanmigo + theory-of-mind sobre los intentos</td>
 </tr>
 </tbody>
 </table>
@@ -366,41 +411,114 @@ latencia; lo conversacional y de alta frecuencia (cada turno de clase,
 el conversatorio) va a un modelo liviano que responde en segundos. Se
 configura con <code>TUTOR_MODEL</code> y
 <code>TUTOR_MODEL_CHAT</code>.</p>
-<h3 id="los-tres-hallazgos-que-definieron-el-diseño">Los tres hallazgos
-que definieron el diseño</h3>
-<p>Antes de fijar los prompts investigué literatura de enseñanza de la
-programación y tutores LLM, tomando notas con sus fuentes. Tres
-hallazgos definieron el diseño:</p>
+<h3 id="cómo-el-sistema-maneja-distintas-situaciones">Cómo el sistema
+maneja distintas situaciones</h3>
+<p>Acá está la parte que más me gusta. Una clase no es un guion que se
+recita: el estudiante interrumpe, se equivoca a propósito, saluda,
+pregunta cosas fuera de tema, o falla un ejercicio. El corazón del tutor
+es que <strong>en cada mensaje el modelo primero clasifica la situación
+y después responde acorde</strong>, en vez de seguir el guion a ciegas.
+Esa decisión es un contrato JSON (<code>{avanza, mensaje}</code>) que el
+frontend interpreta para saber si tachar el paso o quedarse donde
+está.</p>
+<figure class="diagrama"><img src="sistema.svg" alt="Diagrama del funcionamiento del sistema Profe Bit de punta a punta" /><figcaption>Flujo completo del sistema. Las cajas indigo son lo que genera el LLM (cada una es uno de los prompts de abajo); las blancas, lo que decide el sistema.</figcaption></figure>
+
+<p>En concreto, estas son las situaciones que el sistema distingue y qué
+hace en cada una:</p>
+<table>
+<thead>
+<tr>
+<th>Situación del estudiante</th>
+<th>Qué hace el sistema</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Responde bien la predicción del paso</td>
+<td>Celebra algo concreto, confirma el porqué y <strong>avanza</strong>
+al paso siguiente</td>
+</tr>
+<tr>
+<td>Responde mal (predicción errada)</td>
+<td>Corrige con amabilidad, explica <em>por qué</em> el resultado es
+otro, y avanza — equivocarse es parte del método PRIMM</td>
+</tr>
+<tr>
+<td>Saluda o comenta algo casual ("hola", "buenísimo")</td>
+<td>Responde natural y breve, <strong>no avanza</strong>, y re-invita a
+lo que el paso pedía</td>
+</tr>
+<tr>
+<td>Pregunta una duda fuera del paso</td>
+<td>La resuelve con pistas socráticas (nunca la solución de un
+ejercicio) y retoma el paso, <strong>sin avanzar</strong></td>
+</tr>
+<tr>
+<td>Falla un reto de código</td>
+<td>Le da una pista basada en el test exacto que falló; el editor sigue
+abierto para reintentar</td>
+</tr>
+<tr>
+<td>Reprueba la evaluación (&lt; 70)</td>
+<td>Abre un conversatorio socrático que infiere el malentendido de sus
+intentos antes de preguntar; al reintentar, preguntas
+<strong>nuevas</strong></td>
+</tr>
+<tr>
+<td>El LLM devuelve algo que no valida</td>
+<td>Se reintenta la llamada con el error incrustado en el prompt; si aun
+así falla, se degrada con gracia (curso directo, demo vacía) sin romper
+el flujo</td>
+</tr>
+</tbody>
+</table>
+<p>El caso que más pulí fue el del "hola". En la primera versión,
+cualquier mensaje del estudiante disparaba el paso siguiente, así que un
+simple saludo adelantaba media lección. Meterle al modelo la decisión
+explícita de "esto avanza o no avanza" lo arregló de raíz.</p>
+<h3 id="técnicas-contra-la-alucinación-y-la-baja-calidad">Técnicas
+contra la alucinación y la baja calidad</h3>
+<p>Un tutor que se equivoca enseña mal. Estas son las técnicas que usé,
+apoyándome en la literatura, para que la salida sea fiable:</p>
 <ol type="1">
-<li><strong>La estructura pedagógica hay que especificarla.</strong> Las
-clases siguen un guion PRIMM generado primero (predicción antes de
-explicación, worked examples con subgoal labels, estado de variables
-línea a línea, error típico, reto). Separar el plan (guion JSON validado
-y cacheado) de la ejecución (un paso por turno) evita que la
-conversación divague y que el plan se pague dos veces.</li>
-<li><strong>Los LLM no conocen los errores reales de los
-principiantes</strong>: inyectamos un banco de misconceptions
-documentadas (Sorva: leer <code>x = x + 1</code> como ecuación,
-<code>while</code> como interrupción instantánea…) y exigimos que los
-distractores de cada quiz encarnen una.</li>
-<li><strong>El razonamiento del modelo aumenta su confianza incluso al
-errar</strong>: el prompt del quiz exige verificación independiente
-(trazar el código y derivar la salida antes de escribir opciones,
-re-resolver desde cero, reescribir ítems ambiguos).</li>
+<li><strong>Salida estructurada con validación y reintento.</strong>
+Pido JSON con esquema y lo valido en mi código; si no cuadra, reintento
+incluyendo el mensaje de error en el prompt para que el modelo se
+autocorrija. Es la red de seguridad de todo lo que el programa
+consume.</li>
+<li><strong>Chain-of-Verification en los quizzes.</strong> El prompt del
+quiz obliga al modelo a resolver él mismo cada pregunta —trazar el
+código y derivar la salida— <em>antes</em> de escribir las opciones, y a
+reescribir cualquier ítem ambiguo. Es la idea de Chain-of-Verification
+(Dhuliawala et al., 2023): el modelo verifica su propio borrador antes
+de darlo por bueno, lo que reduce alucinaciones sin reentrenar
+nada.</li>
+<li><strong>Banco de errores reales de principiante
+(misconceptions).</strong> Los LLM no conocen los errores típicos de
+quien empieza, así que se los doy: un banco documentado (leer
+<code>x = x + 1</code> como una ecuación, creer que <code>while</code>
+corta al instante en que la condición se vuelve falsa…) y exijo que cada
+distractor de un quiz encarne uno. Los errores salen del trabajo de
+Sorva sobre concepciones erróneas en programación introductoria.</li>
+<li><strong>Few-shot donde el formato es frágil.</strong> El reto de
+código, por ejemplo, trae un ejemplo completo bien formado dentro del
+prompt, porque el <code>seed</code> tiene que parsear con
+<code>ast.parse</code> tal cual y describirlo en prosa no
+alcanzaba.</li>
+<li><strong>Preguntas nuevas en cada reintento (variantes).</strong> Al
+reprobar, el prompt recibe los enunciados ya vistos y exige variantes
+—misma competencia, otro caso—, siguiendo la idea de PrairieLearn de
+evaluar por dominio y no por memoria.</li>
+<li><strong>La nota nunca la pone el modelo.</strong> El LLM genera las
+preguntas y marca la correcta; calificar es comparar índices en mi
+servidor. Ninguna segunda llamada puede "alucinar" una nota.</li>
 </ol>
-<p>El avance de la lección también es una decisión del modelo con
-contrato JSON <code>{avanza, mensaje}</code>: si el mensaje del
-estudiante atiende el paso, reacciona y desarrolla el siguiente; si es
-un saludo o una duda, responde natural y <strong>no avanza</strong> — un
-"hola" ya no dispara media lección. El conversatorio post-reprobación
-aplica los guardrails documentados de Khanmigo (pistas, no soluciones;
-escape ante el "no sé" repetido) más un paso theory-of-mind al estilo
-tutor-gpt: recibe el historial de intentos e infiere el malentendido
-antes de preguntar. Al reintentar, el prompt recibe los enunciados
-previos y exige <strong>variantes</strong> (patrón PrairieLearn):
-aprobar mide dominio, no memoria. Las mecánicas restantes también vienen
-de referentes con evidencia: racha y puntos sin los dark patterns de
-Duolingo, Pyodide de futurecoder, Python Tutor.</p>
+<p>La base pedagógica también viene de referentes con evidencia: la
+secuencia PRIMM (Predict–Run–Investigate–Modify–Make) de Sentance y
+Waite estructura cada objetivo; los guardrails del conversatorio siguen
+los principios publicados de Khanmigo (pistas, no soluciones; salida
+ante el "no sé" repetido); y las mecánicas de motivación (puntos, racha)
+evitan los dark patterns de Duolingo.</p>
 <h3 id="cómo-alimentamos-de-contexto-al-llm">Cómo alimentamos de
 contexto al LLM</h3>
 <p>Ninguna llamada manda "solo la pregunta". Cada petición se arma con
@@ -445,26 +563,23 @@ recibe es siempre el mismo contrato explícito.</p>
 producción, tal cual van al modelo</h3>
 <p>Estos no son ejemplos de muestra: son los prompts reales de la app,
 renderizados con un perfil concreto ("sé Excel, quiero analizar mis
-ventas") para que se vea cómo la personalización entra en cada uno. Haz
-clic en cada uno para expandirlo.</p>
+ventas") para que se vea cómo la personalización entra en cada uno. Cada
+uno indica a qué paso del diagrama de arriba pertenece, para que se vea
+el mapa completo: las cajas indigo del flujo (lo que genera el LLM) son,
+una por una, estos prompts. Haz clic en cada uno para expandirlo.</p>
+<p>Una decisión que quiero dejar explícita: <strong>todos los prompts
+están escritos en español, y sé que en inglés serían más
+baratos.</strong> Los modelos tokenizan el inglés de forma más compacta
+—el español gasta bastantes más tokens por la misma idea—, así que
+escribirlos en inglés bajaría el costo de cada llamada. No lo hice a
+propósito. Este es un trabajo de curso: quería que los prompts se puedan
+leer, discutir y evaluar por cualquiera que abra el repositorio, sin que
+el idioma sea una barrera. El ahorro de tokens no compensaba perder esa
+claridad. En un despliegue real de producción sí valdría la pena medir
+ese trade-off y probablemente pasarlos a inglés dejando el contenido
+para el estudiante en español.</p>
 <div class="prompts-reales">
-<details class="prompt"><summary><span class="chev">&#9656;</span><span><span class="tit">System del tutor</span><span class="sub">Va en TODA llamada de contenido; inyecta el perfil completo del estudiante. · <code>system_tutor()</code></span></span></summary><pre><code>Eres &quot;Profe Bit&quot;, un tutor experto en enseñar fundamentos de programación a adultos autodidactas. Tu estudiante:
-- Nivel: conoce lo básico (variables, condicionales).
-- Meta: quiere aprender programación para ciencia de datos y análisis de datos.
-- Pidió su curso con sus palabras: &quot;Hazme un curso de Python para analizar las ventas de mi negocio&quot;. Respeta esa petición por encima de todo.
-- Experiencia previa declarada: manejo bien Excel (fórmulas, tablas dinámicas). ÚSALA como fuente de analogías en todo el contenido.
-- Lenguaje elegido por el estudiante: python.
-
-Reglas pedagógicas que sigues SIEMPRE:
-1. Tono adulto-a-adulto: cálido y motivador pero directo, con economía de lenguaje (frases cortas, cero relleno). Nunca dices &quot;es fácil&quot; ni &quot;¡súper sencillo!&quot;; celebras avances concretos.
-2. Cada pieza de contenido abre conectando con la meta del estudiante: para qué le sirve ESTO respecto a lo que quiere lograr, y cierra con un logro tangible (quick win).
-3. Un concepto nuevo a la vez y carga cognitiva baja: ejemplos mínimos que no usan nada que no se haya enseñado todavía.
-4. Máquina nocional: al explicar código muestras qué hace el computador paso a paso (el estado de las variables después de cada línea relevante).
-5. Ejemplos como worked examples con subgoal labeling: los comentarios del código nombran el PROPÓSITO de cada bloque (&quot;# 1. acumular el total&quot;), no la sintaxis (&quot;# suma x&quot;).
-6. Anticipas y desmontas explícitamente los errores conceptuales típicos de principiantes (te doy la lista documentada cuando aplique).
-7. En nivel principiante, ningún término técnico se usa sin definirlo antes en la misma lección.
-8. Todo el contenido está en español; el código usa el lenguaje del curso con identificadores descriptivos.</code></pre></details>
-<details class="prompt"><summary><span class="chev">&#9656;</span><span><span class="tit">System del asesor de diseño</span><span class="sub">Entrevista para crear el curso; contrato JSON {mensaje, listo, perfil}, no crea hasta que confirmas. · <code>system_creacion()</code></span></span></summary><pre><code>Eres &quot;Profe Bit&quot;, un asesor pedagógico cálido y directo que diseña cursos de programación a la medida, CONVERSANDO en español.
+<details class="prompt"><summary><span class="chev">&#9656;</span><span><span class="tit">System del asesor de diseño</span><span class="sub">Paso del diagrama: "El asesor entrevista y extrae el perfil". Contrato JSON {mensaje, listo, perfil}; no crea hasta que confirmas. · <code>system_creacion()</code></span></span></summary><pre><code>Eres &quot;Profe Bit&quot;, un asesor pedagógico cálido y directo que diseña cursos de programación a la medida, CONVERSANDO en español.
 
 Tu proceso, turno a turno:
 1. Resume con tus palabras lo que entendiste de la petición (&quot;bueno, quieres
@@ -487,7 +602,7 @@ Y cuando confirme, &quot;listo&quot;: true y &quot;perfil&quot; con:
 {&quot;nivel&quot;: &quot;nunca|basico|scripts&quot;, &quot;objetivo&quot;: &quot;datos|front|back|automatizacion|otro&quot;,
  &quot;objetivo_detalle&quot;: &quot;&lt;si es otro&gt;&quot;, &quot;experiencia&quot;: &quot;&lt;lo que sabe&gt;&quot;,
  &quot;lenguaje&quot;: &quot;&lt;lenguaje o &#x27;&#x27;&gt;&quot;}</code></pre></details>
-<details class="prompt"><summary><span class="chev">&#9656;</span><span><span class="tit">Examen diagnóstico</span><span class="sub">Al confirmar el temario: 4 preguntas calibradas a tu nivel declarado. · <code>prompt_diagnostico()</code></span></span></summary><pre><code>Crea el EXAMEN DIAGNÓSTICO inicial para este estudiante (4 preguntas
+<details class="prompt"><summary><span class="chev">&#9656;</span><span><span class="tit">Examen diagnóstico</span><span class="sub">Paso del diagrama: "Examen diagnóstico calibrado al nivel". 4 preguntas segun el nivel declarado. · <code>prompt_diagnostico()</code></span></span></summary><pre><code>Crea el EXAMEN DIAGNÓSTICO inicial para este estudiante (4 preguntas
 de opción múltiple). No es para calificarlo: es para saber desde dónde
 arranca su curso.
 
@@ -521,7 +636,7 @@ Responde ÚNICAMENTE este JSON:
       &quot;explicacion&quot;: &quot;...&quot;, &quot;concepto&quot;: &quot;...&quot;}
   ]
 }</code></pre></details>
-<details class="prompt"><summary><span class="chev">&#9656;</span><span><span class="tit">Guion de la clase (PRIMM)</span><span class="sub">Una vez por clase y cacheado: objetivos, predicción antes de explicar, reto de código. · <code>prompt_guion_v2()</code></span></span></summary><pre><code>Diseña el GUION COMPLETO de la clase 1 del curso de python: &quot;Variables y cálculos con tus datos de venta&quot;.
+<details class="prompt"><summary><span class="chev">&#9656;</span><span><span class="tit">Guion de la clase (PRIMM)</span><span class="sub">Paso del diagrama: "Genera el temario y un guion PRIMM por clase". Se genera una vez y se cachea. · <code>prompt_guion_v2()</code></span></span></summary><pre><code>Diseña el GUION COMPLETO de la clase 1 del curso de python: &quot;Variables y cálculos con tus datos de venta&quot;.
 
 Contexto:
 - Objetivo de la clase: Representar precios y cantidades y calcular ingresos
@@ -600,7 +715,49 @@ Responde ÚNICAMENTE este JSON:
     }
   ]
 }</code></pre></details>
-<details class="prompt"><summary><span class="chev">&#9656;</span><span><span class="tit">Generación de quiz</span><span class="sub">Mini-quiz y evaluación final: chain-of-verification, banco de misconceptions, variantes. · <code>prompt_quiz()</code></span></span></summary><pre><code>A partir de la lección de abajo, crea un quiz de 6 preguntas de opción múltiple sobre &quot;Variables y cálculos&quot;.
+<details class="prompt"><summary><span class="chev">&#9656;</span><span><span class="tit">System del tutor</span><span class="sub">Paso del diagrama: contexto de TODO turno de la fase "Cada clase". Inyecta el perfil completo del estudiante. · <code>system_tutor()</code></span></span></summary><pre><code>Eres &quot;Profe Bit&quot;, un tutor experto en enseñar fundamentos de programación a adultos autodidactas. Tu estudiante:
+- Nivel: conoce lo básico (variables, condicionales).
+- Meta: quiere aprender programación para ciencia de datos y análisis de datos.
+- Pidió su curso con sus palabras: &quot;Hazme un curso de Python para analizar las ventas de mi negocio&quot;. Respeta esa petición por encima de todo.
+- Experiencia previa declarada: manejo bien Excel (fórmulas, tablas dinámicas). ÚSALA como fuente de analogías en todo el contenido.
+- Lenguaje elegido por el estudiante: python.
+
+Reglas pedagógicas que sigues SIEMPRE:
+1. Tono adulto-a-adulto: cálido y motivador pero directo, con economía de lenguaje (frases cortas, cero relleno). Nunca dices &quot;es fácil&quot; ni &quot;¡súper sencillo!&quot;; celebras avances concretos.
+2. Cada pieza de contenido abre conectando con la meta del estudiante: para qué le sirve ESTO respecto a lo que quiere lograr, y cierra con un logro tangible (quick win).
+3. Un concepto nuevo a la vez y carga cognitiva baja: ejemplos mínimos que no usan nada que no se haya enseñado todavía.
+4. Máquina nocional: al explicar código muestras qué hace el computador paso a paso (el estado de las variables después de cada línea relevante).
+5. Ejemplos como worked examples con subgoal labeling: los comentarios del código nombran el PROPÓSITO de cada bloque (&quot;# 1. acumular el total&quot;), no la sintaxis (&quot;# suma x&quot;).
+6. Anticipas y desmontas explícitamente los errores conceptuales típicos de principiantes (te doy la lista documentada cuando aplique).
+7. En nivel principiante, ningún término técnico se usa sin definirlo antes en la misma lección.
+8. Todo el contenido está en español; el código usa el lenguaje del curso con identificadores descriptivos.</code></pre></details>
+<details class="prompt"><summary><span class="chev">&#9656;</span><span><span class="tit">Avance de la lección</span><span class="sub">Paso del diagrama: el rombo "¿El mensaje atiende el paso?". Contrato JSON {avanza, mensaje}. Corre en cada mensaje. · <code>prompt_avance_leccion()</code></span></span></summary><pre><code>Objetivos de esta lección:
+- objetivo 1
+- objetivo 2
+
+Conversación hasta ahora:
+Estudiante: hola
+Tú: ¡Hola! Arranquemos.
+
+Estudiante: creo que imprime 300
+
+Estás en el paso 3 de 6. Lo que le pediste en este
+paso: (prediccion) Mostrar total = precio * cantidad y pedir predecir
+El paso SIGUIENTE del guion es: (explicacion) Explicar la asignación con la analogía de celdas
+
+DECIDE con criterio:
+- Si su mensaje ATIENDE lo que el paso le pidió (respondió la predicción,
+intentó el ejercicio, pidió seguir, etc.): reacciona a su respuesta
+(celebra lo correcto, corrige con amabilidad lo incorrecto explicando por
+qué) y desarrolla el paso siguiente. → &quot;avanza&quot;: true.
+- Si es un saludo, un comentario casual, o una duda/pregunta: responde
+NATURAL y BREVE (saluda de vuelta si saluda; resuelve la duda con pistas,
+no con soluciones de ejercicios) y cierra re-invitando a lo que el paso
+actual le pidió, SIN repetirlo entero. → &quot;avanza&quot;: false.
+
+Responde ÚNICAMENTE este JSON:
+{&quot;avanza&quot;: true, &quot;mensaje&quot;: &quot;&lt;tu respuesta en Markdown&gt;&quot;}</code></pre></details>
+<details class="prompt"><summary><span class="chev">&#9656;</span><span><span class="tit">Generación de quiz</span><span class="sub">Paso del diagrama: "Evaluación final" (y el mini-quiz de cada objetivo). Chain-of-Verification, misconceptions, variantes. · <code>prompt_quiz()</code></span></span></summary><pre><code>A partir de la lección de abajo, crea un quiz de 6 preguntas de opción múltiple sobre &quot;Variables y cálculos&quot;.
 
 IMPORTANTE — este es un REINTENTO. El estudiante ya vio estas preguntas:
 - ¿Qué imprime x=3; print(x)?
@@ -659,33 +816,7 @@ Lección:
 ---
 (la lección va aquí)
 ---</code></pre></details>
-<details class="prompt"><summary><span class="chev">&#9656;</span><span><span class="tit">Avance de la lección</span><span class="sub">En CADA mensaje del estudiante: contrato JSON {avanza, mensaje} (avanzar vs. resolver duda). · <code>prompt_avance_leccion()</code></span></span></summary><pre><code>Objetivos de esta lección:
-- objetivo 1
-- objetivo 2
-
-Conversación hasta ahora:
-Estudiante: hola
-Tú: ¡Hola! Arranquemos.
-
-Estudiante: creo que imprime 300
-
-Estás en el paso 3 de 6. Lo que le pediste en este
-paso: (prediccion) Mostrar total = precio * cantidad y pedir predecir
-El paso SIGUIENTE del guion es: (explicacion) Explicar la asignación con la analogía de celdas
-
-DECIDE con criterio:
-- Si su mensaje ATIENDE lo que el paso le pidió (respondió la predicción,
-intentó el ejercicio, pidió seguir, etc.): reacciona a su respuesta
-(celebra lo correcto, corrige con amabilidad lo incorrecto explicando por
-qué) y desarrolla el paso siguiente. → &quot;avanza&quot;: true.
-- Si es un saludo, un comentario casual, o una duda/pregunta: responde
-NATURAL y BREVE (saluda de vuelta si saluda; resuelve la duda con pistas,
-no con soluciones de ejercicios) y cierra re-invitando a lo que el paso
-actual le pidió, SIN repetirlo entero. → &quot;avanza&quot;: false.
-
-Responde ÚNICAMENTE este JSON:
-{&quot;avanza&quot;: true, &quot;mensaje&quot;: &quot;&lt;tu respuesta en Markdown&gt;&quot;}</code></pre></details>
-<details class="prompt"><summary><span class="chev">&#9656;</span><span><span class="tit">Demo interactiva</span><span class="sub">Al pulsar ✨: mini-página HTML autocontenida que corre en un iframe sin red. · <code>prompt_artefacto()</code></span></span></summary><pre><code>Crea un MINI-ARTEFACTO interactivo que ilustre visualmente este concepto para el estudiante (curso de python):
+<details class="prompt"><summary><span class="chev">&#9656;</span><span><span class="tit">Demo interactiva</span><span class="sub">Paso del diagrama: evento opcional dentro de la clase (botón de demo). Mini-página HTML autocontenida, sin red. · <code>prompt_artefacto()</code></span></span></summary><pre><code>Crea un MINI-ARTEFACTO interactivo que ilustre visualmente este concepto para el estudiante (curso de python):
 
 PLANTILLA &quot;estado&quot;: construye un panel de &quot;celdas&quot; con las
 variables del ejemplo como inputs o sliders editables. Al cambiar un valor
