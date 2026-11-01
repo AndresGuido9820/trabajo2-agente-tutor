@@ -124,3 +124,26 @@ class TestPedirJson:
         with pytest.raises(ErrorLLM, match="formato esperado"):
             pedir_json(falso, "sys", "p", self._validar)
         assert len(falso.llamadas) == MAX_REINTENTOS_PARSEO + 1
+
+
+@pytest.mark.parametrize(
+    ("base_url", "esperado"),
+    [("http://localhost:11434/v1", "http://localhost:11434/v1"), ("", None)],
+)
+def test_cliente_pasa_endpoint_propio_al_sdk(monkeypatch, tmp_path, base_url, esperado):
+    from tutor.config import Configuracion
+    from tutor.proveedor import llm
+
+    capturado = {}
+
+    def sdk_falso(**kwargs):
+        capturado.update(kwargs)
+        return object()
+
+    monkeypatch.setattr(llm, "OpenAI", sdk_falso)
+    configuracion = Configuracion(
+        api_key="local", modelo="gemma3:4b", dir_datos=tmp_path, base_url=base_url
+    )
+    ClienteOpenAI(configuracion)
+    assert capturado["base_url"] == esperado
+    assert capturado["api_key"] == "local"
