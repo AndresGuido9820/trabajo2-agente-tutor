@@ -16,6 +16,8 @@ from tutor.nucleo.errores import ErrorConfiguracion
 
 MODELO_POR_DEFECTO = "gpt-5-mini"
 DIR_DATOS_POR_DEFECTO = "./data"
+# Valor de relleno para servidores locales que no validan la API key.
+API_KEY_LOCAL = "local"
 
 # Precios por 1M de tokens (USD, entrada/salida) para la estimación de
 # costo local (HU-39). Editables; un modelo ausente no estima costo.
@@ -82,6 +84,8 @@ class Configuracion:
     modelo_chat: str = ""
     # Ilustraciones con IA (HU-08, bonus): apagadas por defecto (costo).
     imagenes: bool = False
+    # Endpoint compatible con OpenAI (p. ej. Ollama local); vacío = OpenAI.
+    base_url: str = ""
 
 
 def cargar_configuracion(entorno: dict[str, str] | None = None) -> Configuracion:
@@ -94,18 +98,30 @@ def cargar_configuracion(entorno: dict[str, str] | None = None) -> Configuracion
     Returns:
         La configuración efectiva.
 
+    Con ``TUTOR_BASE_URL`` (u ``OPENAI_BASE_URL``) apuntando a un servidor
+    compatible con OpenAI, como Ollama, la API key es opcional: los
+    servidores locales la ignoran.
+
     Raises:
-        ErrorConfiguracion: Si falta ``OPENAI_API_KEY``.
+        ErrorConfiguracion: Si falta ``OPENAI_API_KEY`` y no hay endpoint
+            propio configurado.
     """
     if entorno is None:
         load_dotenv()
         entorno = dict(os.environ)
 
+    base_url = (
+        entorno.get("TUTOR_BASE_URL", "").strip()
+        or entorno.get("OPENAI_BASE_URL", "").strip()
+    )
     api_key = entorno.get("OPENAI_API_KEY", "").strip()
+    if not api_key and base_url:
+        api_key = API_KEY_LOCAL
     if not api_key:
         raise ErrorConfiguracion(
             "Falta OPENAI_API_KEY. Copia .env.example a .env y agrega tu "
-            "API key de https://platform.openai.com/api-keys."
+            "API key de https://platform.openai.com/api-keys, o usa un modelo "
+            "local con TUTOR_BASE_URL=http://localhost:11434/v1 (Ollama)."
         )
 
     return Configuracion(
@@ -116,4 +132,5 @@ def cargar_configuracion(entorno: dict[str, str] | None = None) -> Configuracion
         ),
         modelo_chat=entorno.get("TUTOR_MODEL_CHAT", "").strip(),
         imagenes=entorno.get("TUTOR_IMAGENES", "").strip() == "1",
+        base_url=base_url,
     )

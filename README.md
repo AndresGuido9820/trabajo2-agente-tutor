@@ -1,17 +1,33 @@
-# Profe Bit — Tutor de Programación con LLMs (Trabajo 02)
+# Profe Bit — tutor de programación con LLMs
+
+**Pides el curso conversando; cada clase es una conversación socrática con retos de código que corren en tu navegador.**
 
 [![CI](https://github.com/AndresGuido9820/trabajo2-agente-tutor/actions/workflows/ci.yml/badge.svg)](https://github.com/AndresGuido9820/trabajo2-agente-tutor/actions/workflows/ci.yml)
+[![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-green.svg)](LICENSE)
+![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue?logo=python&logoColor=white)
+![Pruebas: 314](https://img.shields.io/badge/pruebas-314-brightgreen)
 
-Agente tutor interactivo que enseña fundamentos de programación. El
-estudiante **pide su curso conversando** ("hazme un curso de Python para
-analizar mis ventas; sé Excel"): el asesor pregunta lo que falta, propone un
-temario y lo crea al confirmar. Cada **clase es una conversación** con el
-tutor (método socrático), con evaluación que desbloquea la siguiente,
-conversatorio de dudas al reprobar, código ejecutable en el navegador
-(Pyodide), demos interactivas generadas por el LLM y puntos/racha.
+[Página del proyecto](https://andresguido9820.github.io/trabajo2-agente-tutor/) ·
+[Video de demostración](https://youtu.be/ENiJgR2DkmA) ·
+[Reporte técnico](https://andresguido9820.github.io/trabajo2-agente-tutor/reporte.html)
+
+![Creación conversacional de un curso en Profe Bit](entregables/capturas-v2/02-creacion-conversacional.png)
+
+Profe Bit enseña fundamentos de programación. El estudiante **pide su curso
+conversando** ("hazme un curso de Python para analizar mis ventas; sé Excel"):
+el asesor pregunta lo que falta, propone un temario y lo crea al confirmar.
+Cada **clase es una conversación** con el tutor (método socrático), con
+evaluación que desbloquea la siguiente, conversatorio de dudas al reprobar,
+código ejecutable en el navegador (Pyodide), demos interactivas generadas por
+el LLM y puntos/racha.
+
+Es una aplicación local (FastAPI + React): la página del proyecto muestra el
+recorrido y el video, pero para usar el tutor lo corres en tu máquina, con tu
+API key de OpenAI o gratis con un modelo local.
 
 Curso: *Normalización: aplicaciones de LLMs y Agentes para la enseñanza de
-la programación básica* — Prof. Juan David Ospina Arango.
+la programación básica* — Prof. Juan David Ospina Arango, Universidad
+Nacional de Colombia.
 
 ## Cómo correrlo
 
@@ -22,15 +38,33 @@ Node: el frontend ya viene compilado.)
 git clone https://github.com/AndresGuido9820/trabajo2-agente-tutor
 cd trabajo2-agente-tutor
 uv sync
+cp .env.example .env
+```
 
-cp .env.example .env          # y pon tu OPENAI_API_KEY=sk-...
+**Opción A: OpenAI** (la calidad con la que se diseñó; ~USD 0,18 por curso
+con gpt-5-mini, ver el reporte). Pon tu `OPENAI_API_KEY=sk-...` en `.env` y:
 
+```bash
 uv run tutor-web              # abre http://127.0.0.1:8017 (UI web, React)
 uv run tutor                  # alternativa: CLI en la terminal
 
 # Opcional: turnos de chat más rápidos con un modelo liviano
 TUTOR_MODEL_CHAT=gpt-5-nano uv run tutor-web
 ```
+
+**Opción B: gratis, con un modelo local** vía cualquier servidor compatible
+con la API de OpenAI, por ejemplo [Ollama](https://ollama.com). No hace falta
+API key:
+
+```bash
+ollama pull gemma3:4b
+TUTOR_BASE_URL=http://localhost:11434/v1 TUTOR_MODEL=gemma3:4b uv run tutor-web
+```
+
+Los modelos pequeños funcionan (el contrato JSON se verificó con
+`gemma3:4b` usando `scripts/humo_llm.py`), pero los temarios, las preguntas y
+las demos salen bastante más pobres y lentos que con gpt-5-mini, sobre todo
+en CPU. Las ilustraciones (`TUTOR_IMAGENES=1`) solo existen con OpenAI.
 
 ## Qué hace (recorrido)
 
@@ -105,7 +139,7 @@ src/tutor/
 ## Desarrollo
 
 ```bash
-uv run pytest              # 307 pruebas (LLM siempre con dobles)
+uv run pytest              # 314 pruebas (LLM siempre con dobles)
 uv run ruff format --check . && uv run ruff check .
 uv run mypy src            # estricto
 
@@ -141,3 +175,14 @@ sobre Mis cursos, Clase y Mi progreso: 0 violaciones serias/críticas.
 - **Reporte técnico**:
   <https://andresguido9820.github.io/trabajo2-agente-tutor/reporte.html>
 - **Video de demostración**: enlazado desde la página del proyecto.
+
+## Contribuir
+
+Issues y PRs son bienvenidos. Antes de abrir un PR corre lo mismo que corre
+el CI: `uv run ruff format --check . && uv run ruff check . && uv run mypy src && uv run pytest`.
+Las pruebas nunca llaman a la API real (el LLM siempre es un doble).
+
+## Licencia
+
+[MIT](LICENSE) © 2026 Andrés Felipe Guido Montoya.
+

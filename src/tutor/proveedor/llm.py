@@ -117,7 +117,9 @@ class ClienteOpenAI:
             "chat": configuracion.modelo_chat or configuracion.modelo,
         }
         self._cliente = cliente or OpenAI(
-            api_key=configuracion.api_key, timeout=TIMEOUT_API_SEGUNDOS
+            api_key=configuracion.api_key,
+            base_url=configuracion.base_url or None,
+            timeout=TIMEOUT_API_SEGUNDOS,
         )
         self._dormir = dormir
         ruta_uso = configuracion.dir_datos / "uso.db"
